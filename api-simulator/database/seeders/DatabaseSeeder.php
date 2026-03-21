@@ -17,6 +17,11 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
+            CampaignGroupSeeder::class,
+            PixelTrackerSeeder::class,
+            CampaignSeeder::class,
+            AdCreativeSeeder::class,
+            AdStatsSeeder::class,
         ]);
     }
 }

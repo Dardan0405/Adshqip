@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('aq_ad_creatives', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('ad_id')->index('idx_ad');
-            $table->string('file_path', 500)->comment('old: file_path');
+            $table->string('file_path', 500)->nullable()->comment('old: file_path; NULL for URL-only ads');
             $table->enum('file_type', ['image', 'video', 'html5', 'gif'])->default('image');
             $table->string('mime_type', 100)->nullable();
             $table->unsignedInteger('file_size_bytes')->nullable();

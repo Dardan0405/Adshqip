@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->validateCsrfTokens(except: [
             'web-login',
+            'serve/*',
         ]);
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,

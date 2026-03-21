@@ -1,0 +1,995 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+
+class CampaignController extends Controller
+{
+    /**
+     * Display the campaigns listing page for admin.
+     */
+    public function index(Request $request)
+    {
+        // Demo campaign data — 30 campaigns
+        $demoCampaigns = [
+            ['id' => 1001, 'name' => 'Summer Brand Awareness — Albania', 'status' => 'active', 'type' => 'cpm', 'start_date' => '2025-06-01', 'end_date' => '2025-08-31', 'model' => 'CPM', 'impressions' => 2847391, 'clicks' => 34182, 'conversions' => 1247, 'ctr' => 1.20, 'advertiser' => 'balkanads@gmail.com', 'budget' => 15000.00, 'spend' => 11234.50],
+            ['id' => 1002, 'name' => 'Kosovo E-Commerce CPC Drive', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-05-15', 'end_date' => '2025-09-15', 'model' => 'CPC', 'impressions' => 1523847, 'clicks' => 52391, 'conversions' => 3842, 'ctr' => 3.44, 'advertiser' => 'ecom-shop@adshqip.com', 'budget' => 25000.00, 'spend' => 18742.30],
+            ['id' => 1003, 'name' => 'Video Pre-Roll — Balkans Q3', 'status' => 'active', 'type' => 'cpv', 'start_date' => '2025-07-01', 'end_date' => '2025-09-30', 'model' => 'CPV', 'impressions' => 984231, 'clicks' => 14892, 'conversions' => 421, 'ctr' => 1.51, 'advertiser' => 'media-agency@tirana.al', 'budget' => 8000.00, 'spend' => 5120.80],
+            ['id' => 1004, 'name' => 'App Install Campaign — Android', 'status' => 'paused', 'type' => 'cpa', 'start_date' => '2025-04-01', 'end_date' => '2025-07-31', 'model' => 'CPA', 'impressions' => 3214782, 'clicks' => 89234, 'conversions' => 12483, 'ctr' => 2.78, 'advertiser' => 'techstartup@gmail.com', 'budget' => 50000.00, 'spend' => 42180.00],
+            ['id' => 1005, 'name' => 'North Macedonia — Retargeting', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-06-15', 'end_date' => '2025-12-31', 'model' => 'CPC', 'impressions' => 567123, 'clicks' => 21847, 'conversions' => 892, 'ctr' => 3.85, 'advertiser' => 'advertiser@adshqip.com', 'budget' => 12000.00, 'spend' => 7890.20],
+            ['id' => 1006, 'name' => 'Holiday Season Push Notification', 'status' => 'draft', 'type' => 'cpm', 'start_date' => '2025-11-15', 'end_date' => '2025-12-31', 'model' => 'CPM', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'newadvertiser@test.com', 'budget' => 5000.00, 'spend' => 0.00],
+            ['id' => 1007, 'name' => 'Crypto Exchange — Lead Gen AL', 'status' => 'rejected', 'type' => 'cpa', 'start_date' => '2025-05-01', 'end_date' => '2025-06-30', 'model' => 'CPA', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'crypto-exchange@mail.com', 'budget' => 30000.00, 'spend' => 0.00],
+            ['id' => 1008, 'name' => 'Balkan Travel CPC — Summer 2025', 'status' => 'completed', 'type' => 'cpc', 'start_date' => '2025-03-01', 'end_date' => '2025-05-31', 'model' => 'CPC', 'impressions' => 4128934, 'clicks' => 112847, 'conversions' => 8923, 'ctr' => 2.73, 'advertiser' => 'travelagency@balkans.com', 'budget' => 20000.00, 'spend' => 19847.60],
+            ['id' => 1009, 'name' => 'Click-to-Watch Video — Tirana', 'status' => 'pending_review', 'type' => 'cpv_ctw', 'start_date' => '2025-08-01', 'end_date' => '2025-10-31', 'model' => 'CPV-CTW', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'videoads@albania.net', 'budget' => 7500.00, 'spend' => 0.00],
+            ['id' => 1010, 'name' => 'Gaming App Install — Kosovo', 'status' => 'active', 'type' => 'cpa', 'start_date' => '2025-07-15', 'end_date' => '2025-11-30', 'model' => 'CPA', 'impressions' => 1892341, 'clicks' => 67234, 'conversions' => 5891, 'ctr' => 3.55, 'advertiser' => 'gamestudio@prishtina.xk', 'budget' => 35000.00, 'spend' => 21340.90],
+            ['id' => 1011, 'name' => 'Montenegro Tourism — Display', 'status' => 'active', 'type' => 'cpm', 'start_date' => '2025-06-01', 'end_date' => '2025-09-30', 'model' => 'CPM', 'impressions' => 723481, 'clicks' => 8923, 'conversions' => 342, 'ctr' => 1.23, 'advertiser' => 'tourism@montenegro.me', 'budget' => 10000.00, 'spend' => 6234.10],
+            ['id' => 1012, 'name' => 'Serbian Marketplace — Conversions', 'status' => 'paused', 'type' => 'cpa', 'start_date' => '2025-04-15', 'end_date' => '2025-08-15', 'model' => 'CPA', 'impressions' => 2341782, 'clicks' => 45123, 'conversions' => 2341, 'ctr' => 1.93, 'advertiser' => 'marketplace@serbia.rs', 'budget' => 18000.00, 'spend' => 14230.70],
+            ['id' => 1013, 'name' => 'Tirana Food Delivery — CPC Blitz', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-08-01', 'end_date' => '2025-10-31', 'model' => 'CPC', 'impressions' => 1345892, 'clicks' => 48723, 'conversions' => 2891, 'ctr' => 3.62, 'advertiser' => 'foodapp@tirana.al', 'budget' => 22000.00, 'spend' => 14280.40],
+            ['id' => 1014, 'name' => 'Croatia Real Estate — Display CPM', 'status' => 'active', 'type' => 'cpm', 'start_date' => '2025-05-01', 'end_date' => '2025-11-30', 'model' => 'CPM', 'impressions' => 2134567, 'clicks' => 21345, 'conversions' => 567, 'ctr' => 1.00, 'advertiser' => 'realestate@zagreb.hr', 'budget' => 18000.00, 'spend' => 12450.30],
+            ['id' => 1015, 'name' => 'Bosnia Auto Dealer — Lead Gen', 'status' => 'active', 'type' => 'cpa', 'start_date' => '2025-06-15', 'end_date' => '2025-12-15', 'model' => 'CPA', 'impressions' => 892341, 'clicks' => 34521, 'conversions' => 1823, 'ctr' => 3.87, 'advertiser' => 'autodealer@sarajevo.ba', 'budget' => 28000.00, 'spend' => 19870.50],
+            ['id' => 1016, 'name' => 'Prishtina Fashion Week — Branding', 'status' => 'completed', 'type' => 'cpm', 'start_date' => '2025-03-15', 'end_date' => '2025-04-15', 'model' => 'CPM', 'impressions' => 3892341, 'clicks' => 42891, 'conversions' => 1234, 'ctr' => 1.10, 'advertiser' => 'fashionweek@prishtina.xk', 'budget' => 15000.00, 'spend' => 14920.00],
+            ['id' => 1017, 'name' => 'Skopje EdTech — App Installs', 'status' => 'paused', 'type' => 'cpa', 'start_date' => '2025-05-01', 'end_date' => '2025-09-30', 'model' => 'CPA', 'impressions' => 1567234, 'clicks' => 42341, 'conversions' => 4892, 'ctr' => 2.70, 'advertiser' => 'edtech@skopje.mk', 'budget' => 20000.00, 'spend' => 15430.20],
+            ['id' => 1018, 'name' => 'Durres Beach Hotels — Summer CPC', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-06-01', 'end_date' => '2025-09-30', 'model' => 'CPC', 'impressions' => 678923, 'clicks' => 28934, 'conversions' => 1234, 'ctr' => 4.26, 'advertiser' => 'hotels@durres.al', 'budget' => 9000.00, 'spend' => 6780.90],
+            ['id' => 1019, 'name' => 'Albanian Telecom — Video Ads', 'status' => 'active', 'type' => 'cpv', 'start_date' => '2025-07-01', 'end_date' => '2025-12-31', 'model' => 'CPV', 'impressions' => 2345678, 'clicks' => 34567, 'conversions' => 892, 'ctr' => 1.47, 'advertiser' => 'telecom@albania.al', 'budget' => 40000.00, 'spend' => 22340.60],
+            ['id' => 1020, 'name' => 'Podgorica Fitness — Retargeting CPC', 'status' => 'draft', 'type' => 'cpc', 'start_date' => '2025-09-01', 'end_date' => '2025-12-31', 'model' => 'CPC', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'fitness@podgorica.me', 'budget' => 6000.00, 'spend' => 0.00],
+            ['id' => 1021, 'name' => 'Balkans Crypto Wallet — Brand CPM', 'status' => 'pending_review', 'type' => 'cpm', 'start_date' => '2025-09-15', 'end_date' => '2025-12-31', 'model' => 'CPM', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'cryptowallet@balkans.io', 'budget' => 45000.00, 'spend' => 0.00],
+            ['id' => 1022, 'name' => 'Ljubljana SaaS — B2B Leads', 'status' => 'active', 'type' => 'cpa', 'start_date' => '2025-04-01', 'end_date' => '2025-10-31', 'model' => 'CPA', 'impressions' => 456789, 'clicks' => 18923, 'conversions' => 2341, 'ctr' => 4.14, 'advertiser' => 'saas@ljubljana.si', 'budget' => 32000.00, 'spend' => 24560.80],
+            ['id' => 1023, 'name' => 'Vlora Restaurant Guide — Local CPC', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-06-01', 'end_date' => '2025-09-30', 'model' => 'CPC', 'impressions' => 234567, 'clicks' => 12345, 'conversions' => 567, 'ctr' => 5.26, 'advertiser' => 'restaurants@vlora.al', 'budget' => 4000.00, 'spend' => 3120.40],
+            ['id' => 1024, 'name' => 'Novi Sad Music Festival — CPV', 'status' => 'completed', 'type' => 'cpv', 'start_date' => '2025-04-01', 'end_date' => '2025-07-15', 'model' => 'CPV', 'impressions' => 3456789, 'clicks' => 45678, 'conversions' => 2345, 'ctr' => 1.32, 'advertiser' => 'musicfest@novisad.rs', 'budget' => 12000.00, 'spend' => 11890.20],
+            ['id' => 1025, 'name' => 'Pristina Uber Clone — Install CPA', 'status' => 'active', 'type' => 'cpa', 'start_date' => '2025-07-01', 'end_date' => '2025-12-31', 'model' => 'CPA', 'impressions' => 1234567, 'clicks' => 56789, 'conversions' => 6789, 'ctr' => 4.60, 'advertiser' => 'rideapp@prishtina.xk', 'budget' => 55000.00, 'spend' => 34560.70],
+            ['id' => 1026, 'name' => 'Ohrid Lake Tourism — Display', 'status' => 'paused', 'type' => 'cpm', 'start_date' => '2025-05-15', 'end_date' => '2025-09-15', 'model' => 'CPM', 'impressions' => 1892345, 'clicks' => 19234, 'conversions' => 456, 'ctr' => 1.02, 'advertiser' => 'tourism@ohrid.mk', 'budget' => 8500.00, 'spend' => 6430.10],
+            ['id' => 1027, 'name' => 'Shkodra Handicrafts — E-commerce CPC', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-08-01', 'end_date' => '2025-11-30', 'model' => 'CPC', 'impressions' => 345678, 'clicks' => 15678, 'conversions' => 789, 'ctr' => 4.54, 'advertiser' => 'crafts@shkodra.al', 'budget' => 6000.00, 'spend' => 3890.50],
+            ['id' => 1028, 'name' => 'Betting Platform — Rejected Gambling', 'status' => 'rejected', 'type' => 'cpc', 'start_date' => '2025-07-01', 'end_date' => '2025-12-31', 'model' => 'CPC', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'betting@offshore.com', 'budget' => 100000.00, 'spend' => 0.00],
+            ['id' => 1029, 'name' => 'Gjakova Furniture — Click-to-Watch', 'status' => 'pending_review', 'type' => 'cpv_ctw', 'start_date' => '2025-09-01', 'end_date' => '2025-12-31', 'model' => 'CPV-CTW', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'furniture@gjakova.xk', 'budget' => 8000.00, 'spend' => 0.00],
+            ['id' => 1030, 'name' => 'Berat Wine Tours — Seasonal CPM', 'status' => 'draft', 'type' => 'cpm', 'start_date' => '2025-10-01', 'end_date' => '2025-12-31', 'model' => 'CPM', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'winetours@berat.al', 'budget' => 3500.00, 'spend' => 0.00],
+        ];
+
+        // Merge session-stored campaigns (created via the form) with demo data
+        $sessionCampaigns = session('created_campaigns', []);
+        $allCampaigns = array_merge($sessionCampaigns, $demoCampaigns);
+
+        // Apply session-stored status overrides
+        $statusOverrides = session('campaign_status_overrides', []);
+        foreach ($allCampaigns as &$c) {
+            if (isset($statusOverrides[$c['id']])) {
+                $c['status'] = $statusOverrides[$c['id']];
+            }
+        }
+        unset($c);
+
+        // Apply session-stored campaign edits
+        $edits = session('campaign_edits', []);
+        foreach ($allCampaigns as &$c) {
+            if (isset($edits[$c['id']])) {
+                $c = array_merge($c, $edits[$c['id']]);
+            }
+        }
+        unset($c);
+
+        // Remove deleted campaigns
+        $deletedIds = session('deleted_campaign_ids', []);
+        $allCampaigns = array_filter($allCampaigns, fn($c) => !in_array($c['id'], $deletedIds));
+        $allCampaigns = array_values($allCampaigns);
+
+        // Compute stats from actual data
+        $stats = [
+            'total'          => count($allCampaigns),
+            'active'         => count(array_filter($allCampaigns, fn($c) => $c['status'] === 'active')),
+            'paused'         => count(array_filter($allCampaigns, fn($c) => $c['status'] === 'paused')),
+            'draft'          => count(array_filter($allCampaigns, fn($c) => $c['status'] === 'draft')),
+            'completed'      => count(array_filter($allCampaigns, fn($c) => $c['status'] === 'completed')),
+            'rejected'       => count(array_filter($allCampaigns, fn($c) => $c['status'] === 'rejected')),
+            'pending_review' => count(array_filter($allCampaigns, fn($c) => $c['status'] === 'pending_review')),
+            'total_budget'   => array_sum(array_column($allCampaigns, 'budget')),
+            'total_spend'    => array_sum(array_column($allCampaigns, 'spend')),
+        ];
+
+        // Apply status filter
+        $statusFilter = $request->query('status', 'all');
+        if ($statusFilter !== 'all') {
+            $allCampaigns = array_filter($allCampaigns, fn($c) => $c['status'] === $statusFilter);
+            $allCampaigns = array_values($allCampaigns);
+        }
+
+        // Apply search filter
+        $search = $request->query('search', '');
+        if ($search) {
+            $allCampaigns = array_filter($allCampaigns, fn($c) =>
+                stripos($c['name'], $search) !== false ||
+                stripos($c['advertiser'], $search) !== false ||
+                stripos((string)$c['id'], $search) !== false
+            );
+            $allCampaigns = array_values($allCampaigns);
+        }
+
+        // Pagination
+        $perPage = 10;
+        $page = max(1, (int) $request->query('page', 1));
+        $totalFiltered = count($allCampaigns);
+        $totalPages = (int) ceil($totalFiltered / $perPage);
+        $page = min($page, max($totalPages, 1));
+        $offset = ($page - 1) * $perPage;
+        $campaigns = array_slice($allCampaigns, $offset, $perPage);
+
+        $pagination = [
+            'current_page' => $page,
+            'per_page'     => $perPage,
+            'total'        => $totalFiltered,
+            'total_pages'  => $totalPages,
+            'from'         => $totalFiltered > 0 ? $offset + 1 : 0,
+            'to'           => min($offset + $perPage, $totalFiltered),
+        ];
+
+        // Campaign groups (demo + session)
+        $campaignGroups = [
+            ['id' => 1, 'name' => 'Summer 2025'],
+            ['id' => 2, 'name' => 'Balkans — Brand Awareness'],
+            ['id' => 3, 'name' => 'Performance Q3'],
+            ['id' => 4, 'name' => 'Retargeting Pool'],
+            ['id' => 5, 'name' => 'App Install Campaigns'],
+        ];
+        $sessionGroups = session('campaign_groups', []);
+        $campaignGroups = array_merge($campaignGroups, $sessionGroups);
+
+        return view('admin.campaigns.index', compact('stats', 'campaigns', 'statusFilter', 'search', 'pagination', 'campaignGroups'));
+    }
+
+    /**
+     * Show the create campaign form.
+     */
+    public function create()
+    {
+        // Demo advertisers
+        $advertisers = [
+            ['id' => 1, 'email' => 'balkanads@gmail.com', 'name' => 'Balkan Ads'],
+            ['id' => 2, 'email' => 'ecom-shop@adshqip.com', 'name' => 'E-Com Shop'],
+            ['id' => 3, 'email' => 'media-agency@tirana.al', 'name' => 'Media Agency Tirana'],
+            ['id' => 4, 'email' => 'techstartup@gmail.com', 'name' => 'Tech Startup'],
+            ['id' => 5, 'email' => 'advertiser@adshqip.com', 'name' => 'Adshqip Advertiser'],
+            ['id' => 6, 'email' => 'gamestudio@prishtina.xk', 'name' => 'Game Studio Prishtina'],
+            ['id' => 7, 'email' => 'tourism@montenegro.me', 'name' => 'Montenegro Tourism'],
+            ['id' => 8, 'email' => 'autodealer@sarajevo.ba', 'name' => 'Auto Dealer Sarajevo'],
+        ];
+
+        // Demo campaign groups + session-stored groups
+        $campaignGroups = [
+            ['id' => 1, 'name' => 'Summer 2025'],
+            ['id' => 2, 'name' => 'Balkans — Brand Awareness'],
+            ['id' => 3, 'name' => 'Performance Q3'],
+            ['id' => 4, 'name' => 'Retargeting Pool'],
+            ['id' => 5, 'name' => 'App Install Campaigns'],
+        ];
+        $sessionGroups = session('campaign_groups', []);
+        $campaignGroups = array_merge($campaignGroups, $sessionGroups);
+
+        // Demo pixel trackers + session-stored pixels
+        $pixelTrackers = [
+            ['id' => 1, 'name' => 'Main Website Pixel', 'type' => 'javascript', 'advertiser' => 'balkanads@gmail.com', 'status' => 'active'],
+            ['id' => 2, 'name' => 'Conversion Tracker', 'type' => 'image', 'advertiser' => 'ecom-shop@adshqip.com', 'status' => 'active'],
+            ['id' => 3, 'name' => 'S2S Lead Pixel', 'type' => 'server_to_server', 'advertiser' => 'techstartup@gmail.com', 'status' => 'active'],
+            ['id' => 4, 'name' => 'App Events Pixel', 'type' => 'javascript', 'advertiser' => 'gamestudio@prishtina.xk', 'status' => 'paused'],
+        ];
+        $sessionPixels = session('pixel_trackers', []);
+        $pixelTrackers = array_merge($pixelTrackers, $sessionPixels);
+
+        // Campaign types
+        $campaignTypes = [
+            'cpm' => 'CPM (Cost Per Mille)',
+            'cpc' => 'CPC (Cost Per Click)',
+            'cpa' => 'CPA (Cost Per Action)',
+            'cpv' => 'CPV (Cost Per View)',
+            'cpv_ctw' => 'CPV-CTW (Click-to-Watch)',
+        ];
+
+        // Categories
+        $categories = [
+            ['id' => 1, 'name' => 'Technology'],
+            ['id' => 2, 'name' => 'Finance'],
+            ['id' => 3, 'name' => 'E-Commerce'],
+            ['id' => 4, 'name' => 'Travel & Tourism'],
+            ['id' => 5, 'name' => 'Gaming'],
+            ['id' => 6, 'name' => 'Education'],
+            ['id' => 7, 'name' => 'Health & Wellness'],
+            ['id' => 8, 'name' => 'Automotive'],
+            ['id' => 9, 'name' => 'Food & Beverage'],
+            ['id' => 10, 'name' => 'Entertainment'],
+            ['id' => 11, 'name' => 'Real Estate'],
+            ['id' => 12, 'name' => 'Sports'],
+        ];
+
+        // Traffic sources
+        $trafficSources = [
+            ['id' => 1, 'name' => 'Organic Search'],
+            ['id' => 2, 'name' => 'Social Media'],
+            ['id' => 3, 'name' => 'Direct Traffic'],
+            ['id' => 4, 'name' => 'Referral'],
+            ['id' => 5, 'name' => 'Email Marketing'],
+            ['id' => 6, 'name' => 'Paid Search'],
+            ['id' => 7, 'name' => 'Display Network'],
+            ['id' => 8, 'name' => 'Video Platforms'],
+            ['id' => 9, 'name' => 'Push Notifications'],
+            ['id' => 10, 'name' => 'Native Ads'],
+        ];
+
+        // Countries
+        $countries = [
+            ['code' => 'AL', 'name' => 'Albania'], ['code' => 'XK', 'name' => 'Kosovo'],
+            ['code' => 'MK', 'name' => 'North Macedonia'], ['code' => 'ME', 'name' => 'Montenegro'],
+            ['code' => 'RS', 'name' => 'Serbia'], ['code' => 'BA', 'name' => 'Bosnia & Herzegovina'],
+            ['code' => 'HR', 'name' => 'Croatia'], ['code' => 'SI', 'name' => 'Slovenia'],
+            ['code' => 'BG', 'name' => 'Bulgaria'], ['code' => 'RO', 'name' => 'Romania'],
+            ['code' => 'GR', 'name' => 'Greece'], ['code' => 'TR', 'name' => 'Turkey'],
+            ['code' => 'US', 'name' => 'United States'], ['code' => 'GB', 'name' => 'United Kingdom'],
+            ['code' => 'DE', 'name' => 'Germany'], ['code' => 'FR', 'name' => 'France'],
+            ['code' => 'IT', 'name' => 'Italy'], ['code' => 'ES', 'name' => 'Spain'],
+            ['code' => 'AT', 'name' => 'Austria'], ['code' => 'CH', 'name' => 'Switzerland'],
+            ['code' => 'NL', 'name' => 'Netherlands'], ['code' => 'BE', 'name' => 'Belgium'],
+            ['code' => 'SE', 'name' => 'Sweden'], ['code' => 'NO', 'name' => 'Norway'],
+            ['code' => 'DK', 'name' => 'Denmark'], ['code' => 'FI', 'name' => 'Finland'],
+            ['code' => 'PL', 'name' => 'Poland'], ['code' => 'CZ', 'name' => 'Czech Republic'],
+            ['code' => 'HU', 'name' => 'Hungary'], ['code' => 'PT', 'name' => 'Portugal'],
+            ['code' => 'IE', 'name' => 'Ireland'], ['code' => 'AU', 'name' => 'Australia'],
+            ['code' => 'CA', 'name' => 'Canada'], ['code' => 'BR', 'name' => 'Brazil'],
+            ['code' => 'JP', 'name' => 'Japan'], ['code' => 'KR', 'name' => 'South Korea'],
+            ['code' => 'IN', 'name' => 'India'], ['code' => 'CN', 'name' => 'China'],
+            ['code' => 'ZA', 'name' => 'South Africa'], ['code' => 'NG', 'name' => 'Nigeria'],
+        ];
+
+        // Ad formats grouped by type
+        $adFormats = [
+            'display_web' => [
+                'label' => 'Display Web',
+                'sizes' => [
+                    '300x250' => 'Medium Rectangle (300×250)',
+                    '336x228' => 'Large Rectangle (336×228)',
+                    '320x50'  => 'Mobile Leaderboard (320×50)',
+                    '468x60'  => 'Banner (468×60)',
+                    '160x600' => 'Wide Skyscraper (160×600)',
+                    '158x21'  => 'Micro Bar (158×21)',
+                    '728x90'  => 'Leaderboard (728×90)',
+                    '120x160' => 'Small Skyscraper (120×160)',
+                    '800x600' => 'Large Display (800×600)',
+                    '250x250' => 'Square (250×250)',
+                    '120x600' => 'Skyscraper (120×600)',
+                    '800x400' => 'Billboard (800×400)',
+                ],
+            ],
+            'special_web' => [
+                'label' => 'Special Web',
+                'sizes' => [
+                    'text'        => 'Text',
+                    'gamebox'     => 'GameBox',
+                    'site_skin'   => 'Site-Skin',
+                    'popunder'    => 'Popunder',
+                    'bannerbox'   => 'BannerBox',
+                    'topbar'      => 'TopBar',
+                    'direct_link' => 'Direct Link',
+                    'lider'       => 'Lider',
+                    'native'      => 'Native',
+                    'layer'       => 'Layer',
+                    'catfish'     => 'Catfish',
+                ],
+            ],
+            'display_video' => [
+                'label' => 'Display Video',
+                'sizes' => [
+                    'inline_video'  => 'Inline Video',
+                    'overlay_video' => 'Overlay Video',
+                    'special_video' => 'Special Video',
+                ],
+            ],
+        ];
+
+        // Pricing models for country bidding
+        $pricingModels = ['CPM', 'CPC', 'CPA', 'CPV'];
+
+        return view('admin.campaigns.create', compact(
+            'advertisers', 'campaignGroups', 'pixelTrackers', 'campaignTypes',
+            'categories', 'trafficSources', 'countries', 'adFormats', 'pricingModels'
+        ));
+    }
+
+    /**
+     * Store a new campaign.
+     */
+    public function store(Request $request)
+    {
+        // Build a campaign entry from the form and persist in session (demo — no DB)
+        $existing = session('created_campaigns', []);
+        $newId = count($existing) > 0 ? max(array_column($existing, 'id')) + 1 : 2001;
+
+        $typeMap = [
+            'cpm' => 'CPM', 'cpc' => 'CPC', 'cpa' => 'CPA',
+            'cpv' => 'CPV', 'cpv_ctw' => 'CPV-CTW',
+        ];
+
+        $status = $request->input('status', 'draft');
+        $campaignType = $request->input('campaign_type', 'cpm');
+
+        $startDate = $request->input('schedule_mode') === 'immediately'
+            ? now()->format('Y-m-d')
+            : ($request->input('start_date') ? \Carbon\Carbon::parse($request->input('start_date'))->format('Y-m-d') : now()->format('Y-m-d'));
+
+        $endDate = $request->input('end_date')
+            ? \Carbon\Carbon::parse($request->input('end_date'))->format('Y-m-d')
+            : null;
+
+        $campaign = [
+            'id'          => $newId,
+            'name'        => $request->input('name', 'Untitled Campaign'),
+            'status'      => $status,
+            'type'        => $campaignType,
+            'start_date'  => $startDate,
+            'end_date'    => $endDate,
+            'model'       => $typeMap[$campaignType] ?? strtoupper($campaignType),
+            'impressions' => 0,
+            'clicks'      => 0,
+            'conversions' => 0,
+            'ctr'         => 0.00,
+            'advertiser'  => 'admin@adshqip.com',
+            'budget'      => 0.00,
+            'spend'       => 0.00,
+        ];
+
+        array_unshift($existing, $campaign);
+        session(['created_campaigns' => $existing]);
+
+        return redirect()->route('admin.campaigns')->with('success', 'Campaign "' . $campaign['name'] . '" created successfully!');
+    }
+
+    /**
+     * Create a new campaign group (AJAX endpoint).
+     */
+    public function storeGroup(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $name = $request->input('name');
+
+        // Check for duplicates across demo + session groups
+        $demoGroups = ['Summer 2025', 'Balkans — Brand Awareness', 'Performance Q3', 'Retargeting Pool', 'App Install Campaigns'];
+        $sessionGroups = session('campaign_groups', []);
+        $allNames = array_merge($demoGroups, array_column($sessionGroups, 'name'));
+
+        if (in_array(strtolower($name), array_map('strtolower', $allNames))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A campaign group with this name already exists.',
+            ], 422);
+        }
+
+        // In production, save to database. For demo, store in session.
+        $groups = $sessionGroups;
+        $newId = count($groups) > 0 ? max(array_column($groups, 'id')) + 1 : 100;
+
+        $group = [
+            'id' => $newId,
+            'name' => $name,
+            'created_at' => now()->toDateTimeString(),
+        ];
+
+        $groups[] = $group;
+        session(['campaign_groups' => $groups]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Campaign group created successfully.',
+            'group' => $group,
+        ]);
+    }
+
+    /**
+     * Create a new pixel tracker (AJAX endpoint).
+     */
+    public function storePixel(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|string|in:javascript,image,server_to_server',
+            'advertiser_id' => 'required',
+        ]);
+
+        $name = $request->input('name');
+
+        // Check for duplicates across demo + session pixels
+        $demoPixels = ['Main Website Pixel', 'Conversion Tracker', 'S2S Lead Pixel', 'App Events Pixel'];
+        $sessionPixels = session('pixel_trackers', []);
+        $allNames = array_merge($demoPixels, array_column($sessionPixels, 'name'));
+
+        if (in_array(strtolower($name), array_map('strtolower', $allNames))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A pixel tracker with this name already exists.',
+            ], 422);
+        }
+
+        // In production, save to database. For demo, store in session.
+        $pixels = $sessionPixels;
+        $newId = count($pixels) > 0 ? max(array_column($pixels, 'id')) + 1 : 100;
+
+        $pixel = [
+            'id' => $newId,
+            'name' => $name,
+            'type' => $request->input('type'),
+            'advertiser_id' => $request->input('advertiser_id'),
+            'advertiser' => $request->input('advertiser_name', 'Unknown'),
+            'category_id' => $request->input('category_id'),
+            'protocol' => $request->input('protocol', 'https'),
+            'goal_value' => $request->input('goal_value', 0),
+            'status' => $request->input('status', 'active'),
+            'code' => $request->input('code', ''),
+            'created_at' => now()->toDateTimeString(),
+        ];
+
+        $pixels[] = $pixel;
+        session(['pixel_trackers' => $pixels]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pixel tracker created successfully.',
+            'pixel' => $pixel,
+        ]);
+    }
+
+    /**
+     * Update campaign status (pause, resume, approve, reject).
+     */
+    public function updateStatus(Request $request, int $id)
+    {
+        $request->validate([
+            'status' => 'required|string|in:active,paused,rejected,draft,completed,pending_review',
+        ]);
+
+        $newStatus = $request->input('status');
+
+        // Store the status override in session
+        $overrides = session('campaign_status_overrides', []);
+        $overrides[$id] = $newStatus;
+        session(['campaign_status_overrides' => $overrides]);
+
+        // Also update session-created campaigns if applicable
+        $sessionCampaigns = session('created_campaigns', []);
+        foreach ($sessionCampaigns as &$c) {
+            if ($c['id'] === $id) {
+                $c['status'] = $newStatus;
+                break;
+            }
+        }
+        unset($c);
+        session(['created_campaigns' => $sessionCampaigns]);
+
+        $statusLabels = [
+            'active' => 'activated',
+            'paused' => 'paused',
+            'rejected' => 'rejected',
+            'draft' => 'moved to draft',
+            'completed' => 'marked as completed',
+            'pending_review' => 'set to pending review',
+        ];
+
+        return redirect()->route('admin.campaigns', [
+            'status' => $request->query('status', 'all'),
+            'search' => $request->query('search', ''),
+            'page' => $request->query('page', 1),
+        ])->with('success', 'Campaign #' . $id . ' has been ' . ($statusLabels[$newStatus] ?? 'updated') . '.');
+    }
+
+    /**
+     * Duplicate a campaign.
+     */
+    public function duplicate(int $id)
+    {
+        // Find the campaign in demo data or session-created campaigns
+        $demoCampaigns = [
+            1001 => ['name' => 'Summer Brand Awareness — Albania', 'type' => 'cpm', 'model' => 'CPM', 'start_date' => '2025-06-01', 'end_date' => '2025-08-31', 'advertiser' => 'balkanads@gmail.com', 'budget' => 15000.00],
+            1002 => ['name' => 'Kosovo E-Commerce CPC Drive', 'type' => 'cpc', 'model' => 'CPC', 'start_date' => '2025-05-15', 'end_date' => '2025-09-15', 'advertiser' => 'ecom-shop@adshqip.com', 'budget' => 25000.00],
+            1003 => ['name' => 'Video Pre-Roll — Balkans Q3', 'type' => 'cpv', 'model' => 'CPV', 'start_date' => '2025-07-01', 'end_date' => '2025-09-30', 'advertiser' => 'media-agency@tirana.al', 'budget' => 8000.00],
+            1004 => ['name' => 'App Install Campaign — Android', 'type' => 'cpa', 'model' => 'CPA', 'start_date' => '2025-04-01', 'end_date' => '2025-07-31', 'advertiser' => 'techstartup@gmail.com', 'budget' => 50000.00],
+            1005 => ['name' => 'North Macedonia — Retargeting', 'type' => 'cpc', 'model' => 'CPC', 'start_date' => '2025-06-15', 'end_date' => '2025-12-31', 'advertiser' => 'advertiser@adshqip.com', 'budget' => 12000.00],
+            1006 => ['name' => 'Holiday Season Push Notification', 'type' => 'cpm', 'model' => 'CPM', 'start_date' => '2025-11-15', 'end_date' => '2025-12-31', 'advertiser' => 'newadvertiser@test.com', 'budget' => 5000.00],
+            1007 => ['name' => 'Crypto Exchange — Lead Gen AL', 'type' => 'cpa', 'model' => 'CPA', 'start_date' => '2025-05-01', 'end_date' => '2025-06-30', 'advertiser' => 'crypto-exchange@mail.com', 'budget' => 30000.00],
+            1008 => ['name' => 'Balkan Travel CPC — Summer 2025', 'type' => 'cpc', 'model' => 'CPC', 'start_date' => '2025-03-01', 'end_date' => '2025-05-31', 'advertiser' => 'travelagency@balkans.com', 'budget' => 20000.00],
+            1009 => ['name' => 'Click-to-Watch Video — Tirana', 'type' => 'cpv_ctw', 'model' => 'CPV-CTW', 'start_date' => '2025-08-01', 'end_date' => '2025-10-31', 'advertiser' => 'videoads@albania.net', 'budget' => 7500.00],
+            1010 => ['name' => 'Gaming App Install — Kosovo', 'type' => 'cpa', 'model' => 'CPA', 'start_date' => '2025-07-15', 'end_date' => '2025-11-30', 'advertiser' => 'gamestudio@prishtina.xk', 'budget' => 35000.00],
+            1011 => ['name' => 'Montenegro Tourism — Display', 'type' => 'cpm', 'model' => 'CPM', 'start_date' => '2025-06-01', 'end_date' => '2025-09-30', 'advertiser' => 'tourism@montenegro.me', 'budget' => 10000.00],
+            1012 => ['name' => 'Serbian Marketplace — Conversions', 'type' => 'cpa', 'model' => 'CPA', 'start_date' => '2025-04-15', 'end_date' => '2025-08-15', 'advertiser' => 'marketplace@serbia.rs', 'budget' => 18000.00],
+            1013 => ['name' => 'Tirana Food Delivery — CPC Blitz', 'type' => 'cpc', 'model' => 'CPC', 'start_date' => '2025-08-01', 'end_date' => '2025-10-31', 'advertiser' => 'foodapp@tirana.al', 'budget' => 22000.00],
+            1014 => ['name' => 'Croatia Real Estate — Display CPM', 'type' => 'cpm', 'model' => 'CPM', 'start_date' => '2025-05-01', 'end_date' => '2025-11-30', 'advertiser' => 'realestate@zagreb.hr', 'budget' => 18000.00],
+            1015 => ['name' => 'Bosnia Auto Dealer — Lead Gen', 'type' => 'cpa', 'model' => 'CPA', 'start_date' => '2025-06-15', 'end_date' => '2025-12-15', 'advertiser' => 'autodealer@sarajevo.ba', 'budget' => 28000.00],
+            1016 => ['name' => 'Prishtina Fashion Week — Branding', 'type' => 'cpm', 'model' => 'CPM', 'start_date' => '2025-03-15', 'end_date' => '2025-04-15', 'advertiser' => 'fashionweek@prishtina.xk', 'budget' => 15000.00],
+            1017 => ['name' => 'Skopje EdTech — App Installs', 'type' => 'cpa', 'model' => 'CPA', 'start_date' => '2025-05-01', 'end_date' => '2025-09-30', 'advertiser' => 'edtech@skopje.mk', 'budget' => 20000.00],
+            1018 => ['name' => 'Durres Beach Hotels — Summer CPC', 'type' => 'cpc', 'model' => 'CPC', 'start_date' => '2025-06-01', 'end_date' => '2025-09-30', 'advertiser' => 'hotels@durres.al', 'budget' => 9000.00],
+            1019 => ['name' => 'Albanian Telecom — Video Ads', 'type' => 'cpv', 'model' => 'CPV', 'start_date' => '2025-07-01', 'end_date' => '2025-12-31', 'advertiser' => 'telecom@albania.al', 'budget' => 40000.00],
+            1020 => ['name' => 'Podgorica Fitness — Retargeting CPC', 'type' => 'cpc', 'model' => 'CPC', 'start_date' => '2025-09-01', 'end_date' => '2025-12-31', 'advertiser' => 'fitness@podgorica.me', 'budget' => 6000.00],
+            1021 => ['name' => 'Balkans Crypto Wallet — Brand CPM', 'type' => 'cpm', 'model' => 'CPM', 'start_date' => '2025-09-15', 'end_date' => '2025-12-31', 'advertiser' => 'cryptowallet@balkans.io', 'budget' => 45000.00],
+            1022 => ['name' => 'Ljubljana SaaS — B2B Leads', 'type' => 'cpa', 'model' => 'CPA', 'start_date' => '2025-04-01', 'end_date' => '2025-10-31', 'advertiser' => 'saas@ljubljana.si', 'budget' => 32000.00],
+            1023 => ['name' => 'Vlora Restaurant Guide — Local CPC', 'type' => 'cpc', 'model' => 'CPC', 'start_date' => '2025-06-01', 'end_date' => '2025-09-30', 'advertiser' => 'restaurants@vlora.al', 'budget' => 4000.00],
+            1024 => ['name' => 'Novi Sad Music Festival — CPV', 'type' => 'cpv', 'model' => 'CPV', 'start_date' => '2025-04-01', 'end_date' => '2025-07-15', 'advertiser' => 'musicfest@novisad.rs', 'budget' => 12000.00],
+            1025 => ['name' => 'Pristina Uber Clone — Install CPA', 'type' => 'cpa', 'model' => 'CPA', 'start_date' => '2025-07-01', 'end_date' => '2025-12-31', 'advertiser' => 'rideapp@prishtina.xk', 'budget' => 55000.00],
+            1026 => ['name' => 'Ohrid Lake Tourism — Display', 'type' => 'cpm', 'model' => 'CPM', 'start_date' => '2025-05-15', 'end_date' => '2025-09-15', 'advertiser' => 'tourism@ohrid.mk', 'budget' => 8500.00],
+            1027 => ['name' => 'Shkodra Handicrafts — E-commerce CPC', 'type' => 'cpc', 'model' => 'CPC', 'start_date' => '2025-08-01', 'end_date' => '2025-11-30', 'advertiser' => 'crafts@shkodra.al', 'budget' => 6000.00],
+            1028 => ['name' => 'Betting Platform — Rejected Gambling', 'type' => 'cpc', 'model' => 'CPC', 'start_date' => '2025-07-01', 'end_date' => '2025-12-31', 'advertiser' => 'betting@offshore.com', 'budget' => 100000.00],
+            1029 => ['name' => 'Gjakova Furniture — Click-to-Watch', 'type' => 'cpv_ctw', 'model' => 'CPV-CTW', 'start_date' => '2025-09-01', 'end_date' => '2025-12-31', 'advertiser' => 'furniture@gjakova.xk', 'budget' => 8000.00],
+            1030 => ['name' => 'Berat Wine Tours — Seasonal CPM', 'type' => 'cpm', 'model' => 'CPM', 'start_date' => '2025-10-01', 'end_date' => '2025-12-31', 'advertiser' => 'winetours@berat.al', 'budget' => 3500.00],
+        ];
+
+        // Look up the source campaign
+        $source = null;
+        if (isset($demoCampaigns[$id])) {
+            $source = $demoCampaigns[$id];
+        } else {
+            $sessionCampaigns = session('created_campaigns', []);
+            foreach ($sessionCampaigns as $c) {
+                if ($c['id'] === $id) {
+                    $source = $c;
+                    break;
+                }
+            }
+        }
+
+        if (!$source) {
+            return redirect()->route('admin.campaigns')->with('success', 'Campaign not found.');
+        }
+
+        // Generate new ID
+        $existing = session('created_campaigns', []);
+        $allIds = array_merge(array_keys($demoCampaigns), array_column($existing, 'id'));
+        $newId = count($allIds) > 0 ? max($allIds) + 1 : 2001;
+
+        $duplicate = [
+            'id'          => $newId,
+            'name'        => ($source['name'] ?? 'Campaign') . ' (Copy)',
+            'status'      => 'draft',
+            'type'        => $source['type'] ?? 'cpm',
+            'start_date'  => $source['start_date'] ?? now()->format('Y-m-d'),
+            'end_date'    => $source['end_date'] ?? null,
+            'model'       => $source['model'] ?? 'CPM',
+            'impressions' => 0,
+            'clicks'      => 0,
+            'conversions' => 0,
+            'ctr'         => 0.00,
+            'advertiser'  => $source['advertiser'] ?? 'admin@adshqip.com',
+            'budget'      => $source['budget'] ?? 0.00,
+            'spend'       => 0.00,
+        ];
+
+        array_unshift($existing, $duplicate);
+        session(['created_campaigns' => $existing]);
+
+        return redirect()->route('admin.campaigns')->with('success', 'Campaign "' . $source['name'] . '" has been duplicated as "' . $duplicate['name'] . '".');
+    }
+
+    /**
+     * Move a campaign to a group.
+     */
+    public function moveToGroup(Request $request, int $id)
+    {
+        $request->validate([
+            'group_id' => 'required|integer',
+        ]);
+
+        $groupId = (int) $request->input('group_id');
+
+        // Resolve group name
+        $demoGroups = [
+            1 => 'Summer 2025',
+            2 => 'Balkans — Brand Awareness',
+            3 => 'Performance Q3',
+            4 => 'Retargeting Pool',
+            5 => 'App Install Campaigns',
+        ];
+        $sessionGroups = session('campaign_groups', []);
+        $groupName = $demoGroups[$groupId] ?? null;
+        if (!$groupName) {
+            foreach ($sessionGroups as $g) {
+                if ($g['id'] === $groupId) {
+                    $groupName = $g['name'];
+                    break;
+                }
+            }
+        }
+        $groupName = $groupName ?? 'Group #' . $groupId;
+
+        // Store group assignment in session
+        $assignments = session('campaign_group_assignments', []);
+        $assignments[$id] = $groupId;
+        session(['campaign_group_assignments' => $assignments]);
+
+        // Also update session-created campaigns if applicable
+        $sessionCampaigns = session('created_campaigns', []);
+        foreach ($sessionCampaigns as &$c) {
+            if ($c['id'] === $id) {
+                $c['group_id'] = $groupId;
+                break;
+            }
+        }
+        unset($c);
+        session(['created_campaigns' => $sessionCampaigns]);
+
+        return redirect()->route('admin.campaigns', [
+            'status' => $request->query('status', 'all'),
+            'search' => $request->query('search', ''),
+            'page' => $request->query('page', 1),
+        ])->with('success', 'Campaign #' . $id . ' has been moved to "' . $groupName . '".');
+    }
+
+    /**
+     * Export campaigns data (CSV or Excel).
+     */
+    public function export(Request $request)
+    {
+        $format = $request->query('format', 'csv'); // csv or excel
+
+        // Rebuild the full campaign list (same logic as index)
+        $demoCampaigns = [
+            ['id' => 1001, 'name' => 'Summer Brand Awareness — Albania', 'status' => 'active', 'type' => 'cpm', 'start_date' => '2025-06-01', 'end_date' => '2025-08-31', 'model' => 'CPM', 'impressions' => 2847391, 'clicks' => 34182, 'conversions' => 1247, 'ctr' => 1.20, 'advertiser' => 'balkanads@gmail.com', 'budget' => 15000.00, 'spend' => 11234.50],
+            ['id' => 1002, 'name' => 'Kosovo E-Commerce CPC Drive', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-05-15', 'end_date' => '2025-09-15', 'model' => 'CPC', 'impressions' => 1523847, 'clicks' => 52391, 'conversions' => 3842, 'ctr' => 3.44, 'advertiser' => 'ecom-shop@adshqip.com', 'budget' => 25000.00, 'spend' => 18742.30],
+            ['id' => 1003, 'name' => 'Video Pre-Roll — Balkans Q3', 'status' => 'active', 'type' => 'cpv', 'start_date' => '2025-07-01', 'end_date' => '2025-09-30', 'model' => 'CPV', 'impressions' => 984231, 'clicks' => 14892, 'conversions' => 421, 'ctr' => 1.51, 'advertiser' => 'media-agency@tirana.al', 'budget' => 8000.00, 'spend' => 5120.80],
+            ['id' => 1004, 'name' => 'App Install Campaign — Android', 'status' => 'paused', 'type' => 'cpa', 'start_date' => '2025-04-01', 'end_date' => '2025-07-31', 'model' => 'CPA', 'impressions' => 3214782, 'clicks' => 89234, 'conversions' => 12483, 'ctr' => 2.78, 'advertiser' => 'techstartup@gmail.com', 'budget' => 50000.00, 'spend' => 42180.00],
+            ['id' => 1005, 'name' => 'North Macedonia — Retargeting', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-06-15', 'end_date' => '2025-12-31', 'model' => 'CPC', 'impressions' => 567123, 'clicks' => 21847, 'conversions' => 892, 'ctr' => 3.85, 'advertiser' => 'advertiser@adshqip.com', 'budget' => 12000.00, 'spend' => 7890.20],
+            ['id' => 1006, 'name' => 'Holiday Season Push Notification', 'status' => 'draft', 'type' => 'cpm', 'start_date' => '2025-11-15', 'end_date' => '2025-12-31', 'model' => 'CPM', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'newadvertiser@test.com', 'budget' => 5000.00, 'spend' => 0.00],
+            ['id' => 1007, 'name' => 'Crypto Exchange — Lead Gen AL', 'status' => 'rejected', 'type' => 'cpa', 'start_date' => '2025-05-01', 'end_date' => '2025-06-30', 'model' => 'CPA', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'crypto-exchange@mail.com', 'budget' => 30000.00, 'spend' => 0.00],
+            ['id' => 1008, 'name' => 'Balkan Travel CPC — Summer 2025', 'status' => 'completed', 'type' => 'cpc', 'start_date' => '2025-03-01', 'end_date' => '2025-05-31', 'model' => 'CPC', 'impressions' => 4128934, 'clicks' => 112847, 'conversions' => 8923, 'ctr' => 2.73, 'advertiser' => 'travelagency@balkans.com', 'budget' => 20000.00, 'spend' => 19847.60],
+            ['id' => 1009, 'name' => 'Click-to-Watch Video — Tirana', 'status' => 'pending_review', 'type' => 'cpv_ctw', 'start_date' => '2025-08-01', 'end_date' => '2025-10-31', 'model' => 'CPV-CTW', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'videoads@albania.net', 'budget' => 7500.00, 'spend' => 0.00],
+            ['id' => 1010, 'name' => 'Gaming App Install — Kosovo', 'status' => 'active', 'type' => 'cpa', 'start_date' => '2025-07-15', 'end_date' => '2025-11-30', 'model' => 'CPA', 'impressions' => 1892341, 'clicks' => 67234, 'conversions' => 5891, 'ctr' => 3.55, 'advertiser' => 'gamestudio@prishtina.xk', 'budget' => 35000.00, 'spend' => 21340.90],
+            ['id' => 1011, 'name' => 'Montenegro Tourism — Display', 'status' => 'active', 'type' => 'cpm', 'start_date' => '2025-06-01', 'end_date' => '2025-09-30', 'model' => 'CPM', 'impressions' => 723481, 'clicks' => 8923, 'conversions' => 342, 'ctr' => 1.23, 'advertiser' => 'tourism@montenegro.me', 'budget' => 10000.00, 'spend' => 6234.10],
+            ['id' => 1012, 'name' => 'Serbian Marketplace — Conversions', 'status' => 'paused', 'type' => 'cpa', 'start_date' => '2025-04-15', 'end_date' => '2025-08-15', 'model' => 'CPA', 'impressions' => 2341782, 'clicks' => 45123, 'conversions' => 2341, 'ctr' => 1.93, 'advertiser' => 'marketplace@serbia.rs', 'budget' => 18000.00, 'spend' => 14230.70],
+            ['id' => 1013, 'name' => 'Tirana Food Delivery — CPC Blitz', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-08-01', 'end_date' => '2025-10-31', 'model' => 'CPC', 'impressions' => 1345892, 'clicks' => 48723, 'conversions' => 2891, 'ctr' => 3.62, 'advertiser' => 'foodapp@tirana.al', 'budget' => 22000.00, 'spend' => 14280.40],
+            ['id' => 1014, 'name' => 'Croatia Real Estate — Display CPM', 'status' => 'active', 'type' => 'cpm', 'start_date' => '2025-05-01', 'end_date' => '2025-11-30', 'model' => 'CPM', 'impressions' => 2134567, 'clicks' => 21345, 'conversions' => 567, 'ctr' => 1.00, 'advertiser' => 'realestate@zagreb.hr', 'budget' => 18000.00, 'spend' => 12450.30],
+            ['id' => 1015, 'name' => 'Bosnia Auto Dealer — Lead Gen', 'status' => 'active', 'type' => 'cpa', 'start_date' => '2025-06-15', 'end_date' => '2025-12-15', 'model' => 'CPA', 'impressions' => 892341, 'clicks' => 34521, 'conversions' => 1823, 'ctr' => 3.87, 'advertiser' => 'autodealer@sarajevo.ba', 'budget' => 28000.00, 'spend' => 19870.50],
+            ['id' => 1016, 'name' => 'Prishtina Fashion Week — Branding', 'status' => 'completed', 'type' => 'cpm', 'start_date' => '2025-03-15', 'end_date' => '2025-04-15', 'model' => 'CPM', 'impressions' => 3892341, 'clicks' => 42891, 'conversions' => 1234, 'ctr' => 1.10, 'advertiser' => 'fashionweek@prishtina.xk', 'budget' => 15000.00, 'spend' => 14920.00],
+            ['id' => 1017, 'name' => 'Skopje EdTech — App Installs', 'status' => 'paused', 'type' => 'cpa', 'start_date' => '2025-05-01', 'end_date' => '2025-09-30', 'model' => 'CPA', 'impressions' => 1567234, 'clicks' => 42341, 'conversions' => 4892, 'ctr' => 2.70, 'advertiser' => 'edtech@skopje.mk', 'budget' => 20000.00, 'spend' => 15430.20],
+            ['id' => 1018, 'name' => 'Durres Beach Hotels — Summer CPC', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-06-01', 'end_date' => '2025-09-30', 'model' => 'CPC', 'impressions' => 678923, 'clicks' => 28934, 'conversions' => 1234, 'ctr' => 4.26, 'advertiser' => 'hotels@durres.al', 'budget' => 9000.00, 'spend' => 6780.90],
+            ['id' => 1019, 'name' => 'Albanian Telecom — Video Ads', 'status' => 'active', 'type' => 'cpv', 'start_date' => '2025-07-01', 'end_date' => '2025-12-31', 'model' => 'CPV', 'impressions' => 2345678, 'clicks' => 34567, 'conversions' => 892, 'ctr' => 1.47, 'advertiser' => 'telecom@albania.al', 'budget' => 40000.00, 'spend' => 22340.60],
+            ['id' => 1020, 'name' => 'Podgorica Fitness — Retargeting CPC', 'status' => 'draft', 'type' => 'cpc', 'start_date' => '2025-09-01', 'end_date' => '2025-12-31', 'model' => 'CPC', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'fitness@podgorica.me', 'budget' => 6000.00, 'spend' => 0.00],
+            ['id' => 1021, 'name' => 'Balkans Crypto Wallet — Brand CPM', 'status' => 'pending_review', 'type' => 'cpm', 'start_date' => '2025-09-15', 'end_date' => '2025-12-31', 'model' => 'CPM', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'cryptowallet@balkans.io', 'budget' => 45000.00, 'spend' => 0.00],
+            ['id' => 1022, 'name' => 'Ljubljana SaaS — B2B Leads', 'status' => 'active', 'type' => 'cpa', 'start_date' => '2025-04-01', 'end_date' => '2025-10-31', 'model' => 'CPA', 'impressions' => 456789, 'clicks' => 18923, 'conversions' => 2341, 'ctr' => 4.14, 'advertiser' => 'saas@ljubljana.si', 'budget' => 32000.00, 'spend' => 24560.80],
+            ['id' => 1023, 'name' => 'Vlora Restaurant Guide — Local CPC', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-06-01', 'end_date' => '2025-09-30', 'model' => 'CPC', 'impressions' => 234567, 'clicks' => 12345, 'conversions' => 567, 'ctr' => 5.26, 'advertiser' => 'restaurants@vlora.al', 'budget' => 4000.00, 'spend' => 3120.40],
+            ['id' => 1024, 'name' => 'Novi Sad Music Festival — CPV', 'status' => 'completed', 'type' => 'cpv', 'start_date' => '2025-04-01', 'end_date' => '2025-07-15', 'model' => 'CPV', 'impressions' => 3456789, 'clicks' => 45678, 'conversions' => 2345, 'ctr' => 1.32, 'advertiser' => 'musicfest@novisad.rs', 'budget' => 12000.00, 'spend' => 11890.20],
+            ['id' => 1025, 'name' => 'Pristina Uber Clone — Install CPA', 'status' => 'active', 'type' => 'cpa', 'start_date' => '2025-07-01', 'end_date' => '2025-12-31', 'model' => 'CPA', 'impressions' => 1234567, 'clicks' => 56789, 'conversions' => 6789, 'ctr' => 4.60, 'advertiser' => 'rideapp@prishtina.xk', 'budget' => 55000.00, 'spend' => 34560.70],
+            ['id' => 1026, 'name' => 'Ohrid Lake Tourism — Display', 'status' => 'paused', 'type' => 'cpm', 'start_date' => '2025-05-15', 'end_date' => '2025-09-15', 'model' => 'CPM', 'impressions' => 1892345, 'clicks' => 19234, 'conversions' => 456, 'ctr' => 1.02, 'advertiser' => 'tourism@ohrid.mk', 'budget' => 8500.00, 'spend' => 6430.10],
+            ['id' => 1027, 'name' => 'Shkodra Handicrafts — E-commerce CPC', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-08-01', 'end_date' => '2025-11-30', 'model' => 'CPC', 'impressions' => 345678, 'clicks' => 15678, 'conversions' => 789, 'ctr' => 4.54, 'advertiser' => 'crafts@shkodra.al', 'budget' => 6000.00, 'spend' => 3890.50],
+            ['id' => 1028, 'name' => 'Betting Platform — Rejected Gambling', 'status' => 'rejected', 'type' => 'cpc', 'start_date' => '2025-07-01', 'end_date' => '2025-12-31', 'model' => 'CPC', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'betting@offshore.com', 'budget' => 100000.00, 'spend' => 0.00],
+            ['id' => 1029, 'name' => 'Gjakova Furniture — Click-to-Watch', 'status' => 'pending_review', 'type' => 'cpv_ctw', 'start_date' => '2025-09-01', 'end_date' => '2025-12-31', 'model' => 'CPV-CTW', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'furniture@gjakova.xk', 'budget' => 8000.00, 'spend' => 0.00],
+            ['id' => 1030, 'name' => 'Berat Wine Tours — Seasonal CPM', 'status' => 'draft', 'type' => 'cpm', 'start_date' => '2025-10-01', 'end_date' => '2025-12-31', 'model' => 'CPM', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'winetours@berat.al', 'budget' => 3500.00, 'spend' => 0.00],
+        ];
+
+        $sessionCampaigns = session('created_campaigns', []);
+        $allCampaigns = array_merge($sessionCampaigns, $demoCampaigns);
+
+        $statusOverrides = session('campaign_status_overrides', []);
+        foreach ($allCampaigns as &$c) {
+            if (isset($statusOverrides[$c['id']])) {
+                $c['status'] = $statusOverrides[$c['id']];
+            }
+        }
+        unset($c);
+
+        $deletedIds = session('deleted_campaign_ids', []);
+        $allCampaigns = array_filter($allCampaigns, fn($c) => !in_array($c['id'], $deletedIds));
+        $allCampaigns = array_values($allCampaigns);
+
+        // Apply status filter if provided
+        $statusFilter = $request->query('status', 'all');
+        if ($statusFilter !== 'all') {
+            $allCampaigns = array_filter($allCampaigns, fn($c) => $c['status'] === $statusFilter);
+            $allCampaigns = array_values($allCampaigns);
+        }
+
+        $headers = ['ID', 'Campaign Name', 'Status', 'Type', 'Model', 'Start Date', 'End Date', 'Advertiser', 'Impressions', 'Clicks', 'Conversions', 'CTR (%)', 'Budget', 'Spend'];
+
+        if ($format === 'excel') {
+            // Generate an HTML table that Excel can open natively
+            $filename = 'campaigns_export_' . date('Y-m-d_His') . '.xls';
+            return response()->streamDownload(function () use ($headers, $allCampaigns) {
+                echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+                echo '<head><meta charset="UTF-8"><style>td,th{border:1px solid #ccc;padding:5px;font-family:Arial,sans-serif;font-size:12px;} th{background:#4f46e5;color:#fff;font-weight:bold;}</style></head><body>';
+                echo '<table>';
+                echo '<tr>';
+                foreach ($headers as $h) {
+                    echo '<th>' . htmlspecialchars($h) . '</th>';
+                }
+                echo '</tr>';
+                foreach ($allCampaigns as $c) {
+                    echo '<tr>';
+                    echo '<td>' . $c['id'] . '</td>';
+                    echo '<td>' . htmlspecialchars($c['name']) . '</td>';
+                    echo '<td>' . ucwords(str_replace('_', ' ', $c['status'])) . '</td>';
+                    echo '<td>' . strtoupper($c['type']) . '</td>';
+                    echo '<td>' . $c['model'] . '</td>';
+                    echo '<td>' . $c['start_date'] . '</td>';
+                    echo '<td>' . ($c['end_date'] ?? '—') . '</td>';
+                    echo '<td>' . htmlspecialchars($c['advertiser']) . '</td>';
+                    echo '<td>' . number_format($c['impressions']) . '</td>';
+                    echo '<td>' . number_format($c['clicks']) . '</td>';
+                    echo '<td>' . number_format($c['conversions']) . '</td>';
+                    echo '<td>' . number_format($c['ctr'], 2) . '%</td>';
+                    echo '<td>€' . number_format($c['budget'], 2) . '</td>';
+                    echo '<td>€' . number_format($c['spend'], 2) . '</td>';
+                    echo '</tr>';
+                }
+                echo '</table></body></html>';
+            }, $filename, [
+                'Content-Type' => 'application/vnd.ms-excel',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+        }
+
+        // Default: CSV
+        $filename = 'campaigns_export_' . date('Y-m-d_His') . '.csv';
+        return response()->streamDownload(function () use ($headers, $allCampaigns) {
+            $output = fopen('php://output', 'w');
+            // UTF-8 BOM for proper Excel encoding
+            fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($output, $headers);
+            foreach ($allCampaigns as $c) {
+                fputcsv($output, [
+                    $c['id'],
+                    $c['name'],
+                    ucwords(str_replace('_', ' ', $c['status'])),
+                    strtoupper($c['type']),
+                    $c['model'],
+                    $c['start_date'],
+                    $c['end_date'] ?? '—',
+                    $c['advertiser'],
+                    $c['impressions'],
+                    $c['clicks'],
+                    $c['conversions'],
+                    number_format($c['ctr'], 2),
+                    $c['budget'],
+                    $c['spend'],
+                ]);
+            }
+            fclose($output);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
+     * Helper: find a campaign by ID from demo + session data.
+     */
+    private function findCampaign(int $id): ?array
+    {
+        $demoCampaigns = [
+            1001 => ['id' => 1001, 'name' => 'Summer Brand Awareness — Albania', 'status' => 'active', 'type' => 'cpm', 'start_date' => '2025-06-01', 'end_date' => '2025-08-31', 'model' => 'CPM', 'impressions' => 2847391, 'clicks' => 34182, 'conversions' => 1247, 'ctr' => 1.20, 'advertiser' => 'balkanads@gmail.com', 'budget' => 15000.00, 'spend' => 11234.50, 'description' => 'Brand awareness campaign targeting Albanian audience during summer season.', 'marketing_objective' => 'brand_awareness', 'bid_amount' => 2.50, 'daily_budget' => 500.00, 'currency' => 'EUR', 'frequency_cap' => 5, 'targeting_geo' => ['AL'], 'targeting_device' => ['desktop', 'mobile'], 'weight' => 5],
+            1002 => ['id' => 1002, 'name' => 'Kosovo E-Commerce CPC Drive', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-05-15', 'end_date' => '2025-09-15', 'model' => 'CPC', 'impressions' => 1523847, 'clicks' => 52391, 'conversions' => 3842, 'ctr' => 3.44, 'advertiser' => 'ecom-shop@adshqip.com', 'budget' => 25000.00, 'spend' => 18742.30, 'description' => 'E-commerce click campaign targeting Kosovo shoppers.', 'marketing_objective' => 'traffic', 'bid_amount' => 0.35, 'daily_budget' => 800.00, 'currency' => 'EUR', 'frequency_cap' => 10, 'targeting_geo' => ['XK'], 'targeting_device' => ['desktop', 'mobile', 'tablet'], 'weight' => 7],
+            1003 => ['id' => 1003, 'name' => 'Video Pre-Roll — Balkans Q3', 'status' => 'active', 'type' => 'cpv', 'start_date' => '2025-07-01', 'end_date' => '2025-09-30', 'model' => 'CPV', 'impressions' => 984231, 'clicks' => 14892, 'conversions' => 421, 'ctr' => 1.51, 'advertiser' => 'media-agency@tirana.al', 'budget' => 8000.00, 'spend' => 5120.80, 'description' => 'Video pre-roll ads across Balkan video platforms.', 'marketing_objective' => 'video_views', 'bid_amount' => 5.00, 'daily_budget' => 300.00, 'currency' => 'EUR', 'frequency_cap' => 3, 'targeting_geo' => ['AL', 'XK', 'MK'], 'targeting_device' => ['desktop', 'mobile'], 'weight' => 5],
+            1004 => ['id' => 1004, 'name' => 'App Install Campaign — Android', 'status' => 'paused', 'type' => 'cpa', 'start_date' => '2025-04-01', 'end_date' => '2025-07-31', 'model' => 'CPA', 'impressions' => 3214782, 'clicks' => 89234, 'conversions' => 12483, 'ctr' => 2.78, 'advertiser' => 'techstartup@gmail.com', 'budget' => 50000.00, 'spend' => 42180.00, 'description' => 'Cost-per-action app install campaign for Android devices.', 'marketing_objective' => 'app_installs', 'bid_amount' => 3.50, 'daily_budget' => 1500.00, 'currency' => 'EUR', 'frequency_cap' => 8, 'targeting_geo' => ['AL', 'XK', 'MK', 'ME', 'RS'], 'targeting_device' => ['mobile'], 'weight' => 8],
+            1005 => ['id' => 1005, 'name' => 'North Macedonia — Retargeting', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-06-15', 'end_date' => '2025-12-31', 'model' => 'CPC', 'impressions' => 567123, 'clicks' => 21847, 'conversions' => 892, 'ctr' => 3.85, 'advertiser' => 'advertiser@adshqip.com', 'budget' => 12000.00, 'spend' => 7890.20, 'description' => 'Retargeting campaign for North Macedonia users.', 'marketing_objective' => 'conversions', 'bid_amount' => 0.45, 'daily_budget' => 400.00, 'currency' => 'EUR', 'frequency_cap' => 12, 'targeting_geo' => ['MK'], 'targeting_device' => ['desktop', 'mobile'], 'weight' => 6],
+            1006 => ['id' => 1006, 'name' => 'Holiday Season Push Notification', 'status' => 'draft', 'type' => 'cpm', 'start_date' => '2025-11-15', 'end_date' => '2025-12-31', 'model' => 'CPM', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'newadvertiser@test.com', 'budget' => 5000.00, 'spend' => 0.00, 'description' => 'Push notification campaign for the holiday shopping season.', 'marketing_objective' => 'reach', 'bid_amount' => 1.80, 'daily_budget' => 200.00, 'currency' => 'EUR', 'frequency_cap' => 3, 'targeting_geo' => ['AL', 'XK'], 'targeting_device' => ['mobile'], 'weight' => 3],
+            1007 => ['id' => 1007, 'name' => 'Crypto Exchange — Lead Gen AL', 'status' => 'rejected', 'type' => 'cpa', 'start_date' => '2025-05-01', 'end_date' => '2025-06-30', 'model' => 'CPA', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'crypto-exchange@mail.com', 'budget' => 30000.00, 'spend' => 0.00, 'description' => 'Lead generation for a crypto exchange platform.', 'marketing_objective' => 'lead_generation', 'bid_amount' => 12.00, 'daily_budget' => 1000.00, 'currency' => 'EUR', 'frequency_cap' => 5, 'targeting_geo' => ['AL'], 'targeting_device' => ['desktop', 'mobile'], 'weight' => 5],
+            1008 => ['id' => 1008, 'name' => 'Balkan Travel CPC — Summer 2025', 'status' => 'completed', 'type' => 'cpc', 'start_date' => '2025-03-01', 'end_date' => '2025-05-31', 'model' => 'CPC', 'impressions' => 4128934, 'clicks' => 112847, 'conversions' => 8923, 'ctr' => 2.73, 'advertiser' => 'travelagency@balkans.com', 'budget' => 20000.00, 'spend' => 19847.60, 'description' => 'Summer travel promotion across the Balkans.', 'marketing_objective' => 'traffic', 'bid_amount' => 0.18, 'daily_budget' => 650.00, 'currency' => 'EUR', 'frequency_cap' => 10, 'targeting_geo' => ['AL', 'XK', 'MK', 'ME', 'RS', 'BA', 'HR'], 'targeting_device' => ['desktop', 'mobile', 'tablet'], 'weight' => 7],
+            1009 => ['id' => 1009, 'name' => 'Click-to-Watch Video — Tirana', 'status' => 'pending_review', 'type' => 'cpv_ctw', 'start_date' => '2025-08-01', 'end_date' => '2025-10-31', 'model' => 'CPV-CTW', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'videoads@albania.net', 'budget' => 7500.00, 'spend' => 0.00, 'description' => 'Click-to-watch video ad campaign targeting Tirana.', 'marketing_objective' => 'video_views', 'bid_amount' => 8.00, 'daily_budget' => 250.00, 'currency' => 'EUR', 'frequency_cap' => 2, 'targeting_geo' => ['AL'], 'targeting_device' => ['desktop', 'mobile'], 'weight' => 4],
+            1010 => ['id' => 1010, 'name' => 'Gaming App Install — Kosovo', 'status' => 'active', 'type' => 'cpa', 'start_date' => '2025-07-15', 'end_date' => '2025-11-30', 'model' => 'CPA', 'impressions' => 1892341, 'clicks' => 67234, 'conversions' => 5891, 'ctr' => 3.55, 'advertiser' => 'gamestudio@prishtina.xk', 'budget' => 35000.00, 'spend' => 21340.90, 'description' => 'Gaming app install campaign targeting Kosovo mobile users.', 'marketing_objective' => 'app_installs', 'bid_amount' => 4.00, 'daily_budget' => 1200.00, 'currency' => 'EUR', 'frequency_cap' => 6, 'targeting_geo' => ['XK'], 'targeting_device' => ['mobile'], 'weight' => 8],
+        ];
+
+        // Check demo campaigns
+        if (isset($demoCampaigns[$id])) {
+            $campaign = $demoCampaigns[$id];
+        } else {
+            // Generate basic details for demo IDs 1011-1030 (not in extended map)
+            $basicDemos = [
+                1011 => ['name' => 'Montenegro Tourism — Display', 'status' => 'active', 'type' => 'cpm', 'start_date' => '2025-06-01', 'end_date' => '2025-09-30', 'model' => 'CPM', 'impressions' => 723481, 'clicks' => 8923, 'conversions' => 342, 'ctr' => 1.23, 'advertiser' => 'tourism@montenegro.me', 'budget' => 10000.00, 'spend' => 6234.10],
+                1012 => ['name' => 'Serbian Marketplace — Conversions', 'status' => 'paused', 'type' => 'cpa', 'start_date' => '2025-04-15', 'end_date' => '2025-08-15', 'model' => 'CPA', 'impressions' => 2341782, 'clicks' => 45123, 'conversions' => 2341, 'ctr' => 1.93, 'advertiser' => 'marketplace@serbia.rs', 'budget' => 18000.00, 'spend' => 14230.70],
+                1013 => ['name' => 'Tirana Food Delivery — CPC Blitz', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-08-01', 'end_date' => '2025-10-31', 'model' => 'CPC', 'impressions' => 1345892, 'clicks' => 48723, 'conversions' => 2891, 'ctr' => 3.62, 'advertiser' => 'foodapp@tirana.al', 'budget' => 22000.00, 'spend' => 14280.40],
+                1014 => ['name' => 'Croatia Real Estate — Display CPM', 'status' => 'active', 'type' => 'cpm', 'start_date' => '2025-05-01', 'end_date' => '2025-11-30', 'model' => 'CPM', 'impressions' => 2134567, 'clicks' => 21345, 'conversions' => 567, 'ctr' => 1.00, 'advertiser' => 'realestate@zagreb.hr', 'budget' => 18000.00, 'spend' => 12450.30],
+                1015 => ['name' => 'Bosnia Auto Dealer — Lead Gen', 'status' => 'active', 'type' => 'cpa', 'start_date' => '2025-06-15', 'end_date' => '2025-12-15', 'model' => 'CPA', 'impressions' => 892341, 'clicks' => 34521, 'conversions' => 1823, 'ctr' => 3.87, 'advertiser' => 'autodealer@sarajevo.ba', 'budget' => 28000.00, 'spend' => 19870.50],
+                1016 => ['name' => 'Prishtina Fashion Week — Branding', 'status' => 'completed', 'type' => 'cpm', 'start_date' => '2025-03-15', 'end_date' => '2025-04-15', 'model' => 'CPM', 'impressions' => 3892341, 'clicks' => 42891, 'conversions' => 1234, 'ctr' => 1.10, 'advertiser' => 'fashionweek@prishtina.xk', 'budget' => 15000.00, 'spend' => 14920.00],
+                1017 => ['name' => 'Skopje EdTech — App Installs', 'status' => 'paused', 'type' => 'cpa', 'start_date' => '2025-05-01', 'end_date' => '2025-09-30', 'model' => 'CPA', 'impressions' => 1567234, 'clicks' => 42341, 'conversions' => 4892, 'ctr' => 2.70, 'advertiser' => 'edtech@skopje.mk', 'budget' => 20000.00, 'spend' => 15430.20],
+                1018 => ['name' => 'Durres Beach Hotels — Summer CPC', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-06-01', 'end_date' => '2025-09-30', 'model' => 'CPC', 'impressions' => 678923, 'clicks' => 28934, 'conversions' => 1234, 'ctr' => 4.26, 'advertiser' => 'hotels@durres.al', 'budget' => 9000.00, 'spend' => 6780.90],
+                1019 => ['name' => 'Albanian Telecom — Video Ads', 'status' => 'active', 'type' => 'cpv', 'start_date' => '2025-07-01', 'end_date' => '2025-12-31', 'model' => 'CPV', 'impressions' => 2345678, 'clicks' => 34567, 'conversions' => 892, 'ctr' => 1.47, 'advertiser' => 'telecom@albania.al', 'budget' => 40000.00, 'spend' => 22340.60],
+                1020 => ['name' => 'Podgorica Fitness — Retargeting CPC', 'status' => 'draft', 'type' => 'cpc', 'start_date' => '2025-09-01', 'end_date' => '2025-12-31', 'model' => 'CPC', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'fitness@podgorica.me', 'budget' => 6000.00, 'spend' => 0.00],
+                1021 => ['name' => 'Balkans Crypto Wallet — Brand CPM', 'status' => 'pending_review', 'type' => 'cpm', 'start_date' => '2025-09-15', 'end_date' => '2025-12-31', 'model' => 'CPM', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'cryptowallet@balkans.io', 'budget' => 45000.00, 'spend' => 0.00],
+                1022 => ['name' => 'Ljubljana SaaS — B2B Leads', 'status' => 'active', 'type' => 'cpa', 'start_date' => '2025-04-01', 'end_date' => '2025-10-31', 'model' => 'CPA', 'impressions' => 456789, 'clicks' => 18923, 'conversions' => 2341, 'ctr' => 4.14, 'advertiser' => 'saas@ljubljana.si', 'budget' => 32000.00, 'spend' => 24560.80],
+                1023 => ['name' => 'Vlora Restaurant Guide — Local CPC', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-06-01', 'end_date' => '2025-09-30', 'model' => 'CPC', 'impressions' => 234567, 'clicks' => 12345, 'conversions' => 567, 'ctr' => 5.26, 'advertiser' => 'restaurants@vlora.al', 'budget' => 4000.00, 'spend' => 3120.40],
+                1024 => ['name' => 'Novi Sad Music Festival — CPV', 'status' => 'completed', 'type' => 'cpv', 'start_date' => '2025-04-01', 'end_date' => '2025-07-15', 'model' => 'CPV', 'impressions' => 3456789, 'clicks' => 45678, 'conversions' => 2345, 'ctr' => 1.32, 'advertiser' => 'musicfest@novisad.rs', 'budget' => 12000.00, 'spend' => 11890.20],
+                1025 => ['name' => 'Pristina Uber Clone — Install CPA', 'status' => 'active', 'type' => 'cpa', 'start_date' => '2025-07-01', 'end_date' => '2025-12-31', 'model' => 'CPA', 'impressions' => 1234567, 'clicks' => 56789, 'conversions' => 6789, 'ctr' => 4.60, 'advertiser' => 'rideapp@prishtina.xk', 'budget' => 55000.00, 'spend' => 34560.70],
+                1026 => ['name' => 'Ohrid Lake Tourism — Display', 'status' => 'paused', 'type' => 'cpm', 'start_date' => '2025-05-15', 'end_date' => '2025-09-15', 'model' => 'CPM', 'impressions' => 1892345, 'clicks' => 19234, 'conversions' => 456, 'ctr' => 1.02, 'advertiser' => 'tourism@ohrid.mk', 'budget' => 8500.00, 'spend' => 6430.10],
+                1027 => ['name' => 'Shkodra Handicrafts — E-commerce CPC', 'status' => 'active', 'type' => 'cpc', 'start_date' => '2025-08-01', 'end_date' => '2025-11-30', 'model' => 'CPC', 'impressions' => 345678, 'clicks' => 15678, 'conversions' => 789, 'ctr' => 4.54, 'advertiser' => 'crafts@shkodra.al', 'budget' => 6000.00, 'spend' => 3890.50],
+                1028 => ['name' => 'Betting Platform — Rejected Gambling', 'status' => 'rejected', 'type' => 'cpc', 'start_date' => '2025-07-01', 'end_date' => '2025-12-31', 'model' => 'CPC', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'betting@offshore.com', 'budget' => 100000.00, 'spend' => 0.00],
+                1029 => ['name' => 'Gjakova Furniture — Click-to-Watch', 'status' => 'pending_review', 'type' => 'cpv_ctw', 'start_date' => '2025-09-01', 'end_date' => '2025-12-31', 'model' => 'CPV-CTW', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'furniture@gjakova.xk', 'budget' => 8000.00, 'spend' => 0.00],
+                1030 => ['name' => 'Berat Wine Tours — Seasonal CPM', 'status' => 'draft', 'type' => 'cpm', 'start_date' => '2025-10-01', 'end_date' => '2025-12-31', 'model' => 'CPM', 'impressions' => 0, 'clicks' => 0, 'conversions' => 0, 'ctr' => 0.00, 'advertiser' => 'winetours@berat.al', 'budget' => 3500.00, 'spend' => 0.00],
+            ];
+
+            if (isset($basicDemos[$id])) {
+                $campaign = array_merge(['id' => $id, 'description' => '', 'marketing_objective' => 'traffic', 'bid_amount' => 1.00, 'daily_budget' => 200.00, 'currency' => 'EUR', 'frequency_cap' => 5, 'targeting_geo' => [], 'targeting_device' => ['desktop', 'mobile'], 'weight' => 5], $basicDemos[$id]);
+            } else {
+                // Check session campaigns
+                $campaign = null;
+                $sessionCampaigns = session('created_campaigns', []);
+                foreach ($sessionCampaigns as $c) {
+                    if ($c['id'] === $id) {
+                        $campaign = $c;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!isset($campaign) || $campaign === null) {
+            return null;
+        }
+
+        // Apply status overrides
+        $statusOverrides = session('campaign_status_overrides', []);
+        if (isset($statusOverrides[$id])) {
+            $campaign['status'] = $statusOverrides[$id];
+        }
+
+        // Check if deleted
+        $deletedIds = session('deleted_campaign_ids', []);
+        if (in_array($id, $deletedIds)) {
+            return null;
+        }
+
+        return $campaign;
+    }
+
+    /**
+     * Show campaign details.
+     */
+    public function show(int $id)
+    {
+        $campaign = $this->findCampaign($id);
+        if (!$campaign) {
+            return redirect()->route('admin.campaigns')->with('success', 'Campaign not found.');
+        }
+
+        // Get group assignment
+        $assignments = session('campaign_group_assignments', []);
+        $groupName = null;
+        if (isset($assignments[$id])) {
+            $demoGroups = [1 => 'Summer 2025', 2 => 'Balkans — Brand Awareness', 3 => 'Performance Q3', 4 => 'Retargeting Pool', 5 => 'App Install Campaigns'];
+            $groupName = $demoGroups[$assignments[$id]] ?? null;
+            if (!$groupName) {
+                foreach (session('campaign_groups', []) as $g) {
+                    if ($g['id'] === $assignments[$id]) { $groupName = $g['name']; break; }
+                }
+            }
+        }
+
+        $campaign['group_name'] = $groupName;
+
+        return view('admin.campaigns.show', compact('campaign'));
+    }
+
+    /**
+     * Show the edit form for a campaign.
+     */
+    public function edit(int $id)
+    {
+        $campaign = $this->findCampaign($id);
+        if (!$campaign) {
+            return redirect()->route('admin.campaigns')->with('success', 'Campaign not found.');
+        }
+
+        // Campaign groups
+        $campaignGroups = [
+            ['id' => 1, 'name' => 'Summer 2025'],
+            ['id' => 2, 'name' => 'Balkans — Brand Awareness'],
+            ['id' => 3, 'name' => 'Performance Q3'],
+            ['id' => 4, 'name' => 'Retargeting Pool'],
+            ['id' => 5, 'name' => 'App Install Campaigns'],
+        ];
+        $sessionGroups = session('campaign_groups', []);
+        $campaignGroups = array_merge($campaignGroups, $sessionGroups);
+
+        // Get current group assignment
+        $assignments = session('campaign_group_assignments', []);
+        $campaign['group_id'] = $assignments[$id] ?? null;
+
+        $campaignTypes = [
+            'cpm' => 'CPM (Cost Per Mille)',
+            'cpc' => 'CPC (Cost Per Click)',
+            'cpa' => 'CPA (Cost Per Action)',
+            'cpv' => 'CPV (Cost Per View)',
+            'cpv_ctw' => 'CPV-CTW (Click-to-Watch)',
+        ];
+
+        $marketingObjectives = [
+            'brand_awareness' => 'Brand Awareness',
+            'reach' => 'Reach',
+            'traffic' => 'Traffic',
+            'engagement' => 'Engagement',
+            'app_installs' => 'App Installs',
+            'video_views' => 'Video Views',
+            'lead_generation' => 'Lead Generation',
+            'conversions' => 'Conversions',
+            'catalog_sales' => 'Catalog Sales',
+            'store_visits' => 'Store Visits',
+        ];
+
+        return view('admin.campaigns.edit', compact('campaign', 'campaignGroups', 'campaignTypes', 'marketingObjectives'));
+    }
+
+    /**
+     * Update a campaign.
+     */
+    public function update(Request $request, int $id)
+    {
+        $typeMap = ['cpm' => 'CPM', 'cpc' => 'CPC', 'cpa' => 'CPA', 'cpv' => 'CPV', 'cpv_ctw' => 'CPV-CTW'];
+
+        // Check if it's a session campaign
+        $sessionCampaigns = session('created_campaigns', []);
+        $found = false;
+        foreach ($sessionCampaigns as &$c) {
+            if ($c['id'] === $id) {
+                $c['name'] = $request->input('name', $c['name']);
+                $c['type'] = $request->input('campaign_type', $c['type']);
+                $c['model'] = $typeMap[$c['type']] ?? strtoupper($c['type']);
+                $c['status'] = $request->input('status', $c['status']);
+                $c['start_date'] = $request->input('start_date', $c['start_date']);
+                $c['end_date'] = $request->input('end_date', $c['end_date']);
+                $c['budget'] = (float) $request->input('total_budget', $c['budget']);
+                $c['description'] = $request->input('description', $c['description'] ?? '');
+                $found = true;
+                break;
+            }
+        }
+        unset($c);
+
+        if ($found) {
+            session(['created_campaigns' => $sessionCampaigns]);
+        } else {
+            // For demo campaigns, store edits in session
+            $edits = session('campaign_edits', []);
+            $edits[$id] = [
+                'name' => $request->input('name'),
+                'type' => $request->input('campaign_type'),
+                'model' => $typeMap[$request->input('campaign_type')] ?? strtoupper($request->input('campaign_type', '')),
+                'status' => $request->input('status'),
+                'start_date' => $request->input('start_date'),
+                'end_date' => $request->input('end_date'),
+                'budget' => (float) $request->input('total_budget', 0),
+                'description' => $request->input('description', ''),
+                'marketing_objective' => $request->input('marketing_objective', 'traffic'),
+                'bid_amount' => (float) $request->input('bid_amount', 0),
+                'daily_budget' => (float) $request->input('daily_budget', 0),
+                'frequency_cap' => $request->input('frequency_cap'),
+                'weight' => (int) $request->input('weight', 5),
+            ];
+            session(['campaign_edits' => $edits]);
+
+            // Also store status override so index reflects the change
+            $overrides = session('campaign_status_overrides', []);
+            $overrides[$id] = $request->input('status');
+            session(['campaign_status_overrides' => $overrides]);
+        }
+
+        // Update group assignment if provided
+        $groupId = $request->input('campaign_group_id');
+        if ($groupId) {
+            $assignments = session('campaign_group_assignments', []);
+            $assignments[$id] = (int) $groupId;
+            session(['campaign_group_assignments' => $assignments]);
+        }
+
+        return redirect()->route('admin.campaigns.show', $id)->with('success', 'Campaign updated successfully!');
+    }
+
+    /**
+     * Delete a campaign.
+     */
+    public function destroy(int $id)
+    {
+        // Add to deleted IDs in session
+        $deletedIds = session('deleted_campaign_ids', []);
+        if (!in_array($id, $deletedIds)) {
+            $deletedIds[] = $id;
+            session(['deleted_campaign_ids' => $deletedIds]);
+        }
+
+        // Also remove from session-created campaigns if applicable
+        $sessionCampaigns = session('created_campaigns', []);
+        $sessionCampaigns = array_filter($sessionCampaigns, fn($c) => $c['id'] !== $id);
+        session(['created_campaigns' => array_values($sessionCampaigns)]);
+
+        return redirect()->route('admin.campaigns')->with('success', 'Campaign #' . $id . ' has been deleted.');
+    }
+}
