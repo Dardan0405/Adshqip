@@ -136,6 +136,8 @@
                         <th class="text-left px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Model</th>
                         <th class="text-right px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Impressions</th>
                         <th class="text-right px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Clicks</th>
+                        <th class="text-right px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Views</th>
+                        <th class="text-right px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">AdBlock</th>
                         <th class="text-right px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Conversions</th>
                         <th class="text-right px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">CTR (%)</th>
                         <th class="text-center px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Actions</th>
@@ -210,6 +212,21 @@
                             {{-- Clicks --}}
                             <td class="px-5 py-3.5 text-right font-medium text-gray-800 tabular-nums">
                                 {{ number_format($campaign['clicks']) }}
+                            </td>
+                            {{-- Views (Viewable Impressions) --}}
+                            <td class="px-5 py-3.5 text-right font-medium text-gray-800 tabular-nums">
+                                {{ number_format($campaign['views']) }}
+                            </td>
+                            {{-- AdBlock Detected --}}
+                            <td class="px-5 py-3.5 text-right tabular-nums">
+                                @if($campaign['adblock_detected'] > 0)
+                                    <span class="inline-flex items-center gap-1 font-semibold text-red-600">
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                        {{ number_format($campaign['adblock_detected']) }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-400">0</span>
+                                @endif
                             </td>
                             {{-- Conversions --}}
                             <td class="px-5 py-3.5 text-right font-medium text-gray-800 tabular-nums">
@@ -317,7 +334,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="12" class="px-5 py-12 text-center">
+                            <td colspan="14" class="px-5 py-12 text-center">
                                 <div class="flex flex-col items-center">
                                     <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-3">
                                         <svg class="w-6 h-6 text-gray-400" viewBox="0 0 24 24" fill="none"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -688,7 +705,7 @@
         html += '<h1>AdsHqip — Campaigns Report</h1>';
         html += '<p class="subtitle">Exported on ' + new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'}) + ' at ' + new Date().toLocaleTimeString() + '</p>';
         html += '<table><thead><tr>';
-        html += '<th>ID</th><th>Status</th><th>Campaign Name</th><th>Type</th><th>Start Date</th><th>End Date</th><th>Model</th><th class="text-right">Impressions</th><th class="text-right">Clicks</th><th class="text-right">Conversions</th><th class="text-right">CTR</th><th class="text-right">Budget</th><th class="text-right">Spend</th>';
+        html += '<th>ID</th><th>Status</th><th>Campaign Name</th><th>Type</th><th>Start Date</th><th>End Date</th><th>Model</th><th class="text-right">Impressions</th><th class="text-right">Clicks</th><th class="text-right">Views</th><th class="text-right">AdBlock</th><th class="text-right">Conversions</th><th class="text-right">CTR</th><th class="text-right">Budget</th><th class="text-right">Spend</th>';
         html += '</tr></thead><tbody>';
 
         var statusLabels = {active:'Active',paused:'Paused',draft:'Draft',completed:'Completed',rejected:'Rejected',pending_review:'Pending Review'};
@@ -704,6 +721,8 @@
             html += '<td>' + c.model + '</td>';
             html += '<td class="text-right">' + Number(c.impressions).toLocaleString() + '</td>';
             html += '<td class="text-right">' + Number(c.clicks).toLocaleString() + '</td>';
+            html += '<td class="text-right">' + Number(c.views).toLocaleString() + '</td>';
+            html += '<td class="text-right">' + Number(c.adblock_detected).toLocaleString() + '</td>';
             html += '<td class="text-right">' + Number(c.conversions).toLocaleString() + '</td>';
             html += '<td class="text-right">' + Number(c.ctr).toFixed(2) + '%</td>';
             html += '<td class="text-right">€' + Number(c.budget).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + '</td>';

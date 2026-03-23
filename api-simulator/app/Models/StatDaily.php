@@ -27,6 +27,7 @@ class StatDaily extends Model
         'unique_clicks',
         'conversions',
         'viewable_impressions',
+        'adblock_detected',
         'revenue',
         'publisher_earnings',
         'ecpm',

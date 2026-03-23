@@ -346,6 +346,40 @@
                 </div>
             </div>
 
+            {{-- Country / Geo Targeting --}}
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Country Targeting</label>
+                <select name="targeting_geo[]" multiple class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white min-h-[120px]">
+                    @php
+                        $selectedGeo = $campaign['targeting_geo'] ?? [];
+                    @endphp
+                    @foreach($countries as $country)
+                        <option value="{{ $country['code'] }}" {{ is_array($selectedGeo) && in_array($country['code'], $selectedGeo) ? 'selected' : '' }}>{{ $country['name'] }} ({{ $country['code'] }})</option>
+                    @endforeach
+                </select>
+                <p class="text-[10px] text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple countries</p>
+            </div>
+
+            {{-- Device Targeting --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Targeting Type (Device)</label>
+                    <select name="device_type" id="deviceTypeSelect" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white">
+                        <option value="all">All Devices</option>
+                        <option value="desktop">Desktop</option>
+                        <option value="mobile">Mobile</option>
+                        <option value="tablet">Tablet</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Select Device</label>
+                    <select name="target_devices[]" id="deviceListSelect" multiple class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white min-h-[80px]">
+                        {{-- Populated via JS --}}
+                    </select>
+                    <p class="text-[10px] text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                </div>
+            </div>
+
             <div class="border-t border-gray-100"></div>
 
             {{-- Traffic Source Bidding --}}
@@ -400,6 +434,7 @@
                                                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                                             </button>
                                             <input type="hidden" name="traffic_sources[{{ $index }}][id]" value="{{ $ts['id'] ?? '' }}">
+                                            <input type="hidden" name="traffic_sources[{{ $index }}][name]" value="{{ $ts['name'] ?? 'Source #' . ($ts['id'] ?? '') }}">
                                             <input type="hidden" name="traffic_sources[{{ $index }}][bid]" value="{{ $ts['bid'] ?? 0 }}">
                                             <input type="hidden" name="traffic_sources[{{ $index }}][status]" value="{{ $ts['status'] ?? 'active' }}">
                                         </td>
@@ -475,6 +510,7 @@
                                                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                                             </button>
                                             <input type="hidden" name="country_bids[{{ $index }}][code]" value="{{ $cb['code'] ?? '' }}">
+                                            <input type="hidden" name="country_bids[{{ $index }}][name]" value="{{ $cb['name'] ?? $cb['code'] ?? '' }}">
                                             <input type="hidden" name="country_bids[{{ $index }}][pricing]" value="{{ $cb['pricing'] ?? 'CPM' }}">
                                             <input type="hidden" name="country_bids[{{ $index }}][bid]" value="{{ $cb['bid'] ?? 0 }}">
                                             <input type="hidden" name="country_bids[{{ $index }}][status]" value="{{ $cb['status'] ?? 'active' }}">
@@ -895,6 +931,7 @@ function addTrafficSource() {
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             </button>
             <input type="hidden" name="traffic_sources[${tsCounter}][id]" value="${id}">
+            <input type="hidden" name="traffic_sources[${tsCounter}][name]" value="${name}">
             <input type="hidden" name="traffic_sources[${tsCounter}][bid]" value="${bid}">
             <input type="hidden" name="traffic_sources[${tsCounter}][status]" value="${status}">
         </td>
@@ -930,6 +967,7 @@ function addCountryBid() {
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             </button>
             <input type="hidden" name="country_bids[${cbCounter}][code]" value="${code}">
+            <input type="hidden" name="country_bids[${cbCounter}][name]" value="${name}">
             <input type="hidden" name="country_bids[${cbCounter}][pricing]" value="${pricing}">
             <input type="hidden" name="country_bids[${cbCounter}][bid]" value="${bid}">
             <input type="hidden" name="country_bids[${cbCounter}][status]" value="${status}">
@@ -948,6 +986,61 @@ function showNotification(message, type = 'success') {
     document.body.appendChild(notification);
     setTimeout(() => notification.remove(), 3000);
 }
+
+// ─── Device list by type ───
+const devicesByType = {
+    all: ['Windows PC','MacBook','iMac','Linux Desktop','iPhone','Samsung Galaxy','Google Pixel','iPad','Android Tablet','Huawei','Xiaomi','OnePlus','Oppo'],
+    desktop: ['Windows PC','MacBook','iMac','Linux Desktop','Chromebook'],
+    mobile: ['iPhone','Samsung Galaxy','Google Pixel','Huawei','Xiaomi','OnePlus','Oppo','Vivo','Realme','Nokia'],
+    tablet: ['iPad','iPad Pro','Samsung Tab','Amazon Fire','Lenovo Tab','Microsoft Surface'],
+};
+
+// ─── Device type change ───
+const savedDevices = @json($campaign['targeting_device'] ?? []);
+document.getElementById('deviceTypeSelect').addEventListener('change', function() {
+    const sel = document.getElementById('deviceListSelect');
+    sel.innerHTML = '';
+    (devicesByType[this.value] || []).forEach(d => {
+        const o = document.createElement('option');
+        o.value = d.toLowerCase().replace(/\s+/g, '_');
+        o.textContent = d;
+        if (Array.isArray(savedDevices) && savedDevices.includes(o.value)) {
+            o.selected = true;
+        }
+        sel.appendChild(o);
+    });
+});
+document.getElementById('deviceTypeSelect').dispatchEvent(new Event('change'));
+
+// ─── Form submission: Convert multi-select to JSON ───
+document.getElementById('editCampaignForm').addEventListener('submit', function(e) {
+    // Convert targeting_geo multi-select to JSON
+    const geoSelect = document.querySelector('select[name="targeting_geo[]"]');
+    if (geoSelect) {
+        const selectedGeo = Array.from(geoSelect.selectedOptions).map(opt => opt.value);
+        geoSelect.name = '';
+        if (selectedGeo.length > 0) {
+            const hiddenGeo = document.createElement('input');
+            hiddenGeo.type = 'hidden';
+            hiddenGeo.name = 'targeting_geo';
+            hiddenGeo.value = JSON.stringify(selectedGeo);
+            this.appendChild(hiddenGeo);
+        }
+    }
+
+    // Convert targeting_device multi-select to JSON
+    const deviceSelect = document.querySelector('select[name="target_devices[]"]');
+    if (deviceSelect) {
+        const selectedDevices = Array.from(deviceSelect.selectedOptions).map(opt => opt.value);
+        if (selectedDevices.length > 0) {
+            const hiddenDevice = document.createElement('input');
+            hiddenDevice.type = 'hidden';
+            hiddenDevice.name = 'targeting_device';
+            hiddenDevice.value = JSON.stringify(selectedDevices);
+            this.appendChild(hiddenDevice);
+        }
+    }
+});
 
 // ─── Create Pixel (AJAX) ───
 function createPixel() {

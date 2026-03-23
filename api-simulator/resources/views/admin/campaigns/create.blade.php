@@ -902,7 +902,7 @@ function addTrafficSource() {
         </td>
     `;
     // Hidden inputs
-    const inputs = `<input type="hidden" name="traffic_sources[${tsCounter}][id]" value="${id}"><input type="hidden" name="traffic_sources[${tsCounter}][bid]" value="${bid}"><input type="hidden" name="traffic_sources[${tsCounter}][status]" value="${status}">`;
+    const inputs = `<input type="hidden" name="traffic_sources[${tsCounter}][id]" value="${id}"><input type="hidden" name="traffic_sources[${tsCounter}][name]" value="${name}"><input type="hidden" name="traffic_sources[${tsCounter}][bid]" value="${bid}"><input type="hidden" name="traffic_sources[${tsCounter}][status]" value="${status}">`;
     row.querySelector('td:first-child').insertAdjacentHTML('beforeend', inputs);
     document.getElementById('tsBody').appendChild(row);
 
@@ -937,7 +937,7 @@ function addCountryBid() {
             </button>
         </td>
     `;
-    const inputs = `<input type="hidden" name="country_bids[${cbCounter}][code]" value="${code}"><input type="hidden" name="country_bids[${cbCounter}][pricing]" value="${pricing}"><input type="hidden" name="country_bids[${cbCounter}][bid]" value="${bid}"><input type="hidden" name="country_bids[${cbCounter}][status]" value="${status}">`;
+    const inputs = `<input type="hidden" name="country_bids[${cbCounter}][code]" value="${code}"><input type="hidden" name="country_bids[${cbCounter}][name]" value="${name}"><input type="hidden" name="country_bids[${cbCounter}][pricing]" value="${pricing}"><input type="hidden" name="country_bids[${cbCounter}][bid]" value="${bid}"><input type="hidden" name="country_bids[${cbCounter}][status]" value="${status}">`;
     row.querySelector('td:first-child').insertAdjacentHTML('beforeend', inputs);
     document.getElementById('cbBody').appendChild(row);
 

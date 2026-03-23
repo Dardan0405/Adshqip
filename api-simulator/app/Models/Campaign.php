@@ -106,19 +106,13 @@ class Campaign extends Model
         return $this->belongsTo(PixelTracker::class, 'pixel_tracker_id');
     }
 
-    // Tracking relationships (to be implemented later)
-    // public function impressions()
-    // {
-    //     return $this->hasMany(Impression::class, 'campaign_id');
-    // }
+    public function ads()
+    {
+        return $this->hasMany(Ad::class, 'campaign_id');
+    }
 
-    // public function clicks()
-    // {
-    //     return $this->hasMany(Click::class, 'campaign_id');
-    // }
-
-    // public function conversions()
-    // {
-    //     return $this->hasMany(Conversion::class, 'campaign_id');
-    // }
+    public function stats()
+    {
+        return $this->hasMany(StatDaily::class, 'campaign_id');
+    }
 }

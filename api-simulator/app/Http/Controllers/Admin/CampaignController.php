@@ -8,6 +8,7 @@ use App\Models\AdCreative;
 use App\Models\Campaign;
 use App\Models\CampaignGroup;
 use App\Models\PixelTracker;
+use App\Models\StatDaily;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -18,19 +19,26 @@ class CampaignController extends Controller
      */
     public function index(Request $request)
     {
-        // Get all campaigns with their relationships
+        // Get all campaigns with their relationships and aggregated stats
         $campaigns = Campaign::with(['group', 'advertiser'])
+            ->withSum('stats', 'impressions')
+            ->withSum('stats', 'clicks')
+            ->withSum('stats', 'conversions')
+            ->withSum('stats', 'revenue')
+            ->withSum('stats', 'viewable_impressions')
+            ->withSum('stats', 'adblock_detected')
             ->where('is_deleted', false)
             ->orderBy('created_at', 'desc')
             ->get();
 
         // Transform campaigns to match the expected array format for the view
         $allCampaigns = $campaigns->map(function ($campaign) {
-            // Set metrics to 0 for now (tracking models will be implemented later)
-            $impressions = 0;
-            $clicks = 0;
-            $conversions = 0;
-            $spend = (float)($campaign->total_budget - $campaign->remaining_budget);
+            $impressions = (int) ($campaign->stats_sum_impressions ?? 0);
+            $clicks = (int) ($campaign->stats_sum_clicks ?? 0);
+            $conversions = (int) ($campaign->stats_sum_conversions ?? 0);
+            $spend = (float) ($campaign->stats_sum_revenue ?? ($campaign->total_budget - $campaign->remaining_budget));
+            $views = (int) ($campaign->stats_sum_viewable_impressions ?? 0);
+            $adblockDetected = (int) ($campaign->stats_sum_adblock_detected ?? 0);
 
             return [
                 'id' => $campaign->id,
@@ -47,6 +55,8 @@ class CampaignController extends Controller
                 'advertiser' => $campaign->advertiser->email ?? 'Unknown',
                 'budget' => (float)$campaign->total_budget,
                 'spend' => $spend,
+                'views' => $views,
+                'adblock_detected' => $adblockDetected,
                 'group' => $campaign->group ? $campaign->group->name : null,
                 'group_id' => $campaign->group_id,
             ];
@@ -600,7 +610,12 @@ class CampaignController extends Controller
      */
     public function show(int $id)
     {
-        $campaign = Campaign::with(['group', 'advertiser'])->find($id);
+        $campaign = Campaign::with(['group', 'advertiser'])
+            ->withSum('stats', 'impressions')
+            ->withSum('stats', 'clicks')
+            ->withSum('stats', 'conversions')
+            ->withSum('stats', 'revenue')
+            ->find($id);
 
         if (!$campaign || $campaign->is_deleted) {
             return redirect()
@@ -608,11 +623,10 @@ class CampaignController extends Controller
                 ->with('error', 'Campaign not found');
         }
 
-        // Set metrics to 0 for now (tracking models will be implemented later)
-        $impressions = 0;
-        $clicks = 0;
-        $conversions = 0;
-        $spend = (float)($campaign->total_budget - $campaign->remaining_budget);
+        $impressions = (int) ($campaign->stats_sum_impressions ?? 0);
+        $clicks = (int) ($campaign->stats_sum_clicks ?? 0);
+        $conversions = (int) ($campaign->stats_sum_conversions ?? 0);
+        $spend = (float) ($campaign->stats_sum_revenue ?? ($campaign->total_budget - $campaign->remaining_budget));
 
         $campaignData = [
             'id' => $campaign->id,
@@ -721,6 +735,8 @@ class CampaignController extends Controller
             'frequency_cap' => $campaign->frequency_cap,
             'targeting_schedule' => $campaign->targeting_schedule,
             'targeting_region' => $campaign->targeting_region,
+            'targeting_geo' => $campaign->targeting_geo,
+            'targeting_device' => $campaign->targeting_device,
             'traffic_sources' => $campaign->traffic_sources,
             'country_bids' => $campaign->country_bids,
             'ad_formats' => $campaign->ad_formats,
@@ -859,6 +875,8 @@ class CampaignController extends Controller
             'end_date' => 'nullable|date|after:start_date',
             'frequency_cap' => 'nullable|integer|min:1',
             'weight' => 'nullable|integer|min:1|max:10',
+            'targeting_geo' => 'nullable|json',
+            'targeting_device' => 'nullable|json',
             'targeting_region' => 'nullable|array',
             'targeting_region.*' => 'string',
             'traffic_sources' => 'nullable|array',
@@ -895,9 +913,23 @@ class CampaignController extends Controller
             $validated['ad_formats'] = array_values($validated['ad_formats']);
         }
 
-        // If region/formats not sent, set to null (unchecked all)
+        // Parse JSON fields if they're strings
+        if (isset($validated['targeting_geo']) && is_string($validated['targeting_geo'])) {
+            $validated['targeting_geo'] = json_decode($validated['targeting_geo'], true);
+        }
+        if (isset($validated['targeting_device']) && is_string($validated['targeting_device'])) {
+            $validated['targeting_device'] = json_decode($validated['targeting_device'], true);
+        }
+
+        // If region/formats/geo/device not sent, set to null (unchecked all)
         if (!$request->has('targeting_region')) {
             $validated['targeting_region'] = null;
+        }
+        if (!$request->has('targeting_geo')) {
+            $validated['targeting_geo'] = null;
+        }
+        if (!$request->has('targeting_device')) {
+            $validated['targeting_device'] = null;
         }
         if (!$request->has('ad_formats')) {
             $validated['ad_formats'] = null;
