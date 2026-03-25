@@ -152,6 +152,7 @@ class AdCreativeController extends Controller
             'campaign_id' => $ad->campaign_id,
             'campaign_name' => $ad->campaign ? $ad->campaign->name : '—',
             'ad_type' => $ad->ad_type,
+            'ad_format' => $this->getAdFormat($ad),
             'status' => $ad->status,
             'destination_url' => $ad->destination_url,
             'display_url' => $ad->display_url,
@@ -159,9 +160,12 @@ class AdCreativeController extends Controller
             'body_text' => $ad->body_text,
             'call_to_action' => $ad->call_to_action,
             'brand_name' => $ad->brand_name,
+            'sponsored_label' => $ad->sponsored_label,
             'weight' => $ad->weight ?? 5,
             'file_type' => $creative ? $creative->file_type : null,
             'file_path' => $creative ? $creative->file_path : null,
+            'video_url' => $creative ? $creative->video_url : null,
+            'thumbnail_path' => $creative ? $creative->thumbnail_path : null,
             'width' => $creative ? $creative->width : null,
             'height' => $creative ? $creative->height : null,
             'alt_text' => $creative ? $creative->alt_text : null,
@@ -222,13 +226,14 @@ class AdCreativeController extends Controller
             'body_text' => 'nullable|string',
             'call_to_action' => 'nullable|string|max:50',
             'brand_name' => 'nullable|string|max:100',
+            'sponsored_label' => 'nullable|string|max:100',
             'weight' => 'required|integer|min:1|max:10',
             'alt_text' => 'nullable|string|max:255',
             'width' => 'nullable|integer|min:0',
             'height' => 'nullable|integer|min:0',
         ]);
 
-        $ad->update([
+        $updateData = [
             'name' => $request->input('name'),
             'campaign_id' => $request->input('campaign_id'),
             'ad_type' => $request->input('ad_type'),
@@ -240,7 +245,14 @@ class AdCreativeController extends Controller
             'call_to_action' => $request->input('call_to_action'),
             'brand_name' => $request->input('brand_name'),
             'weight' => $request->input('weight'),
-        ]);
+        ];
+
+        // Save sponsored_label if provided (rewarded video reward type)
+        if ($request->has('sponsored_label')) {
+            $updateData['sponsored_label'] = $request->input('sponsored_label');
+        }
+
+        $ad->update($updateData);
 
         // Update or create primary creative for dimensions
         $creative = $ad->primaryCreative;
@@ -356,6 +368,7 @@ class AdCreativeController extends Controller
             'body_text' => $ad->body_text,
             'call_to_action' => $ad->call_to_action,
             'brand_name' => $ad->brand_name,
+            'sponsored_label' => $ad->sponsored_label,
             'weight' => $ad->weight ?? 5,
             'file_type' => $creative ? $creative->file_type : null,
             'file_path' => $creative ? $creative->file_path : null,
@@ -363,6 +376,7 @@ class AdCreativeController extends Controller
             'height' => $creative ? $creative->height : null,
             'alt_text' => $creative ? $creative->alt_text : null,
             'file_size_kb' => $creative && $creative->file_size_bytes ? number_format($creative->file_size_bytes / 1024, 1) : null,
+            'ad_format' => $this->getAdFormat($ad),
         ];
 
         return view('admin.adformats.demo', ['ad' => $adData]);
@@ -961,7 +975,531 @@ SCRIPT;
         $height = $creative->height ?? null;
         $tracking = $this->trackingScript($id, $countryParam);
 
-        // Popunder / interstitial / direct link — URL-only ads
+        // Determine the ad format from campaign ad_formats metadata
+        $adFormat = $this->getAdFormat($ad);
+
+        // ── SOCIAL BAR ── (must be checked before generic text ad since social_bar uses ad_type=text)
+        if ($adFormat === 'social_bar') {
+            $headline = e($ad->headline ?: $ad->name);
+            $body = e($ad->body_text ?: '');
+            $cta = e($ad->call_to_action ?: 'Learn More');
+            $iconUrl = ($creative && $creative->file_path) ? asset($creative->file_path) : '';
+            $iconTag = $iconUrl ? "<img src=\"{$iconUrl}\" style=\"width:32px;height:32px;border-radius:6px;object-fit:cover;flex-shrink:0;\">" : '<div style="width:32px;height:32px;border-radius:6px;background:#4285f4;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-weight:bold;font-size:12px;">Ad</div>';
+            $html = <<<HTML
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Ad</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:transparent}
+.social-bar{position:fixed;top:12px;right:12px;width:360px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#fff;padding:10px 14px;border-radius:10px;display:flex;align-items:center;gap:10px;z-index:99999;box-shadow:0 4px 24px rgba(0,0,0,.25);animation:slideIn .4s ease}
+.social-bar-content{flex:1;min-width:0}
+.social-bar-title{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.social-bar-body{font-size:10px;color:rgba(255,255,255,.6);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.social-bar-cta{padding:5px 14px;background:#4285f4;color:#fff;border-radius:5px;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap;transition:background .2s;flex-shrink:0}
+.social-bar-cta:hover{background:#3367d6}
+.social-bar-close{    width: 12px;
+    height: 12px;
+    background: rgba(255, 255, 255, .15);
+    /* border: 1px solid rgba(255, 255, 255, .2); */
+    /* border-radius: 50%; */
+    cursor: pointer;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: all .2s;
+    position: absolute;
+    top: 3px;
+    right: 2px;
+    padding: 0;
+    background: transparent;
+    border: 0;}
+.social-bar-close:hover{background:rgba(255,255,255,.35)}
+.social-bar-label{font-size:8px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;position:absolute;bottom:3px;right:10px}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+</style></head>
+<body>
+<div class="social-bar" id="aq-ad">
+    <span class="social-bar-label">Ad</span>
+    <button class="social-bar-close" onclick="event.stopPropagation();this.parentElement.remove();"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1l-8 8" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    {$iconTag}
+    <div class="social-bar-content">
+        <div class="social-bar-title">{$headline}</div>
+        <div class="social-bar-body">{$body}</div>
+    </div>
+    <a href="{$clickUrl}" target="_blank" rel="noopener" class="social-bar-cta">{$cta}</a>
+</div>
+{$tracking}
+</body></html>
+HTML;
+            return $this->adResponse($html);
+        }
+
+        // ── TEXT AD ──
+        if ($ad->ad_type === 'text') {
+            $headline = e($ad->headline ?: $ad->name);
+            $body = nl2br(e($ad->body_text ?: ''));
+            $cta = e($ad->call_to_action ?: 'Learn More');
+            $displayUrl = e($ad->display_url ?: parse_url($ad->destination_url, PHP_URL_HOST) ?: '');
+            $html = <<<HTML
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Ad</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+.text-ad{padding:12px 16px;border:1px solid #e0e0e0;border-radius:8px;background:#fff;max-width:400px;cursor:pointer}
+.text-ad:hover{border-color:#4285f4;box-shadow:0 1px 4px rgba(66,133,244,.15)}
+.text-ad-headline{font-size:16px;font-weight:600;color:#1a0dab;margin-bottom:4px;text-decoration:none}
+.text-ad-headline:hover{text-decoration:underline}
+.text-ad-url{font-size:12px;color:#006621;margin-bottom:4px}
+.text-ad-body{font-size:13px;color:#545454;line-height:1.4}
+.text-ad-cta{display:inline-block;margin-top:8px;padding:6px 16px;background:#4285f4;color:#fff;border-radius:4px;font-size:12px;font-weight:600;text-decoration:none}
+.text-ad-cta:hover{background:#3367d6}
+.text-ad-label{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+</style></head>
+<body>
+<div class="text-ad" id="aq-ad" onclick="window.open('{$clickUrl}','_blank')">
+    <div class="text-ad-label">Sponsored</div>
+    <a href="{$clickUrl}" target="_blank" rel="noopener" class="text-ad-headline">{$headline}</a>
+    <div class="text-ad-url">{$displayUrl}</div>
+    <div class="text-ad-body">{$body}</div>
+    <a href="{$clickUrl}" target="_blank" rel="noopener" class="text-ad-cta">{$cta}</a>
+</div>
+{$tracking}
+</body></html>
+HTML;
+            return $this->adResponse($html);
+        }
+
+        // ── NATIVE AD ──
+        if ($ad->ad_type === 'native') {
+            $headline = e($ad->headline ?: $ad->name);
+            $body = e($ad->body_text ?: '');
+            $brand = e($ad->brand_name ?: '');
+            $cta = e($ad->call_to_action ?: 'Learn More');
+            $imgTag = '';
+            if ($creative && $creative->file_path) {
+                $imgUrl = asset($creative->file_path);
+                $imgTag = "<img src=\"{$imgUrl}\" alt=\"" . e($ad->name) . "\" style=\"width:100%;height:180px;object-fit:cover;border-radius:8px 8px 0 0;\">";
+            }
+            $html = <<<HTML
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Ad</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+.native-ad{border:1px solid #e0e0e0;border-radius:8px;background:#fff;max-width:320px;overflow:hidden;cursor:pointer}
+.native-ad:hover{box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.native-ad-content{padding:12px 16px}
+.native-ad-label{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.native-ad-headline{font-size:15px;font-weight:600;color:#1a1a1a;margin-bottom:4px;line-height:1.3}
+.native-ad-body{font-size:13px;color:#666;line-height:1.4;margin-bottom:8px}
+.native-ad-footer{display:flex;align-items:center;justify-content:space-between}
+.native-ad-brand{font-size:11px;color:#999;font-weight:500}
+.native-ad-cta{padding:6px 14px;background:#4285f4;color:#fff;border-radius:4px;font-size:12px;font-weight:600;text-decoration:none}
+.native-ad-cta:hover{background:#3367d6}
+</style></head>
+<body>
+<div class="native-ad" id="aq-ad" onclick="window.open('{$clickUrl}','_blank')">
+    {$imgTag}
+    <div class="native-ad-content">
+        <div class="native-ad-label">Sponsored</div>
+        <div class="native-ad-headline">{$headline}</div>
+        <div class="native-ad-body">{$body}</div>
+        <div class="native-ad-footer">
+            <span class="native-ad-brand">{$brand}</span>
+            <a href="{$clickUrl}" target="_blank" rel="noopener" class="native-ad-cta">{$cta}</a>
+        </div>
+    </div>
+</div>
+{$tracking}
+</body></html>
+HTML;
+            return $this->adResponse($html);
+        }
+
+        // ── REWARDED VIDEO AD (must watch full video, no skip) ──
+        if ($ad->ad_type === 'video' && $adFormat === 'rewarded') {
+            $videoSrc = '';
+            $posterTag = '';
+            if ($creative) {
+                if ($creative->video_url) {
+                    $videoSrc = e($creative->video_url);
+                } elseif ($creative->file_path) {
+                    $videoSrc = asset($creative->file_path);
+                }
+                if ($creative->thumbnail_path) {
+                    $posterTag = 'poster="' . asset($creative->thumbnail_path) . '"';
+                }
+            }
+
+            if (!$videoSrc) {
+                $name = e($ad->name);
+                $html = <<<HTML
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Ad</title><style>*{margin:0;padding:0}</style></head>
+<body>
+<a href="{$clickUrl}" target="_blank" rel="noopener" id="aq-ad" style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;font-family:sans-serif;font-size:13px;color:#666;text-decoration:none;background:#000;">
+    <span style="color:#fff">{$name}</span>
+</a>
+{$tracking}
+</body></html>
+HTML;
+                return $this->adResponse($html);
+            }
+
+            $w = $width ? "width=\"{$width}\"" : 'width="480"';
+            $h = $height ? "height=\"{$height}\"" : 'height="320"';
+            $ctaText = e($ad->call_to_action ?: 'Claim Reward');
+            $headline = e($ad->headline ?: $ad->name);
+            $rewardAmount = e($ad->body_text ?: '');
+            $rewardType = e($ad->sponsored_label ?: 'Reward');
+            $rewardLabel = $rewardAmount ? "{$rewardAmount} {$rewardType}" : $rewardType;
+            $html = <<<HTML
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Ad</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+.video-container{position:relative;max-width:100%}
+video{max-width:100%;display:block;border-radius:4px}
+.reward-badge{position:absolute;top:8px;right:8px;display:flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(245,158,11,.9);border-radius:20px;font-size:11px;font-weight:700;color:#fff;z-index:10}
+.reward-badge svg{width:14px;height:14px}
+.video-label{position:absolute;top:8px;left:8px;padding:2px 8px;background:rgba(0,0,0,.6);color:#ccc;border-radius:4px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;z-index:10}
+.video-headline{position:absolute;bottom:52px;left:12px;padding:4px 10px;background:rgba(0,0,0,.7);color:#fff;border-radius:4px;font-size:12px;font-weight:600;z-index:10;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.video-cta{position:absolute;bottom:12px;right:12px;padding:8px 18px;background:rgba(245,158,11,.5);color:rgba(255,255,255,.5);border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;z-index:10;pointer-events:none;transition:all .3s}
+.video-cta.active{background:rgba(245,158,11,.9);color:#fff;pointer-events:auto;cursor:pointer}
+.progress-wrap{position:absolute;bottom:44px;left:12px;right:12px;z-index:10}
+.progress-bar{height:3px;background:rgba(255,255,255,.2);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:#f59e0b;border-radius:3px;width:0%;transition:width .3s linear}
+.progress-time{display:flex;justify-content:space-between;margin-top:2px;font-size:9px;color:rgba(255,255,255,.4)}
+</style></head>
+<body>
+<div class="video-container" id="aq-ad">
+    <span class="video-label">Rewarded Ad</span>
+    <div class="reward-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> {$rewardLabel}</div>
+    <div class="video-headline">{$headline}</div>
+    <video {$w} {$h} {$posterTag} autoplay muted playsinline>
+        <source src="{$videoSrc}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-time"><span id="timeCurrent">0:00</span><span id="timeDuration">0:00</span></div>
+    </div>
+    <a href="{$clickUrl}" target="_blank" rel="noopener" class="video-cta" id="ctaBtn">{$ctaText}</a>
+</div>
+<script>
+var vid=document.querySelector('video');
+var fill=document.getElementById('progressFill');
+var curT=document.getElementById('timeCurrent');
+var durT=document.getElementById('timeDuration');
+var cta=document.getElementById('ctaBtn');
+var rewarded=false;
+function fmt(s){var m=Math.floor(s/60);s=Math.floor(s%60);return m+':'+(s<10?'0':'')+s;}
+vid.addEventListener('loadedmetadata',function(){durT.textContent=fmt(vid.duration);});
+vid.addEventListener('timeupdate',function(){
+    var p=(vid.currentTime/vid.duration)*100;
+    fill.style.width=p+'%';
+    curT.textContent=fmt(vid.currentTime);
+});
+vid.addEventListener('ended',function(){
+    rewarded=true;
+    fill.style.width='100%';
+    cta.classList.add('active');
+    // Notify parent page that reward is earned
+    if(window.parent!==window){window.parent.postMessage('aq-rewarded-complete','*');}
+});
+// Prevent seeking ahead
+vid.addEventListener('seeking',function(){
+    if(!rewarded&&vid.currentTime>vid.played.end(vid.played.length-1)+1){
+        vid.currentTime=vid.played.end(vid.played.length-1);
+    }
+});
+</script>
+{$tracking}
+</body></html>
+HTML;
+            return $this->adResponse($html);
+        }
+
+        // ── OUT-STREAM VIDEO AD (inline, scroll-aware) ──
+        if ($ad->ad_type === 'video' && $adFormat === 'outstream') {
+            $videoSrc = '';
+            $posterTag = '';
+            if ($creative) {
+                if ($creative->video_url) {
+                    $videoSrc = e($creative->video_url);
+                } elseif ($creative->file_path) {
+                    $videoSrc = asset($creative->file_path);
+                }
+                if ($creative->thumbnail_path) {
+                    $posterTag = 'poster="' . asset($creative->thumbnail_path) . '"';
+                }
+            }
+
+            if (!$videoSrc) {
+                $name = e($ad->name);
+                $html = <<<HTML
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Ad</title><style>*{margin:0;padding:0}</style></head>
+<body>
+<a href="{$clickUrl}" target="_blank" rel="noopener" id="aq-ad" style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;font-family:sans-serif;font-size:13px;color:#666;text-decoration:none;background:#000;">
+    <span style="color:#fff">{$name}</span>
+</a>
+{$tracking}
+</body></html>
+HTML;
+                return $this->adResponse($html);
+            }
+
+            $w = $width ? "width=\"{$width}\"" : 'width="640"';
+            $h = $height ? "height=\"{$height}\"" : 'height="360"';
+            $ctaText = e($ad->call_to_action ?: 'Learn More');
+            $headline = e($ad->headline ?: $ad->name);
+            $headlineHtml = $ad->headline ? "<span class=\"video-title\">{$headline}</span>" : '';
+            $html = <<<HTML
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Ad</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.video-container{position:relative;max-width:100%;cursor:pointer}
+video{max-width:100%;display:block}
+.video-cta{position:absolute;bottom:12px;right:12px;padding:8px 18px;background:rgba(66,133,244,.9);color:#fff;border-radius:6px;font-family:sans-serif;font-size:13px;font-weight:600;text-decoration:none;z-index:10;opacity:0;transition:opacity .3s}
+.video-cta:hover{background:#4285f4}
+.video-container:hover .video-cta{opacity:1}
+.video-label{position:absolute;top:8px;left:8px;padding:2px 8px;background:rgba(0,0,0,.6);color:#ccc;border-radius:4px;font-family:sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:.5px;z-index:10}
+.video-title{position:absolute;bottom:12px;left:12px;padding:4px 10px;background:rgba(0,0,0,.7);color:#fff;border-radius:4px;font-family:sans-serif;font-size:12px;font-weight:600;z-index:10;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .3s}
+.video-container:hover .video-title{opacity:1}
+</style></head>
+<body>
+<div class="video-container" id="aq-ad">
+    <span class="video-label">Ad</span>
+    {$headlineHtml}
+    <video {$w} {$h} {$posterTag} controls autoplay muted playsinline>
+        <source src="{$videoSrc}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <a href="{$clickUrl}" target="_blank" rel="noopener" class="video-cta">{$ctaText}</a>
+</div>
+<script>
+var vid=document.querySelector('video');
+var hasParent=false;
+// Listen for parent page scroll-visibility messages (IntersectionObserver)
+window.addEventListener('message',function(e){
+    if(e.data==='aq-play'){hasParent=true;vid.play();}
+    else if(e.data==='aq-pause'){hasParent=true;vid.pause();}
+});
+vid.addEventListener('ended',function(){document.querySelector('.video-cta').style.opacity='1';});
+document.querySelector('.video-container').addEventListener('click',function(e){
+    if(e.target.tagName!=='VIDEO'&&!e.target.closest('.video-cta')){
+        window.open('{$clickUrl}','_blank');
+    }
+});
+</script>
+{$tracking}
+</body></html>
+HTML;
+            return $this->adResponse($html);
+        }
+
+        // ── VIDEO AD (instream, rewarded, or generic video) ──
+        if ($ad->ad_type === 'video') {
+            $videoSrc = '';
+            $posterTag = '';
+            if ($creative) {
+                if ($creative->video_url) {
+                    $videoSrc = e($creative->video_url);
+                } elseif ($creative->file_path) {
+                    $videoSrc = asset($creative->file_path);
+                }
+                if ($creative->thumbnail_path) {
+                    $posterTag = 'poster="' . asset($creative->thumbnail_path) . '"';
+                }
+            }
+
+            if (!$videoSrc) {
+                // No video source — show a placeholder with click link
+                $name = e($ad->name);
+                $html = <<<HTML
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Ad</title><style>*{margin:0;padding:0}</style></head>
+<body>
+<a href="{$clickUrl}" target="_blank" rel="noopener" id="aq-ad" style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;font-family:sans-serif;font-size:13px;color:#666;text-decoration:none;background:#000;">
+    <span style="color:#fff">{$name}</span>
+</a>
+{$tracking}
+</body></html>
+HTML;
+                return $this->adResponse($html);
+            }
+
+            $w = $width ? "width=\"{$width}\"" : 'width="640"';
+            $h = $height ? "height=\"{$height}\"" : 'height="360"';
+            $ctaText = e($ad->call_to_action ?: 'Learn More');
+            $headline = e($ad->headline ?: $ad->name);
+            $headlineHtml = $ad->headline ? "<span class=\"video-title\">{$headline}</span>" : '';
+            $html = <<<HTML
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Ad</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.video-container{position:relative;max-width:100%;cursor:pointer}
+video{max-width:100%;display:block;border-radius:4px}
+.video-cta{position:absolute;bottom:12px;right:12px;padding:8px 18px;background:rgba(66,133,244,.9);color:#fff;border-radius:6px;font-family:sans-serif;font-size:13px;font-weight:600;text-decoration:none;z-index:10;opacity:0;transition:opacity .3s}
+.video-cta:hover{background:#4285f4}
+.video-container:hover .video-cta{opacity:1}
+.video-label{position:absolute;top:8px;left:8px;padding:2px 8px;background:rgba(0,0,0,.6);color:#ccc;border-radius:4px;font-family:sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:.5px;z-index:10}
+.video-title{position:absolute;bottom:12px;left:12px;padding:4px 10px;background:rgba(0,0,0,.7);color:#fff;border-radius:4px;font-family:sans-serif;font-size:12px;font-weight:600;z-index:10;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .3s}
+.video-container:hover .video-title{opacity:1}
+</style></head>
+<body>
+<div class="video-container" id="aq-ad">
+    <span class="video-label">Ad</span>
+    {$headlineHtml}
+    <video {$w} {$h} {$posterTag} controls autoplay muted playsinline>
+        <source src="{$videoSrc}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <a href="{$clickUrl}" target="_blank" rel="noopener" class="video-cta">{$ctaText}</a>
+</div>
+<script>
+document.querySelector('video').addEventListener('ended', function() {
+    document.querySelector('.video-cta').style.opacity = '1';
+});
+document.querySelector('.video-container').addEventListener('click', function(e) {
+    if (e.target.tagName !== 'VIDEO' && !e.target.closest('.video-cta')) {
+        window.open('{$clickUrl}', '_blank');
+    }
+});
+</script>
+{$tracking}
+</body></html>
+HTML;
+            return $this->adResponse($html);
+        }
+
+        // ── POPUNDER ── (opens destination in background tab on click)
+        if ($adFormat === 'popunder' || ($ad->ad_type === 'rich_media' && !$creative?->file_path && $adFormat === 'popunder')) {
+            $headline = e($ad->headline ?: $ad->name);
+            $body = e($ad->body_text ?: '');
+            $bodyHtml = $body ? "<br><span style=\"font-size:11px;color:#999\">{$body}</span>" : '';
+            $html = <<<HTML
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Ad</title>
+<style>*{margin:0;padding:0}body{cursor:pointer}</style>
+</head><body>
+<div id="aq-ad" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:sans-serif;font-size:13px;color:#666;text-align:center;">
+    <span>{$headline}{$bodyHtml}</span>
+</div>
+<script>
+(function(){
+    var fired=false;
+    document.addEventListener('click',function(){
+        if(fired)return;fired=true;
+        var w=window.open('{$clickUrl}','_blank');
+        if(w){try{w.blur();window.focus();}catch(e){}}
+    });
+})();
+</script>
+{$tracking}
+</body></html>
+HTML;
+            return $this->adResponse($html);
+        }
+
+        // ── INTERSTITIAL ── (fullscreen overlay before redirect)
+        if ($adFormat === 'interstitial') {
+            $headline = e($ad->headline ?: $ad->name);
+            $body = e($ad->body_text ?: 'You will be redirected shortly...');
+            $cta = e($ad->call_to_action ?: 'Continue');
+            $bgImage = $ad->creatives->first()?->file_path;
+            $bgStyle = $bgImage ? "background:url('" . asset($bgImage) . "') center/cover no-repeat;background-color:rgba(0,0,0,.85)" : "background:rgba(0,0,0,.85)";
+            $overlayStyle = $bgImage ? "background:rgba(0,0,0,.6);min-height:100vh;display:flex;align-items:center;justify-content:center" : "";
+            $html = <<<HTML
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Ad</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;{$bgStyle};display:flex;align-items:center;justify-content:center;min-height:100vh;color:#fff}
+.overlay{{$overlayStyle};width:100%}
+.interstitial{text-align:center;padding:40px;max-width:480px;margin:0 auto}
+.interstitial h2{font-size:24px;margin-bottom:12px}
+.interstitial p{font-size:14px;color:#ccc;margin-bottom:24px}
+.interstitial .cta-btn{display:inline-block;padding:12px 32px;background:#4285f4;color:#fff;border-radius:8px;font-size:16px;font-weight:600;text-decoration:none;transition:background .2s}
+.interstitial .cta-btn:hover{background:#3367d6}
+.interstitial .skip{display:block;margin-top:16px;font-size:12px;color:#888;text-decoration:underline;cursor:pointer}
+.countdown{font-size:11px;color:#666;margin-top:8px}
+</style></head>
+<body>
+<div class="overlay">
+<div class="interstitial" id="aq-ad">
+    <h2>{$headline}</h2>
+    <p>{$body}</p>
+    <a href="{$clickUrl}" target="_blank" rel="noopener" class="cta-btn">{$cta}</a>
+    <div class="countdown">Closing in <span id="timer">5</span>s</div>
+    <span class="skip" onclick="document.body.style.display='none'">Skip Ad</span>
+</div>
+</div>
+<script>
+var t=5;var el=document.getElementById('timer');
+var iv=setInterval(function(){t--;el.textContent=t;if(t<=0){clearInterval(iv);document.body.style.display='none';}},1000);
+</script>
+{$tracking}
+</body></html>
+HTML;
+            return $this->adResponse($html);
+        }
+
+        // ── IN-PAGE PUSH NOTIFICATION ──
+        if ($adFormat === 'in_page_push') {
+            $headline = e($ad->headline ?: $ad->name);
+            $body = e($ad->body_text ?: 'Click to learn more');
+            $iconUrl = ($creative && $creative->file_path) ? asset($creative->file_path) : '';
+            $iconTag = $iconUrl ? "<img src=\"{$iconUrl}\" style=\"width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;\">" : '<div style="width:48px;height:48px;border-radius:8px;background:#4285f4;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-weight:bold;font-size:18px;">Ad</div>';
+            $html = <<<HTML
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Ad</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+.push-notification{position:fixed;top:16px;right:16px;width:340px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.15);padding:14px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;animation:slideIn .3s ease;z-index:9999}
+.push-notification:hover{box-shadow:0 6px 32px rgba(0,0,0,.2)}
+.push-content{flex:1;min-width:0}
+.push-title{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.push-body{font-size:12px;color:#666;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.push-close{position:absolute;top:8px;right:10px;width:20px;height:20px;background:#f0f0f0;border:none;border-radius:50%;cursor:pointer;font-size:12px;color:#999;display:flex;align-items:center;justify-content:center}
+.push-close:hover{background:#e0e0e0;color:#333}
+.push-label{font-size:9px;color:#bbb;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+</style></head>
+<body>
+<div class="push-notification" id="aq-ad" onclick="window.open('{$clickUrl}','_blank')">
+    {$iconTag}
+    <div class="push-content">
+        <div class="push-label">Sponsored</div>
+        <div class="push-title">{$headline}</div>
+        <div class="push-body">{$body}</div>
+    </div>
+    <button class="push-close" onclick="event.stopPropagation();this.parentElement.remove();">&times;</button>
+</div>
+{$tracking}
+</body></html>
+HTML;
+            return $this->adResponse($html);
+        }
+
+        // ── DIRECT LINK ── (immediate redirect)
+        if ($adFormat === 'direct_link') {
+            return redirect($clickUrl);
+        }
+
+        // ── URL-only ads (rich_media without file) — generic clickable ──
         if (in_array($ad->ad_type, ['html', 'rich_media']) && !$creative?->file_path) {
             $name = e($ad->name);
             $html = <<<HTML
@@ -983,8 +1521,8 @@ HTML;
             return $this->adResponse($html);
         }
 
-        // Image ad
-        if ($creative && ($creative->file_type === 'image' || $creative->file_type === 'gif')) {
+        // ── IMAGE AD ──
+        if ($creative && ($creative->file_type === 'image' || $creative->file_type === 'gif') && $creative->file_path) {
             $imgUrl = asset($creative->file_path);
             $alt = e($ad->name);
             $w = $width ? "width=\"{$width}\"" : '';
@@ -1000,24 +1538,45 @@ HTML;
             return $this->adResponse($html);
         }
 
-        // HTML5 creative with file
+        // ── HTML5 creative with file ──
         if ($creative && $creative->file_path && $creative->file_type === 'html5') {
             return redirect(asset($creative->file_path));
         }
 
-        // Fallback
+        // ── FALLBACK ──
         $name = e($ad->name);
         $html = <<<HTML
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Ad</title><style>*{margin:0;padding:0}</style></head>
 <body>
-<a href="{$clickUrl}" target="_blank" rel="noopener" style="display:block;width:100%;height:100%;text-decoration:none;font-family:sans-serif;font-size:13px;color:#666;display:flex;align-items:center;justify-content:center;">
+<a href="{$clickUrl}" target="_blank" rel="noopener" id="aq-ad" style="display:flex;width:100%;height:100%;text-decoration:none;font-family:sans-serif;font-size:13px;color:#666;align-items:center;justify-content:center;">
     <span>{$name}</span>
 </a>
 {$tracking}
 </body></html>
 HTML;
         return $this->adResponse($html);
+    }
+
+    /**
+     * Get the specific ad format (e.g., 'popunder', 'interstitial', 'instream') from campaign ad_formats metadata.
+     */
+    private function getAdFormat(Ad $ad): ?string
+    {
+        $campaign = $ad->campaign;
+        if (!$campaign || empty($campaign->ad_formats)) {
+            return null;
+        }
+
+        foreach ($campaign->ad_formats as $af) {
+            if (!is_array($af)) continue;
+            $afName = $af['ad_name'] ?? '';
+            if ($afName === $ad->name && !empty($af['format'])) {
+                return $af['format'];
+            }
+        }
+
+        return null;
     }
 
     /**

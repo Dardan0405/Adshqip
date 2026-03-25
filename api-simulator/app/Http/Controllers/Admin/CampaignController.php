@@ -268,6 +268,7 @@ class CampaignController extends Controller
                     'popunder' => 'Popunder',
                     'direct_link' => 'Direct Link',
                     'in_page_push' => 'In-Page Push',
+                    'social_bar' => 'Social Bar',
                 ],
             ],
             'display_video' => [
@@ -332,6 +333,26 @@ class CampaignController extends Controller
             'ad_formats.*.dimension' => 'nullable|string',
             'ad_formats.*.file_path' => 'nullable|string',
             'ad_formats.*.file_size' => 'nullable|integer',
+            'ad_formats.*.video_url' => 'nullable|string',
+            'ad_formats.*.text_title' => 'nullable|string',
+            'ad_formats.*.text_description' => 'nullable|string',
+            'ad_formats.*.text_body' => 'nullable|string',
+            'ad_formats.*.text_cta' => 'nullable|string',
+            'ad_formats.*.native_headline' => 'nullable|string',
+            'ad_formats.*.native_brand' => 'nullable|string',
+            'ad_formats.*.native_body' => 'nullable|string',
+            'ad_formats.*.native_cta' => 'nullable|string',
+            'ad_formats.*.interstitial_headline' => 'nullable|string',
+            'ad_formats.*.interstitial_body' => 'nullable|string',
+            'ad_formats.*.interstitial_cta' => 'nullable|string',
+            'ad_formats.*.popunder_headline' => 'nullable|string',
+            'ad_formats.*.popunder_body' => 'nullable|string',
+            'ad_formats.*.ipp_headline' => 'nullable|string',
+            'ad_formats.*.ipp_body' => 'nullable|string',
+            'ad_formats.*.video_headline' => 'nullable|string',
+            'ad_formats.*.video_cta' => 'nullable|string',
+            'ad_formats.*.reward_amount' => 'nullable|string',
+            'ad_formats.*.reward_type' => 'nullable|string',
             'pixel_tracker_id' => 'nullable|exists:aq_pixel_trackers,id',
         ]);
 
@@ -382,93 +403,8 @@ class CampaignController extends Controller
         $campaign = Campaign::create($validated);
 
         // Create Ad + AdCreative records from ad_formats so they appear on Ad Formats page
-        // Use original keys to match ad_files[] indices from the form
         if (!empty($originalAdFormats)) {
-            $uploadedFiles = $request->file('ad_files', []);
-            $updatedAdFormats = [];
-
-            foreach ($originalAdFormats as $index => $af) {
-                $adType = $this->mapAdType($af['ad_type'] ?? '', $af['content_type'] ?? 'image');
-                $ad = Ad::create([
-                    'campaign_id' => $campaign->id,
-                    'name' => $af['ad_name'] ?? 'Untitled Creative',
-                    'ad_type' => $adType,
-                    'status' => 'pending_review',
-                    'destination_url' => $af['ad_url'] ?? '',
-                    'display_url' => parse_url($af['ad_url'] ?? '', PHP_URL_HOST) ?: null,
-                    'admin_approved' => false,
-                    'is_deleted' => false,
-                ]);
-
-                // Parse dimension (e.g. "300x250")
-                $width = null;
-                $height = null;
-                $dimension = $af['dimension'] ?? '';
-                if (str_contains($dimension, 'x')) {
-                    [$width, $height] = array_map('intval', explode('x', $dimension));
-                }
-
-                // Map form content_type to valid DB enum: image, video, html5, gif
-                $rawFileType = $af['content_type'] ?? 'image';
-                $fileType = match ($rawFileType) {
-                    'html', 'flash' => 'html5',
-                    'video' => 'video',
-                    'gif' => 'gif',
-                    default => 'image',
-                };
-                $mimeTypes = ['image' => 'image/png', 'video' => 'video/mp4', 'html5' => 'text/html', 'gif' => 'image/gif'];
-
-                // Handle file upload — use original $index to match ad_files[] form keys
-                $filePath = null;
-                $fileSizeBytes = 0;
-                $mimeType = $mimeTypes[$fileType] ?? 'image/png';
-
-                $uploadedFile = $uploadedFiles[$index] ?? null;
-                if ($uploadedFile && $uploadedFile->isValid()) {
-                    $uploadDir = public_path('uploads' . DIRECTORY_SEPARATOR . 'creatives');
-                    if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0755, true);
-                    }
-
-                    $mimeType = $uploadedFile->getClientMimeType() ?: ($mimeTypes[$fileType] ?? 'image/png');
-                    $extension = $uploadedFile->getClientOriginalExtension() ?: match ($fileType) {
-                        'video' => 'mp4',
-                        'html5' => 'html',
-                        'gif' => 'gif',
-                        default => 'png',
-                    };
-                    $fileName = time() . '_' . $ad->id . '_' . preg_replace('/[^a-z0-9\-]/', '', strtolower(str_replace(' ', '-', $af['ad_name'] ?? 'creative'))) . '.' . $extension;
-
-                    $uploadedFile->move($uploadDir, $fileName);
-
-                    $filePath = '/uploads/creatives/' . $fileName;
-                    $fullPath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
-                    $fileSizeBytes = file_exists($fullPath) ? filesize($fullPath) : 0;
-                } else {
-                    // No new file uploaded — use existing file_path if present, otherwise null
-                    $filePath = !empty($af['file_path']) ? $af['file_path'] : null;
-                    $fileSizeBytes = (int)($af['file_size'] ?? 0);
-                }
-
-                AdCreative::create([
-                    'ad_id' => $ad->id,
-                    'file_path' => $filePath,
-                    'file_type' => $fileType,
-                    'mime_type' => $mimeType,
-                    'file_size_bytes' => $fileSizeBytes,
-                    'width' => $width,
-                    'height' => $height,
-                    'alt_text' => $af['ad_name'] ?? '',
-                    'is_primary' => true,
-                ]);
-
-                // Store file_path and file_size back into ad_formats for future editing
-                $af['file_path'] = $filePath;
-                $af['file_size'] = $fileSizeBytes;
-                $updatedAdFormats[] = $af;
-            }
-
-            // Update campaign with enriched ad_formats (includes file_path and file_size)
+            $updatedAdFormats = $this->processAdFormats($campaign, $originalAdFormats, $request);
             $campaign->update(['ad_formats' => $updatedAdFormats]);
         }
 
@@ -820,6 +756,7 @@ class CampaignController extends Controller
                     'popunder' => 'Popunder',
                     'direct_link' => 'Direct Link',
                     'in_page_push' => 'In-Page Push',
+                    'social_bar' => 'Social Bar',
                 ],
             ],
             'display_video' => [
@@ -892,6 +829,26 @@ class CampaignController extends Controller
             'ad_formats.*.dimension' => 'nullable|string',
             'ad_formats.*.file_path' => 'nullable|string',
             'ad_formats.*.file_size' => 'nullable|integer',
+            'ad_formats.*.video_url' => 'nullable|string',
+            'ad_formats.*.text_title' => 'nullable|string',
+            'ad_formats.*.text_description' => 'nullable|string',
+            'ad_formats.*.text_body' => 'nullable|string',
+            'ad_formats.*.text_cta' => 'nullable|string',
+            'ad_formats.*.native_headline' => 'nullable|string',
+            'ad_formats.*.native_brand' => 'nullable|string',
+            'ad_formats.*.native_body' => 'nullable|string',
+            'ad_formats.*.native_cta' => 'nullable|string',
+            'ad_formats.*.interstitial_headline' => 'nullable|string',
+            'ad_formats.*.interstitial_body' => 'nullable|string',
+            'ad_formats.*.interstitial_cta' => 'nullable|string',
+            'ad_formats.*.popunder_headline' => 'nullable|string',
+            'ad_formats.*.popunder_body' => 'nullable|string',
+            'ad_formats.*.ipp_headline' => 'nullable|string',
+            'ad_formats.*.ipp_body' => 'nullable|string',
+            'ad_formats.*.video_headline' => 'nullable|string',
+            'ad_formats.*.video_cta' => 'nullable|string',
+            'ad_formats.*.reward_amount' => 'nullable|string',
+            'ad_formats.*.reward_type' => 'nullable|string',
             'pixel_tracker_id' => 'nullable|exists:aq_pixel_trackers,id',
         ]);
 
@@ -961,90 +918,7 @@ class CampaignController extends Controller
         Ad::where('campaign_id', $campaign->id)->update(['is_deleted' => true]);
 
         if (!empty($originalAdFormats)) {
-            $uploadedFiles = $request->file('ad_files', []);
-            $updatedAdFormats = [];
-
-            foreach ($originalAdFormats as $index => $af) {
-                $adType = $this->mapAdType($af['ad_type'] ?? '', $af['content_type'] ?? 'image');
-                $ad = Ad::create([
-                    'campaign_id' => $campaign->id,
-                    'name' => $af['ad_name'] ?? 'Untitled Creative',
-                    'ad_type' => $adType,
-                    'status' => 'pending_review',
-                    'destination_url' => $af['ad_url'] ?? '',
-                    'display_url' => parse_url($af['ad_url'] ?? '', PHP_URL_HOST) ?: null,
-                    'admin_approved' => false,
-                    'is_deleted' => false,
-                ]);
-
-                $width = null;
-                $height = null;
-                $dimension = $af['dimension'] ?? '';
-                if (str_contains($dimension, 'x')) {
-                    [$width, $height] = array_map('intval', explode('x', $dimension));
-                }
-
-                // Map form content_type to valid DB enum: image, video, html5, gif
-                $rawFileType = $af['content_type'] ?? 'image';
-                $fileType = match ($rawFileType) {
-                    'html', 'flash' => 'html5',
-                    'video' => 'video',
-                    'gif' => 'gif',
-                    default => 'image',
-                };
-                $mimeTypes = ['image' => 'image/png', 'video' => 'video/mp4', 'html5' => 'text/html', 'gif' => 'image/gif'];
-
-                // Handle file upload — use original $index to match ad_files[] form keys
-                $filePath = null;
-                $fileSizeBytes = 0;
-                $mimeType = $mimeTypes[$fileType] ?? 'image/png';
-
-                $uploadedFile = $uploadedFiles[$index] ?? null;
-                if ($uploadedFile && $uploadedFile->isValid()) {
-                    $uploadDir = public_path('uploads' . DIRECTORY_SEPARATOR . 'creatives');
-                    if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0755, true);
-                    }
-
-                    $mimeType = $uploadedFile->getClientMimeType() ?: ($mimeTypes[$fileType] ?? 'image/png');
-                    $extension = $uploadedFile->getClientOriginalExtension() ?: match ($fileType) {
-                        'video' => 'mp4',
-                        'html5' => 'html',
-                        'gif' => 'gif',
-                        default => 'png',
-                    };
-                    $fileName = time() . '_' . $ad->id . '_' . preg_replace('/[^a-z0-9\-]/', '', strtolower(str_replace(' ', '-', $af['ad_name'] ?? 'creative'))) . '.' . $extension;
-
-                    $uploadedFile->move($uploadDir, $fileName);
-
-                    $filePath = '/uploads/creatives/' . $fileName;
-                    $fullPath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
-                    $fileSizeBytes = file_exists($fullPath) ? filesize($fullPath) : 0;
-                } else {
-                    // No new file uploaded — use existing file_path if present, otherwise null
-                    $filePath = !empty($af['file_path']) ? $af['file_path'] : null;
-                    $fileSizeBytes = (int)($af['file_size'] ?? 0);
-                }
-
-                AdCreative::create([
-                    'ad_id' => $ad->id,
-                    'file_path' => $filePath,
-                    'file_type' => $fileType,
-                    'mime_type' => $mimeType,
-                    'file_size_bytes' => $fileSizeBytes,
-                    'width' => $width,
-                    'height' => $height,
-                    'alt_text' => $af['ad_name'] ?? '',
-                    'is_primary' => true,
-                ]);
-
-                // Store file_path and file_size back into ad_formats for future editing
-                $af['file_path'] = $filePath;
-                $af['file_size'] = $fileSizeBytes;
-                $updatedAdFormats[] = $af;
-            }
-
-            // Update campaign with enriched ad_formats (includes file_path and file_size)
+            $updatedAdFormats = $this->processAdFormats($campaign, $originalAdFormats, $request);
             $campaign->update(['ad_formats' => $updatedAdFormats]);
         }
 
@@ -1129,14 +1003,29 @@ class CampaignController extends Controller
     /**
      * Map form ad_type to database enum value.
      */
-    private function mapAdType(string $formAdType, string $contentType): string
+    private function mapAdType(string $formAdType, string $contentType, string $format = ''): string
     {
+        // Check format-specific types first
+        if (in_array($format, ['text', 'text_banner', 'social_bar'])) {
+            return 'text';
+        }
+        if ($format === 'native') {
+            return 'native';
+        }
+        if (in_array($format, ['instream', 'outstream', 'rewarded'])) {
+            return 'video';
+        }
+        if ($format === 'vast') {
+            return 'vast';
+        }
+
         // Map the form's ad_type (display_web, special_web, display_video) to aq_ads enum
         return match ($formAdType) {
             'display_video' => 'video',
             'special_web' => match ($contentType) {
                 'video' => 'video',
                 'html', 'html5' => 'html',
+                'text' => 'text',
                 default => 'rich_media',
             },
             default => match ($contentType) {
@@ -1147,5 +1036,172 @@ class CampaignController extends Controller
                 default => 'image',
             },
         };
+    }
+
+    /**
+     * Process ad_formats array: create Ad + AdCreative records, handle file uploads.
+     * Returns the enriched ad_formats array with file paths.
+     */
+    private function processAdFormats(Campaign $campaign, array $originalAdFormats, Request $request): array
+    {
+        $uploadedFiles = $request->file('ad_files', []);
+        $uploadedThumbs = $request->file('ad_thumbs', []);
+        $updatedAdFormats = [];
+
+        foreach ($originalAdFormats as $index => $af) {
+            $format = $af['format'] ?? '';
+            $contentType = $af['content_type'] ?? 'image';
+            $adType = $this->mapAdType($af['ad_type'] ?? '', $contentType, $format);
+
+            // Build Ad record data
+            $adData = [
+                'campaign_id' => $campaign->id,
+                'name' => $af['ad_name'] ?? 'Untitled Creative',
+                'ad_type' => $adType,
+                'status' => 'pending_review',
+                'destination_url' => $af['ad_url'] ?? '',
+                'display_url' => parse_url($af['ad_url'] ?? '', PHP_URL_HOST) ?: null,
+                'admin_approved' => false,
+                'is_deleted' => false,
+            ];
+
+            // Text ad fields → save to Ad model
+            if ($format === 'social_bar') {
+                $adData['headline'] = $af['text_title'] ?? null;
+                $adData['body_text'] = $af['text_description'] ?? null;
+                $adData['call_to_action'] = $af['text_body'] ?? 'Learn More';
+            } elseif ($contentType === 'text' || in_array($format, ['text', 'text_banner'])) {
+                $adData['headline'] = $af['text_title'] ?? null;
+                $desc = $af['text_description'] ?? '';
+                $body = $af['text_body'] ?? '';
+                if ($desc && $body) {
+                    $adData['body_text'] = $desc . "\n" . $body;
+                } else {
+                    $adData['body_text'] = $body ?: ($desc ?: null);
+                }
+                $adData['call_to_action'] = !empty($af['text_cta']) ? $af['text_cta'] : null;
+            } elseif ($format === 'native') {
+                $adData['headline'] = $af['native_headline'] ?? null;
+                $adData['body_text'] = $af['native_body'] ?? null;
+                $adData['brand_name'] = $af['native_brand'] ?? null;
+                $adData['call_to_action'] = !empty($af['native_cta']) ? $af['native_cta'] : null;
+            } elseif ($format === 'interstitial') {
+                $adData['headline'] = $af['interstitial_headline'] ?? null;
+                $adData['body_text'] = $af['interstitial_body'] ?? null;
+                $adData['call_to_action'] = !empty($af['interstitial_cta']) ? $af['interstitial_cta'] : null;
+            } elseif ($format === 'popunder') {
+                $adData['headline'] = $af['popunder_headline'] ?? null;
+                $adData['body_text'] = $af['popunder_body'] ?? null;
+            } elseif ($format === 'in_page_push') {
+                $adData['headline'] = $af['ipp_headline'] ?? null;
+                $adData['body_text'] = $af['ipp_body'] ?? null;
+            } elseif (in_array($format, ['instream', 'outstream', 'rewarded'])) {
+                $adData['headline'] = $af['video_headline'] ?? null;
+                $adData['call_to_action'] = !empty($af['video_cta']) ? $af['video_cta'] : null;
+                if ($format === 'rewarded') {
+                    $adData['body_text'] = $af['reward_amount'] ?? null;
+                    $adData['sponsored_label'] = $af['reward_type'] ?? 'Coins';
+                }
+            }
+
+            $ad = Ad::create($adData);
+
+            // Parse dimension (e.g. "300x250")
+            $width = null;
+            $height = null;
+            $dimension = $af['dimension'] ?? '';
+            if (str_contains($dimension, 'x')) {
+                [$width, $height] = array_map('intval', explode('x', $dimension));
+            }
+
+            // Map form content_type to valid DB enum: image, video, html5, gif
+            $fileType = match ($contentType) {
+                'html', 'flash' => 'html5',
+                'video' => 'video',
+                'gif' => 'gif',
+                'text', 'url', 'interstitial', 'popunder', 'in_page_push' => 'image', // text/url/interstitial/popunder/in_page_push ads may not have a file, default to image
+                default => 'image',
+            };
+            $mimeTypes = ['image' => 'image/png', 'video' => 'video/mp4', 'html5' => 'text/html', 'gif' => 'image/gif'];
+
+            // Handle file upload
+            $filePath = null;
+            $fileSizeBytes = 0;
+            $mimeType = $mimeTypes[$fileType] ?? 'image/png';
+
+            $uploadedFile = $uploadedFiles[$index] ?? null;
+            if ($uploadedFile && $uploadedFile->isValid()) {
+                $uploadDir = public_path('uploads' . DIRECTORY_SEPARATOR . 'creatives');
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+
+                $mimeType = $uploadedFile->getClientMimeType() ?: ($mimeTypes[$fileType] ?? 'image/png');
+                $extension = $uploadedFile->getClientOriginalExtension() ?: match ($fileType) {
+                    'video' => 'mp4',
+                    'html5' => 'html',
+                    'gif' => 'gif',
+                    default => 'png',
+                };
+                $fileName = time() . '_' . $ad->id . '_' . preg_replace('/[^a-z0-9\-]/', '', strtolower(str_replace(' ', '-', $af['ad_name'] ?? 'creative'))) . '.' . $extension;
+
+                $uploadedFile->move($uploadDir, $fileName);
+
+                $filePath = '/uploads/creatives/' . $fileName;
+                $fullPath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
+                $fileSizeBytes = file_exists($fullPath) ? filesize($fullPath) : 0;
+
+                // Update file type based on actual upload
+                if (str_contains($mimeType, 'video')) {
+                    $fileType = 'video';
+                }
+            } else {
+                $filePath = !empty($af['file_path']) ? $af['file_path'] : null;
+                $fileSizeBytes = (int)($af['file_size'] ?? 0);
+            }
+
+            // Handle video thumbnail upload
+            $thumbnailPath = null;
+            $uploadedThumb = $uploadedThumbs[$index] ?? null;
+            if ($uploadedThumb && $uploadedThumb->isValid()) {
+                $uploadDir = public_path('uploads' . DIRECTORY_SEPARATOR . 'creatives');
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                $thumbName = time() . '_' . $ad->id . '_thumb.' . ($uploadedThumb->getClientOriginalExtension() ?: 'jpg');
+                $uploadedThumb->move($uploadDir, $thumbName);
+                $thumbnailPath = '/uploads/creatives/' . $thumbName;
+            }
+
+            // Video URL from form
+            $videoUrl = $af['video_url'] ?? null;
+
+            AdCreative::create([
+                'ad_id' => $ad->id,
+                'file_path' => $filePath,
+                'video_url' => $videoUrl,
+                'file_type' => $fileType,
+                'mime_type' => $mimeType,
+                'file_size_bytes' => $fileSizeBytes,
+                'width' => $width,
+                'height' => $height,
+                'alt_text' => $af['ad_name'] ?? '',
+                'thumbnail_path' => $thumbnailPath,
+                'is_primary' => true,
+            ]);
+
+            // Store enriched data back
+            $af['file_path'] = $filePath;
+            $af['file_size'] = $fileSizeBytes;
+            if ($videoUrl) {
+                $af['video_url'] = $videoUrl;
+            }
+            if ($thumbnailPath) {
+                $af['thumbnail_path'] = $thumbnailPath;
+            }
+            $updatedAdFormats[] = $af;
+        }
+
+        return $updatedAdFormats;
     }
 }

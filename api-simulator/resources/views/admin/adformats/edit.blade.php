@@ -104,8 +104,9 @@
     </div>
 
     {{-- ═══════════════════════════════════════════════════════ --}}
-    {{-- SECTION 2: BRANDING & CONTENT                          --}}
+    {{-- SECTION 2: AD CONTENT (format-specific fields)         --}}
     {{-- ═══════════════════════════════════════════════════════ --}}
+    @php $fmt = $ad['ad_format'] ?? null; @endphp
     <div class="bg-white rounded-xl border border-gray-200 mb-6">
         <div class="px-6 py-4 border-b border-gray-100">
             <div class="flex items-center gap-3">
@@ -113,13 +114,220 @@
                     <span class="text-sm font-bold text-purple-600">2</span>
                 </div>
                 <div>
-                    <h2 class="text-base font-semibold text-gray-900">Branding &amp; Content</h2>
-                    <p class="text-xs text-gray-400 mt-0.5">Ad copy and branding for native/text ads</p>
+                    <h2 class="text-base font-semibold text-gray-900">Ad Content</h2>
+                    <p class="text-xs text-gray-400 mt-0.5">
+                        @if($fmt === 'social_bar') Social Bar ad copy & icon
+                        @elseif($fmt === 'native') Native ad copy & branding
+                        @elseif($fmt === 'interstitial') Interstitial overlay content
+                        @elseif($fmt === 'popunder') Popunder content
+                        @elseif($fmt === 'in_page_push') In-Page Push notification content
+                        @elseif(in_array($fmt, ['instream', 'outstream'])) Video ad headline & CTA
+                        @elseif($fmt === 'rewarded') Rewarded video content & reward settings
+                        @elseif($ad['ad_type'] === 'text') Text ad copy
+                        @elseif($fmt === 'direct_link') Direct link — no content fields needed
+                        @else Ad copy and branding
+                        @endif
+                    </p>
                 </div>
+                @if($fmt)
+                    <span class="ml-auto px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase
+                        @if($fmt === 'social_bar') bg-orange-100 text-orange-700
+                        @elseif($fmt === 'native') bg-indigo-100 text-indigo-700
+                        @elseif($fmt === 'interstitial') bg-red-100 text-red-700
+                        @elseif($fmt === 'popunder') bg-pink-100 text-pink-700
+                        @elseif($fmt === 'in_page_push') bg-teal-100 text-teal-700
+                        @elseif(in_array($fmt, ['instream', 'outstream'])) bg-purple-100 text-purple-700
+                        @elseif($fmt === 'rewarded') bg-amber-100 text-amber-700
+                        @elseif($fmt === 'direct_link') bg-brand-100 text-brand-700
+                        @else bg-gray-100 text-gray-700
+                        @endif
+                    ">{{ ucfirst(str_replace('_', ' ', $fmt)) }}</span>
+                @endif
             </div>
         </div>
         <div class="p-6 space-y-5">
-            {{-- Row: Headline + Brand Name --}}
+
+            @if($fmt === 'social_bar')
+            {{-- ═══ SOCIAL BAR FIELDS ═══ --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Title <span class="text-red-500">*</span></label>
+                    <input type="text" name="headline" value="{{ old('headline', $ad['headline']) }}" placeholder="e.g. Don't Miss This Deal!" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Button Text</label>
+                    <input type="text" name="call_to_action" value="{{ old('call_to_action', $ad['call_to_action']) }}" placeholder="e.g. Learn More" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Description</label>
+                <input type="text" name="body_text" value="{{ old('body_text', $ad['body_text']) }}" placeholder="Short description text" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+            </div>
+
+            @elseif($fmt === 'native')
+            {{-- ═══ NATIVE AD FIELDS ═══ --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Headline <span class="text-red-500">*</span></label>
+                    <input type="text" name="headline" value="{{ old('headline', $ad['headline']) }}" placeholder="e.g. Discover Our New Product" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Brand Name</label>
+                    <input type="text" name="brand_name" value="{{ old('brand_name', $ad['brand_name']) }}" placeholder="e.g. Acme Inc." class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Body Text</label>
+                <textarea name="body_text" rows="3" placeholder="Describe your product or offer..." class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 resize-none">{{ old('body_text', $ad['body_text']) }}</textarea>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Call to Action</label>
+                    <input type="text" name="call_to_action" value="{{ old('call_to_action', $ad['call_to_action']) }}" placeholder="e.g. Learn More, Shop Now" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Alt Text</label>
+                    <input type="text" name="alt_text" value="{{ old('alt_text', $ad['alt_text']) }}" placeholder="Image description for accessibility" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+            </div>
+
+            @elseif($fmt === 'interstitial')
+            {{-- ═══ INTERSTITIAL FIELDS ═══ --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Headline <span class="text-red-500">*</span></label>
+                    <input type="text" name="headline" value="{{ old('headline', $ad['headline']) }}" placeholder="e.g. Special Offer!" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">CTA Button Text</label>
+                    <input type="text" name="call_to_action" value="{{ old('call_to_action', $ad['call_to_action']) }}" placeholder="e.g. Continue, Get Started" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Body Text</label>
+                <textarea name="body_text" rows="2" placeholder="e.g. You will be redirected shortly..." class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 resize-none">{{ old('body_text', $ad['body_text']) }}</textarea>
+            </div>
+
+            @elseif($fmt === 'popunder')
+            {{-- ═══ POPUNDER FIELDS ═══ --}}
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Headline</label>
+                <input type="text" name="headline" value="{{ old('headline', $ad['headline']) }}" placeholder="e.g. Check This Out" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Body Text</label>
+                <textarea name="body_text" rows="2" placeholder="Optional description..." class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 resize-none">{{ old('body_text', $ad['body_text']) }}</textarea>
+            </div>
+
+            @elseif($fmt === 'in_page_push')
+            {{-- ═══ IN-PAGE PUSH FIELDS ═══ --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Headline <span class="text-red-500">*</span></label>
+                    <input type="text" name="headline" value="{{ old('headline', $ad['headline']) }}" placeholder="e.g. Don't Miss This Offer!" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Body Text</label>
+                    <input type="text" name="body_text" value="{{ old('body_text', $ad['body_text']) }}" placeholder="e.g. Limited time — click to see details" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+            </div>
+
+            @elseif(in_array($fmt, ['instream', 'outstream']))
+            {{-- ═══ IN-STREAM / OUT-STREAM VIDEO FIELDS ═══ --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Headline</label>
+                    <input type="text" name="headline" value="{{ old('headline', $ad['headline']) }}" placeholder="e.g. Watch Our Latest Ad" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Button Text</label>
+                    <input type="text" name="call_to_action" value="{{ old('call_to_action', $ad['call_to_action']) }}" placeholder="e.g. Learn More, Shop Now" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+            </div>
+            @if($ad['video_url'])
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Video URL</label>
+                    <div class="flex items-center gap-2 bg-gray-50 rounded-lg px-4 py-2.5 border border-gray-100">
+                        <svg class="w-4 h-4 text-purple-500 flex-shrink-0" viewBox="0 0 24 24" fill="none"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" fill="currentColor"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5"/></svg>
+                        <span class="text-xs text-gray-600 font-mono truncate">{{ $ad['video_url'] }}</span>
+                    </div>
+                </div>
+            @endif
+
+            @elseif($fmt === 'rewarded')
+            {{-- ═══ REWARDED VIDEO FIELDS ═══ --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Headline</label>
+                    <input type="text" name="headline" value="{{ old('headline', $ad['headline']) }}" placeholder="e.g. Watch to Earn Coins!" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">CTA Button Text</label>
+                    <input type="text" name="call_to_action" value="{{ old('call_to_action', $ad['call_to_action']) }}" placeholder="e.g. Claim Reward" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+            </div>
+            @if($ad['video_url'])
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Video URL</label>
+                    <div class="flex items-center gap-2 bg-gray-50 rounded-lg px-4 py-2.5 border border-gray-100">
+                        <svg class="w-4 h-4 text-purple-500 flex-shrink-0" viewBox="0 0 24 24" fill="none"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" fill="currentColor"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5"/></svg>
+                        <span class="text-xs text-gray-600 font-mono truncate">{{ $ad['video_url'] }}</span>
+                    </div>
+                </div>
+            @endif
+            {{-- Reward Settings --}}
+            <div class="p-4 rounded-lg border border-amber-200 bg-amber-50/50">
+                <p class="text-xs font-semibold text-amber-700 flex items-center gap-1.5 mb-3">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    Reward Settings
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Reward Amount</label>
+                        <input type="number" name="body_text" value="{{ old('body_text', $ad['body_text']) }}" placeholder="e.g. 50" min="1" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Reward Type</label>
+                        @php $currentRewardType = old('sponsored_label', $ad['sponsored_label'] ?? 'Coins'); @endphp
+                        <select name="sponsored_label" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 bg-white">
+                            @foreach(['Coins', 'Gems', 'Credits', 'Points', 'Extra Life', 'Bonus'] as $rt)
+                                <option value="{{ $rt }}" {{ $currentRewardType === $rt ? 'selected' : '' }}>{{ $rt }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            @elseif($ad['ad_type'] === 'text')
+            {{-- ═══ TEXT AD FIELDS ═══ --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Headline <span class="text-red-500">*</span></label>
+                    <input type="text" name="headline" value="{{ old('headline', $ad['headline']) }}" placeholder="e.g. Great Summer Sale!" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Display URL</label>
+                    <input type="text" name="display_url" value="{{ old('display_url', $ad['display_url']) }}" placeholder="e.g. example.com/sale" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Body Text</label>
+                <textarea name="body_text" rows="3" placeholder="Main ad description text..." class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 resize-none">{{ old('body_text', $ad['body_text']) }}</textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Call to Action</label>
+                <input type="text" name="call_to_action" value="{{ old('call_to_action', $ad['call_to_action']) }}" placeholder="e.g. Learn More, Shop Now" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+            </div>
+
+            @elseif($fmt === 'direct_link')
+            {{-- ═══ DIRECT LINK — minimal ═══ --}}
+            <div class="flex items-center gap-3 p-4 rounded-lg bg-gray-50 border border-gray-100">
+                <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <p class="text-sm text-gray-500">Direct link ads redirect instantly — no ad content fields are needed.</p>
+            </div>
+
+            @else
+            {{-- ═══ DEFAULT / IMAGE / DISPLAY FIELDS ═══ --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Headline</label>
@@ -130,14 +338,10 @@
                     <input type="text" name="brand_name" value="{{ old('brand_name', $ad['brand_name']) }}" placeholder="e.g. Acme Inc." class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
                 </div>
             </div>
-
-            {{-- Row: Body Text --}}
             <div>
                 <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Body Text</label>
                 <textarea name="body_text" rows="3" placeholder="Main ad content text..." class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 resize-none">{{ old('body_text', $ad['body_text']) }}</textarea>
             </div>
-
-            {{-- Row: Call to Action + Alt Text --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Call to Action</label>
@@ -148,6 +352,8 @@
                     <input type="text" name="alt_text" value="{{ old('alt_text', $ad['alt_text']) }}" placeholder="Descriptive text for accessibility" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
                 </div>
             </div>
+            @endif
+
         </div>
     </div>
 

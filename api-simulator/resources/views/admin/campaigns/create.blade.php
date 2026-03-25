@@ -593,6 +593,10 @@
                         <label class="block text-xs font-medium text-gray-500 mb-1">Ad Body Text</label>
                         <textarea id="cr_text_body" rows="3" placeholder="Main ad content text" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"></textarea>
                     </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Button Text</label>
+                        <input type="text" id="cr_text_cta" placeholder="e.g. Shop Now, Learn More, Sign Up" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
                 </div>
 
                 {{-- Image/Banner Ad Fields --}}
@@ -608,6 +612,100 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Upload File <span class="text-red-500">*</span></label>
                         <input type="file" id="cr_file" accept="image/*,.html,.swf,.gif" class="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100">
+                    </div>
+                </div>
+
+                {{-- Social Bar Ad Fields --}}
+                <div id="socialBarAdFields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Title <span class="text-red-500">*</span></label>
+                        <input type="text" id="cr_sb_title" placeholder="e.g. Limited Time Offer!" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Description</label>
+                        <input type="text" id="cr_sb_description" placeholder="Short message for the bar" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Button Text</label>
+                        <input type="text" id="cr_sb_button_text" placeholder="e.g. Get Deal" value="Learn More" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Icon Image (Optional)</label>
+                        <input type="file" id="cr_sb_icon" accept="image/*" class="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100">
+                    </div>
+                </div>
+
+                {{-- Native Ad Fields --}}
+                {{-- In-Page Push Ad Fields --}}
+                <div id="inPagePushAdFields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Headline <span class="text-red-500">*</span></label>
+                        <input type="text" id="cr_ipp_headline" placeholder="e.g. Don't Miss This Offer!" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Body Text</label>
+                        <input type="text" id="cr_ipp_body" placeholder="e.g. Limited time — click to see details" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Icon Image (Optional)</label>
+                        <input type="file" id="cr_ipp_icon" accept="image/*" class="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100">
+                        <p class="text-[10px] text-gray-400 mt-1">Recommended: 48x48px square image</p>
+                    </div>
+                </div>
+
+                {{-- Popunder Ad Fields --}}
+                <div id="popunderAdFields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Headline <span class="text-red-500">*</span></label>
+                        <input type="text" id="cr_popunder_headline" placeholder="e.g. Check Out Our Latest Deals" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Body Text</label>
+                        <input type="text" id="cr_popunder_body" placeholder="Short text shown in the trigger area (optional)" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
+                </div>
+
+                {{-- Interstitial Ad Fields --}}
+                <div id="interstitialAdFields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Headline <span class="text-red-500">*</span></label>
+                        <input type="text" id="cr_interstitial_headline" placeholder="e.g. Special Offer — 50% Off Today" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Button Text</label>
+                        <input type="text" id="cr_interstitial_cta" placeholder="e.g. Continue, Shop Now, Learn More" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Body Text</label>
+                        <textarea id="cr_interstitial_body" rows="2" placeholder="Short description shown below the headline" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Background Image (Optional)</label>
+                        <input type="file" id="cr_interstitial_image" accept="image/*" class="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100">
+                    </div>
+                </div>
+
+                {{-- Native Ad Fields --}}
+                <div id="nativeAdFields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Headline <span class="text-red-500">*</span></label>
+                        <input type="text" id="cr_native_headline" placeholder="e.g. Discover Our New Collection" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Brand Name</label>
+                        <input type="text" id="cr_native_brand" placeholder="e.g. Your Company" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Body Text</label>
+                        <textarea id="cr_native_body" rows="2" placeholder="Describe what you're promoting" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Button Text</label>
+                        <input type="text" id="cr_native_cta" placeholder="e.g. Learn More, Shop Now" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Cover Image (Optional)</label>
+                        <input type="file" id="cr_native_image" accept="image/*" class="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100">
                     </div>
                 </div>
 
@@ -628,9 +726,41 @@
                         <label class="block text-xs font-medium text-gray-500 mb-1">Upload Video <span class="text-red-500">*</span></label>
                         <input type="file" id="cr_video_file" accept="video/*" class="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100">
                     </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Headline</label>
+                        <input type="text" id="cr_video_headline" placeholder="e.g. Watch Our Latest Ad" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Button Text</label>
+                        <input type="text" id="cr_video_cta" placeholder="e.g. Learn More, Shop Now" value="Learn More" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
                     <div class="md:col-span-2">
                         <label class="block text-xs font-medium text-gray-500 mb-1">Video Thumbnail (Optional)</label>
                         <input type="file" id="cr_video_thumb" accept="image/*" class="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100">
+                    </div>
+                    {{-- Reward-specific fields (only shown for rewarded format) --}}
+                    <div id="rewardedFields" class="hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 mt-1 p-3 rounded-lg border border-amber-200 bg-amber-50/50">
+                        <div class="md:col-span-2">
+                            <p class="text-xs font-semibold text-amber-700 flex items-center gap-1.5 mb-2">
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                Reward Settings
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Reward Amount</label>
+                            <input type="number" id="cr_reward_amount" placeholder="e.g. 50" min="1" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Reward Type</label>
+                            <select id="cr_reward_type" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white">
+                                <option value="Coins">Coins</option>
+                                <option value="Gems">Gems</option>
+                                <option value="Credits">Credits</option>
+                                <option value="Points">Points</option>
+                                <option value="Extra Life">Extra Life</option>
+                                <option value="Bonus">Bonus</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -832,21 +962,39 @@ document.getElementById('adFormatSelect').addEventListener('change', function() 
     document.getElementById('textAdFields').classList.add('hidden');
     document.getElementById('imageAdFields').classList.add('hidden');
     document.getElementById('videoAdFields').classList.add('hidden');
+    document.getElementById('socialBarAdFields').classList.add('hidden');
+    document.getElementById('nativeAdFields').classList.add('hidden');
+    document.getElementById('interstitialAdFields').classList.add('hidden');
+    document.getElementById('popunderAdFields').classList.add('hidden');
+    document.getElementById('inPagePushAdFields').classList.add('hidden');
+    document.getElementById('rewardedFields').classList.add('hidden');
 
     // URL-only formats (no file upload needed)
-    const urlOnlyFormats = ['interstitial', 'native', 'popunder', 'direct_link', 'in_page_push'];
+    const urlOnlyFormats = ['direct_link'];
 
     if (format) {
         block.classList.remove('hidden');
 
         // Show appropriate fields based on ad type/format
-        if (format === 'text' || format === 'text_banner') {
+        if (format === 'social_bar') {
+            document.getElementById('socialBarAdFields').classList.remove('hidden');
+        } else if (format === 'popunder') {
+            document.getElementById('popunderAdFields').classList.remove('hidden');
+        } else if (format === 'interstitial') {
+            document.getElementById('interstitialAdFields').classList.remove('hidden');
+        } else if (format === 'in_page_push') {
+            document.getElementById('inPagePushAdFields').classList.remove('hidden');
+        } else if (format === 'native') {
+            document.getElementById('nativeAdFields').classList.remove('hidden');
+        } else if (format === 'text' || format === 'text_banner') {
             document.getElementById('textAdFields').classList.remove('hidden');
-        } else if (adType === 'display_video' || format.includes('video')) {
+        } else if (adType === 'display_video' || format.includes('video') || format === 'instream' || format === 'outstream' || format === 'rewarded') {
             document.getElementById('videoAdFields').classList.remove('hidden');
+            if (format === 'rewarded') {
+                document.getElementById('rewardedFields').classList.remove('hidden');
+            }
         } else if (urlOnlyFormats.includes(format)) {
             // URL-only ads: just Ad Name + Ad URL, no file upload needed
-            // Fields are already visible (cr_name + cr_url), nothing extra to show
         } else {
             // Display banner ads — show image/file upload fields
             document.getElementById('imageAdFields').classList.remove('hidden');
@@ -946,30 +1094,186 @@ function addCountryBid() {
 }
 
 // ─── Creatives ───
-const urlOnlyCreativeFormats = ['interstitial', 'native', 'popunder', 'direct_link', 'in_page_push'];
+const urlOnlyCreativeFormats = ['direct_link'];
+const videoFormats = ['instream', 'outstream', 'rewarded'];
+const textFormats = ['text', 'text_banner'];
 let crCounter = 0;
 function addCreative() {
     const name = document.getElementById('cr_name').value;
     const url = document.getElementById('cr_url').value;
     const format = document.getElementById('adFormatSelect').value;
+    const adType = document.getElementById('adTypeSelect').value;
     const isUrlOnly = urlOnlyCreativeFormats.includes(format);
-    const contentType = isUrlOnly ? 'url' : (document.getElementById('cr_content_type')?.value || 'image');
-    const fileInput = isUrlOnly ? null : document.getElementById('cr_file');
+    const isVideo = videoFormats.includes(format) || adType === 'display_video';
+    const isText = textFormats.includes(format);
+    const isSocialBar = format === 'social_bar';
+    const isNative = format === 'native';
+    const isInterstitial = format === 'interstitial';
+    const isPopunder = format === 'popunder';
+    const isInPagePush = format === 'in_page_push';
+    const isRewarded = format === 'rewarded';
+
+    // Determine content type
+    let contentType = 'image';
+    if (isSocialBar) contentType = 'text';
+    else if (isPopunder) contentType = 'popunder';
+    else if (isInterstitial) contentType = 'interstitial';
+    else if (isInPagePush) contentType = 'in_page_push';
+    else if (isNative) contentType = 'native';
+    else if (isUrlOnly) contentType = 'url';
+    else if (isVideo) contentType = 'video';
+    else if (isText) contentType = 'text';
+    else contentType = document.getElementById('cr_content_type')?.value || 'image';
+
+    // Determine which file input to use
+    let fileInput = null;
+    if (!isUrlOnly && !isVideo && !isText && !isSocialBar && !isNative && !isInterstitial && !isPopunder && !isInPagePush) {
+        fileInput = document.getElementById('cr_file');
+    }
+
     if (!name || !url) return alert('Please fill in Ad Name and Ad URL.');
 
+    // Gather video-specific fields
+    let videoUrl = '';
+    let videoFileInput = null;
+    let videoThumbInput = null;
+    let videoHeadline = '';
+    let videoCta = '';
+    if (isVideo) {
+        const videoSourceType = document.getElementById('cr_video_source')?.value || 'url';
+        if (videoSourceType === 'url') {
+            videoUrl = document.getElementById('cr_video_url')?.value || '';
+            if (!videoUrl) return alert('Please enter a Video URL.');
+        } else {
+            videoFileInput = document.getElementById('cr_video_file');
+            if (!videoFileInput?.files[0]) return alert('Please select a video file to upload.');
+        }
+        videoThumbInput = document.getElementById('cr_video_thumb');
+        videoHeadline = document.getElementById('cr_video_headline')?.value || '';
+        videoCta = document.getElementById('cr_video_cta')?.value || '';
+    }
+
+    // Gather rewarded video fields
+    let rewardAmount = '';
+    let rewardType = '';
+    if (isRewarded) {
+        rewardAmount = document.getElementById('cr_reward_amount')?.value || '';
+        rewardType = document.getElementById('cr_reward_type')?.value || 'Coins';
+    }
+
+    // Gather text ad fields
+    let textTitle = '';
+    let textDescription = '';
+    let textBody = '';
+    let textCta = '';
+    if (isText) {
+        textTitle = document.getElementById('cr_text_title')?.value || '';
+        textDescription = document.getElementById('cr_text_description')?.value || '';
+        textBody = document.getElementById('cr_text_body')?.value || '';
+        textCta = document.getElementById('cr_text_cta')?.value || '';
+        if (!textTitle) return alert('Please enter an Ad Title for the text ad.');
+    }
+
+    // Gather social bar fields
+    let sbTitle = '';
+    let sbDescription = '';
+    let sbButtonText = '';
+    let sbIconInput = null;
+    if (isSocialBar) {
+        sbTitle = document.getElementById('cr_sb_title')?.value || '';
+        sbDescription = document.getElementById('cr_sb_description')?.value || '';
+        sbButtonText = document.getElementById('cr_sb_button_text')?.value || 'Learn More';
+        sbIconInput = document.getElementById('cr_sb_icon');
+        if (!sbTitle) return alert('Please enter a Title for the Social Bar ad.');
+    }
+
+    // Gather native ad fields
+    let nativeHeadline = '';
+    let nativeBrand = '';
+    let nativeBody = '';
+    let nativeCta = '';
+    let nativeImageInput = null;
+    if (isNative) {
+        nativeHeadline = document.getElementById('cr_native_headline')?.value || '';
+        nativeBrand = document.getElementById('cr_native_brand')?.value || '';
+        nativeBody = document.getElementById('cr_native_body')?.value || '';
+        nativeCta = document.getElementById('cr_native_cta')?.value || '';
+        nativeImageInput = document.getElementById('cr_native_image');
+        if (!nativeHeadline) return alert('Please enter a Headline for the Native ad.');
+    }
+
+    // Gather interstitial ad fields
+    let interstitialHeadline = '';
+    let interstitialBody = '';
+    let interstitialCta = '';
+    let interstitialImageInput = null;
+    if (isInterstitial) {
+        interstitialHeadline = document.getElementById('cr_interstitial_headline')?.value || '';
+        interstitialBody = document.getElementById('cr_interstitial_body')?.value || '';
+        interstitialCta = document.getElementById('cr_interstitial_cta')?.value || '';
+        interstitialImageInput = document.getElementById('cr_interstitial_image');
+        if (!interstitialHeadline) return alert('Please enter a Headline for the Interstitial ad.');
+    }
+
+    // Gather popunder ad fields
+    let popunderHeadline = '';
+    let popunderBody = '';
+    if (isPopunder) {
+        popunderHeadline = document.getElementById('cr_popunder_headline')?.value || '';
+        popunderBody = document.getElementById('cr_popunder_body')?.value || '';
+        if (!popunderHeadline) return alert('Please enter a Headline for the Popunder ad.');
+    }
+
+    // Gather in-page push ad fields
+    let ippHeadline = '';
+    let ippBody = '';
+    let ippIconInput = null;
+    if (isInPagePush) {
+        ippHeadline = document.getElementById('cr_ipp_headline')?.value || '';
+        ippBody = document.getElementById('cr_ipp_body')?.value || '';
+        ippIconInput = document.getElementById('cr_ipp_icon');
+        if (!ippHeadline) return alert('Please enter a Headline for the In-Page Push ad.');
+    }
+
     crCounter++;
-    const file = fileInput ? fileInput.files[0] : null;
-    const filename = file ? file.name : (isUrlOnly ? 'URL-only' : '—');
+    const file = fileInput ? fileInput.files[0] : (videoFileInput ? videoFileInput.files[0] : null);
+    const sbIconFile = sbIconInput ? sbIconInput.files[0] : null;
+    const nativeImageFile = nativeImageInput ? nativeImageInput.files[0] : null;
+    const interstitialImageFile = interstitialImageInput ? interstitialImageInput.files[0] : null;
+    const ippIconFile = ippIconInput ? ippIconInput.files[0] : null;
+    const filename = file ? file.name : (isInPagePush ? (ippIconFile ? ippIconFile.name : 'In-Page Push') : (isPopunder ? 'Popunder' : (isInterstitial ? (interstitialImageFile ? interstitialImageFile.name : 'Interstitial') : (isNative ? (nativeImageFile ? nativeImageFile.name : 'Native Ad') : (isSocialBar ? 'Social Bar' : (isUrlOnly ? 'URL-only' : (isVideo && videoUrl ? 'Video URL' : (isText ? 'Text Ad' : '—'))))))));
     const fileSize = file ? (file.size / 1024).toFixed(1) : '—';
     const dimension = format.includes('x') ? format : '—';
     const formatLabel = document.getElementById('adFormatSelect').options[document.getElementById('adFormatSelect').selectedIndex].textContent;
+
+    // Preview column content
+    let previewHtml = contentType.toUpperCase();
+    if (contentType === 'image' && file) {
+        previewHtml = '<img src="" class="w-8 h-8 rounded object-cover cr-preview-' + crCounter + '" />';
+    } else if (isRewarded) {
+        previewHtml = '<svg class="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+    } else if (isVideo) {
+        previewHtml = '<svg class="w-5 h-5 text-purple-500" viewBox="0 0 24 24" fill="none"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" fill="currentColor"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5"/></svg>';
+    } else if (isPopunder) {
+        previewHtml = '<svg class="w-5 h-5 text-pink-500" viewBox="0 0 24 24" fill="none"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 17l3 3m-3 0l3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+    } else if (isInterstitial) {
+        previewHtml = '<svg class="w-5 h-5 text-red-500" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+    } else if (isInPagePush) {
+        previewHtml = '<svg class="w-5 h-5 text-teal-500" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+    } else if (isNative) {
+        previewHtml = '<svg class="w-5 h-5 text-indigo-500" viewBox="0 0 24 24" fill="none"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z" stroke="currentColor" stroke-width="1.5"/><path d="M3 9h18M9 21V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+    } else if (isSocialBar) {
+        previewHtml = '<svg class="w-5 h-5 text-orange-500" viewBox="0 0 24 24" fill="none"><rect x="2" y="17" width="20" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M8 19.5h8M6 19.5h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+    } else if (isText) {
+        previewHtml = '<svg class="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+    }
 
     document.getElementById('crEmptyRow')?.remove();
     const row = document.createElement('tr');
     row.className = 'hover:bg-gray-50/50';
     row.innerHTML = `
         <td class="px-4 py-2.5 text-sm font-medium text-gray-800">${name}</td>
-        <td class="px-4 py-2.5"><span class="inline-block w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-[10px] text-gray-400">${contentType === 'image' && file ? '<img src="" class="w-8 h-8 rounded object-cover cr-preview-' + crCounter + '" />' : contentType.toUpperCase()}</span></td>
+        <td class="px-4 py-2.5"><span class="inline-block w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-[10px] text-gray-400">${previewHtml}</span></td>
         <td class="px-4 py-2.5 text-xs text-gray-500 font-mono max-w-[120px] truncate">${filename}</td>
         <td class="px-4 py-2.5 text-xs text-gray-600">${dimension}</td>
         <td class="px-4 py-2.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-purple-100 text-purple-700">${formatLabel}</span></td>
@@ -982,8 +1286,7 @@ function addCreative() {
         </td>
     `;
     // Add hidden inputs so ad_formats data gets submitted
-    const adType = document.getElementById('adTypeSelect').value;
-    const hiddenInputs = `
+    let hiddenInputs = `
         <input type="hidden" name="ad_formats[${crCounter}][ad_name]" value="${name.replace(/"/g, '&quot;')}">
         <input type="hidden" name="ad_formats[${crCounter}][ad_url]" value="${url.replace(/"/g, '&quot;')}">
         <input type="hidden" name="ad_formats[${crCounter}][ad_type]" value="${adType}">
@@ -995,23 +1298,179 @@ function addCreative() {
         <input type="hidden" name="ad_formats[${crCounter}][file_path]" value="">
         <input type="hidden" name="ad_formats[${crCounter}][file_size]" value="${file ? file.size : 0}">
     `;
+
+    // Video-specific hidden inputs
+    if (isVideo) {
+        hiddenInputs += `<input type="hidden" name="ad_formats[${crCounter}][video_url]" value="${videoUrl.replace(/"/g, '&quot;')}">`;
+        hiddenInputs += `<input type="hidden" name="ad_formats[${crCounter}][video_headline]" value="${videoHeadline.replace(/"/g, '&quot;')}">`;
+        hiddenInputs += `<input type="hidden" name="ad_formats[${crCounter}][video_cta]" value="${videoCta.replace(/"/g, '&quot;')}">`;
+    }
+
+    // Rewarded video hidden inputs
+    if (isRewarded) {
+        hiddenInputs += `<input type="hidden" name="ad_formats[${crCounter}][reward_amount]" value="${rewardAmount}">`;
+        hiddenInputs += `<input type="hidden" name="ad_formats[${crCounter}][reward_type]" value="${rewardType.replace(/"/g, '&quot;')}">`;
+    }
+
+    // Text ad hidden inputs
+    if (isText) {
+        hiddenInputs += `
+            <input type="hidden" name="ad_formats[${crCounter}][text_title]" value="${textTitle.replace(/"/g, '&quot;')}">
+            <input type="hidden" name="ad_formats[${crCounter}][text_description]" value="${textDescription.replace(/"/g, '&quot;')}">
+            <input type="hidden" name="ad_formats[${crCounter}][text_body]" value="${textBody.replace(/"/g, '&quot;')}">
+            <input type="hidden" name="ad_formats[${crCounter}][text_cta]" value="${textCta.replace(/"/g, '&quot;')}">
+        `;
+    }
+
+    // Social Bar hidden inputs
+    if (isSocialBar) {
+        hiddenInputs += `
+            <input type="hidden" name="ad_formats[${crCounter}][text_title]" value="${sbTitle.replace(/"/g, '&quot;')}">
+            <input type="hidden" name="ad_formats[${crCounter}][text_description]" value="${sbDescription.replace(/"/g, '&quot;')}">
+            <input type="hidden" name="ad_formats[${crCounter}][text_body]" value="${sbButtonText.replace(/"/g, '&quot;')}">
+        `;
+    }
+
+    // Native ad hidden inputs
+    if (isNative) {
+        hiddenInputs += `
+            <input type="hidden" name="ad_formats[${crCounter}][native_headline]" value="${nativeHeadline.replace(/"/g, '&quot;')}">
+            <input type="hidden" name="ad_formats[${crCounter}][native_brand]" value="${nativeBrand.replace(/"/g, '&quot;')}">
+            <input type="hidden" name="ad_formats[${crCounter}][native_body]" value="${nativeBody.replace(/"/g, '&quot;')}">
+            <input type="hidden" name="ad_formats[${crCounter}][native_cta]" value="${nativeCta.replace(/"/g, '&quot;')}">
+        `;
+    }
+
+    // Interstitial ad hidden inputs
+    if (isInterstitial) {
+        hiddenInputs += `
+            <input type="hidden" name="ad_formats[${crCounter}][interstitial_headline]" value="${interstitialHeadline.replace(/"/g, '&quot;')}">
+            <input type="hidden" name="ad_formats[${crCounter}][interstitial_body]" value="${interstitialBody.replace(/"/g, '&quot;')}">
+            <input type="hidden" name="ad_formats[${crCounter}][interstitial_cta]" value="${interstitialCta.replace(/"/g, '&quot;')}">
+        `;
+    }
+
+    // Popunder ad hidden inputs
+    if (isPopunder) {
+        hiddenInputs += `
+            <input type="hidden" name="ad_formats[${crCounter}][popunder_headline]" value="${popunderHeadline.replace(/"/g, '&quot;')}">
+            <input type="hidden" name="ad_formats[${crCounter}][popunder_body]" value="${popunderBody.replace(/"/g, '&quot;')}">
+        `;
+    }
+
+    // In-Page Push ad hidden inputs
+    if (isInPagePush) {
+        hiddenInputs += `
+            <input type="hidden" name="ad_formats[${crCounter}][ipp_headline]" value="${ippHeadline.replace(/"/g, '&quot;')}">
+            <input type="hidden" name="ad_formats[${crCounter}][ipp_body]" value="${ippBody.replace(/"/g, '&quot;')}">
+        `;
+    }
+
     row.querySelector('td:first-child').insertAdjacentHTML('beforeend', hiddenInputs);
 
     // Move the actual file input into the row so it gets submitted with the form
-    if (file) {
-        const originalParent = fileInput.parentNode; // Save parent BEFORE moving
-
+    if (file && fileInput) {
+        const originalParent = fileInput.parentNode;
         fileInput.name = `ad_files[${crCounter}]`;
         fileInput.style.display = 'none';
         row.appendChild(fileInput);
 
-        // Create a new file input in the ORIGINAL location
         const newFileInput = document.createElement('input');
         newFileInput.type = 'file';
         newFileInput.id = 'cr_file';
         newFileInput.accept = 'image/*,.html,.swf,.gif';
         newFileInput.className = 'w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100';
         originalParent.appendChild(newFileInput);
+    }
+
+    // Move video file input into the row
+    if (videoFileInput && videoFileInput.files[0]) {
+        const originalParent = videoFileInput.parentNode;
+        videoFileInput.name = `ad_files[${crCounter}]`;
+        videoFileInput.style.display = 'none';
+        row.appendChild(videoFileInput);
+
+        const newVideoInput = document.createElement('input');
+        newVideoInput.type = 'file';
+        newVideoInput.id = 'cr_video_file';
+        newVideoInput.accept = 'video/*';
+        newVideoInput.className = 'w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100';
+        originalParent.appendChild(newVideoInput);
+    }
+
+    // Move social bar icon file input into the row
+    if (sbIconInput && sbIconFile) {
+        const originalParent = sbIconInput.parentNode;
+        sbIconInput.name = `ad_files[${crCounter}]`;
+        sbIconInput.style.display = 'none';
+        row.appendChild(sbIconInput);
+
+        const newSbIconInput = document.createElement('input');
+        newSbIconInput.type = 'file';
+        newSbIconInput.id = 'cr_sb_icon';
+        newSbIconInput.accept = 'image/*';
+        newSbIconInput.className = 'w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100';
+        originalParent.appendChild(newSbIconInput);
+    }
+
+    // Move native ad image file input into the row
+    if (nativeImageInput && nativeImageFile) {
+        const originalParent = nativeImageInput.parentNode;
+        nativeImageInput.name = `ad_files[${crCounter}]`;
+        nativeImageInput.style.display = 'none';
+        row.appendChild(nativeImageInput);
+
+        const newNativeImageInput = document.createElement('input');
+        newNativeImageInput.type = 'file';
+        newNativeImageInput.id = 'cr_native_image';
+        newNativeImageInput.accept = 'image/*';
+        newNativeImageInput.className = 'w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100';
+        originalParent.appendChild(newNativeImageInput);
+    }
+
+    // Move interstitial background image file input into the row
+    if (interstitialImageInput && interstitialImageFile) {
+        const originalParent = interstitialImageInput.parentNode;
+        interstitialImageInput.name = `ad_files[${crCounter}]`;
+        interstitialImageInput.style.display = 'none';
+        row.appendChild(interstitialImageInput);
+
+        const newInterstitialImageInput = document.createElement('input');
+        newInterstitialImageInput.type = 'file';
+        newInterstitialImageInput.id = 'cr_interstitial_image';
+        newInterstitialImageInput.accept = 'image/*';
+        newInterstitialImageInput.className = 'w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100';
+        originalParent.appendChild(newInterstitialImageInput);
+    }
+
+    // Move in-page push icon file input into the row
+    if (ippIconInput && ippIconFile) {
+        const originalParent = ippIconInput.parentNode;
+        ippIconInput.name = `ad_files[${crCounter}]`;
+        ippIconInput.style.display = 'none';
+        row.appendChild(ippIconInput);
+
+        const newIppIconInput = document.createElement('input');
+        newIppIconInput.type = 'file';
+        newIppIconInput.id = 'cr_ipp_icon';
+        newIppIconInput.accept = 'image/*';
+        newIppIconInput.className = 'w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100';
+        originalParent.appendChild(newIppIconInput);
+    }
+
+    // Move video thumbnail input into the row
+    if (videoThumbInput && videoThumbInput.files[0]) {
+        const originalParent = videoThumbInput.parentNode;
+        videoThumbInput.name = `ad_thumbs[${crCounter}]`;
+        videoThumbInput.style.display = 'none';
+        row.appendChild(videoThumbInput);
+
+        const newThumbInput = document.createElement('input');
+        newThumbInput.type = 'file';
+        newThumbInput.id = 'cr_video_thumb';
+        newThumbInput.accept = 'image/*';
+        newThumbInput.className = 'w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100';
+        originalParent.appendChild(newThumbInput);
     }
 
     document.getElementById('crBody').appendChild(row);
@@ -1026,9 +1485,32 @@ function addCreative() {
         reader.readAsDataURL(file);
     }
 
-    // Reset text fields only (file input was already replaced)
+    // Reset fields
     document.getElementById('cr_name').value = '';
     document.getElementById('cr_url').value = '';
+    if (document.getElementById('cr_video_url')) document.getElementById('cr_video_url').value = '';
+    if (document.getElementById('cr_video_headline')) document.getElementById('cr_video_headline').value = '';
+    if (document.getElementById('cr_video_cta')) { document.getElementById('cr_video_cta').value = 'Learn More'; }
+    if (document.getElementById('cr_text_title')) document.getElementById('cr_text_title').value = '';
+    if (document.getElementById('cr_text_description')) document.getElementById('cr_text_description').value = '';
+    if (document.getElementById('cr_text_body')) document.getElementById('cr_text_body').value = '';
+    if (document.getElementById('cr_text_cta')) document.getElementById('cr_text_cta').value = '';
+    if (document.getElementById('cr_sb_title')) document.getElementById('cr_sb_title').value = '';
+    if (document.getElementById('cr_sb_description')) document.getElementById('cr_sb_description').value = '';
+    if (document.getElementById('cr_sb_button_text')) document.getElementById('cr_sb_button_text').value = 'Learn More';
+    if (document.getElementById('cr_native_headline')) document.getElementById('cr_native_headline').value = '';
+    if (document.getElementById('cr_native_brand')) document.getElementById('cr_native_brand').value = '';
+    if (document.getElementById('cr_native_body')) document.getElementById('cr_native_body').value = '';
+    if (document.getElementById('cr_native_cta')) document.getElementById('cr_native_cta').value = '';
+    if (document.getElementById('cr_interstitial_headline')) document.getElementById('cr_interstitial_headline').value = '';
+    if (document.getElementById('cr_interstitial_body')) document.getElementById('cr_interstitial_body').value = '';
+    if (document.getElementById('cr_interstitial_cta')) document.getElementById('cr_interstitial_cta').value = '';
+    if (document.getElementById('cr_popunder_headline')) document.getElementById('cr_popunder_headline').value = '';
+    if (document.getElementById('cr_popunder_body')) document.getElementById('cr_popunder_body').value = '';
+    if (document.getElementById('cr_ipp_headline')) document.getElementById('cr_ipp_headline').value = '';
+    if (document.getElementById('cr_ipp_body')) document.getElementById('cr_ipp_body').value = '';
+    if (document.getElementById('cr_reward_amount')) document.getElementById('cr_reward_amount').value = '';
+    if (document.getElementById('cr_reward_type')) document.getElementById('cr_reward_type').value = 'Coins';
 }
 
 // ─── Create Group (AJAX) ───

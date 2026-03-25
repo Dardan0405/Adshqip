@@ -16,6 +16,7 @@ class AdCreative extends Model
     protected $fillable = [
         'ad_id',
         'file_path',
+        'video_url',
         'file_type',
         'mime_type',
         'file_size_bytes',
@@ -23,6 +24,7 @@ class AdCreative extends Model
         'height',
         'duration_seconds',
         'alt_text',
+        'thumbnail_path',
         'is_primary',
     ];
 
