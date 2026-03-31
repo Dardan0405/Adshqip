@@ -247,8 +247,15 @@
                         <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Geo Targeting</dt>
                         <dd class="mt-1.5 flex flex-wrap gap-1.5">
                             @if(!empty($campaign['targeting_geo']))
+                                @php
+                                    $countryNames = [
+                                        'AL'=>'Albania','BA'=>'Bosnia & Herzegovina','BG'=>'Bulgaria','HR'=>'Croatia',
+                                        'GR'=>'Greece','XK'=>'Kosovo','ME'=>'Montenegro','MK'=>'North Macedonia',
+                                        'RO'=>'Romania','RS'=>'Serbia','SI'=>'Slovenia','TR'=>'Turkey',
+                                    ];
+                                @endphp
                                 @foreach($campaign['targeting_geo'] as $geo)
-                                    <span class="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 text-xs font-semibold text-blue-700">{{ $geo }}</span>
+                                    <span class="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 text-xs font-semibold text-blue-700">{{ $countryNames[$geo] ?? $geo }} ({{ $geo }})</span>
                                 @endforeach
                             @else
                                 <span class="text-sm text-gray-400">All countries</span>
@@ -267,6 +274,54 @@
                             @endif
                         </dd>
                     </div>
+                    <div>
+                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Operating System</dt>
+                        <dd class="mt-1.5 flex flex-wrap gap-1.5">
+                            @if(!empty($campaign['targeting_os']))
+                                @foreach($campaign['targeting_os'] as $os)
+                                    <span class="px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-100 text-xs font-semibold text-indigo-700">{{ $os }}</span>
+                                @endforeach
+                            @else
+                                <span class="text-sm text-gray-400">All operating systems</span>
+                            @endif
+                        </dd>
+                    </div>
+                    @if(!empty($campaign['targeting_os_version']))
+                    <div>
+                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">OS Versions</dt>
+                        <dd class="mt-1.5 flex flex-wrap gap-1.5">
+                            @foreach($campaign['targeting_os_version'] as $osVer)
+                                @if(is_array($osVer))
+                                    <span class="px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-100 text-xs font-semibold text-indigo-600">{{ $osVer['version'] ?? '' }}</span>
+                                @endif
+                            @endforeach
+                        </dd>
+                    </div>
+                    @endif
+                    <div>
+                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Browser</dt>
+                        <dd class="mt-1.5 flex flex-wrap gap-1.5">
+                            @if(!empty($campaign['targeting_browser']))
+                                @foreach($campaign['targeting_browser'] as $browser)
+                                    <span class="px-2.5 py-1 rounded-lg bg-cyan-50 border border-cyan-100 text-xs font-semibold text-cyan-700">{{ $browser }}</span>
+                                @endforeach
+                            @else
+                                <span class="text-sm text-gray-400">All browsers</span>
+                            @endif
+                        </dd>
+                    </div>
+                    @if(!empty($campaign['targeting_browser_version']))
+                    <div>
+                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Browser Versions</dt>
+                        <dd class="mt-1.5 flex flex-wrap gap-1.5">
+                            @foreach($campaign['targeting_browser_version'] as $brVer)
+                                @if(is_array($brVer))
+                                    <span class="px-2.5 py-1 rounded-lg bg-cyan-50 border border-cyan-100 text-xs font-semibold text-cyan-600">{{ $brVer['version'] ?? '' }}</span>
+                                @endif
+                            @endforeach
+                        </dd>
+                    </div>
+                    @endif
                     <div>
                         <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Frequency Cap</dt>
                         <dd class="text-sm font-medium text-gray-900 mt-1">{{ $campaign['frequency_cap'] ?? 'No limit' }} {{ ($campaign['frequency_cap'] ?? null) ? 'impressions/day' : '' }}</dd>
@@ -322,6 +377,103 @@
                             @endif
                         </dd>
                     </div>
+                    <div>
+                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">City Targeting</dt>
+                        <dd class="mt-1.5 flex flex-wrap gap-1.5">
+                            @if(!empty($campaign['targeting_city']))
+                                @foreach($campaign['targeting_city'] as $cityEntry)
+                                    @if(is_array($cityEntry) && !empty($cityEntry['city']))
+                                        <span class="px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-100 text-xs font-semibold text-orange-700">{{ $cityEntry['city'] }} ({{ $cityEntry['country'] ?? '' }})</span>
+                                    @endif
+                                @endforeach
+                            @else
+                                <span class="text-sm text-gray-400">All cities</span>
+                            @endif
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Connection Type</dt>
+                        <dd class="mt-1.5 flex flex-wrap gap-1.5">
+                            @if(!empty($campaign['targeting_connection_type']))
+                                @foreach($campaign['targeting_connection_type'] as $connType)
+                                    <span class="px-2.5 py-1 rounded-lg bg-teal-50 border border-teal-100 text-xs font-semibold text-teal-700">{{ $connType }}</span>
+                                @endforeach
+                            @else
+                                <span class="text-sm text-gray-400">All connection types</span>
+                            @endif
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Mobile Carrier</dt>
+                        <dd class="mt-1.5 flex flex-wrap gap-1.5">
+                            @if(!empty($campaign['targeting_carrier']))
+                                @foreach($campaign['targeting_carrier'] as $carrierEntry)
+                                    @if(is_array($carrierEntry) && !empty($carrierEntry['carrier']))
+                                        <span class="px-2.5 py-1 rounded-lg bg-pink-50 border border-pink-100 text-xs font-semibold text-pink-700">{{ $carrierEntry['carrier'] }} ({{ $carrierEntry['country'] ?? '' }})</span>
+                                    @endif
+                                @endforeach
+                            @else
+                                <span class="text-sm text-gray-400">All carriers</span>
+                            @endif
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Language Targeting</dt>
+                        <dd class="mt-1.5 flex flex-wrap gap-1.5">
+                            @if(!empty($campaign['targeting_language']))
+                                @php
+                                    $langNames = [
+                                        'sq'=>'Albanian','bs'=>'Bosnian','bg'=>'Bulgarian','hr'=>'Croatian','el'=>'Greek',
+                                        'mk'=>'Macedonian','me'=>'Montenegrin','ro'=>'Romanian','sr'=>'Serbian','sl'=>'Slovenian',
+                                        'tr'=>'Turkish','en'=>'English','de'=>'German','fr'=>'French','it'=>'Italian',
+                                        'es'=>'Spanish','pt'=>'Portuguese','ru'=>'Russian','ar'=>'Arabic','zh'=>'Chinese',
+                                        'ja'=>'Japanese','ko'=>'Korean','hi'=>'Hindi','nl'=>'Dutch','pl'=>'Polish',
+                                        'sv'=>'Swedish','da'=>'Danish','fi'=>'Finnish','no'=>'Norwegian','cs'=>'Czech',
+                                        'hu'=>'Hungarian','uk'=>'Ukrainian',
+                                    ];
+                                @endphp
+                                @foreach($campaign['targeting_language'] as $langCode)
+                                    <span class="px-2.5 py-1 rounded-lg bg-violet-50 border border-violet-100 text-xs font-semibold text-violet-700">{{ $langNames[$langCode] ?? $langCode }} ({{ $langCode }})</span>
+                                @endforeach
+                            @else
+                                <span class="text-sm text-gray-400">All languages</span>
+                            @endif
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Traffic Type</dt>
+                        <dd class="mt-1.5">
+                            @php $tt = $campaign['targeting_traffic_type'] ?? 'all'; @endphp
+                            @if($tt === 'mainstream')
+                                <span class="px-2.5 py-1 rounded-lg bg-green-50 border border-green-100 text-xs font-semibold text-green-700">Mainstream</span>
+                            @elseif($tt === 'non-mainstream')
+                                <span class="px-2.5 py-1 rounded-lg bg-red-50 border border-red-100 text-xs font-semibold text-red-700">Non-Mainstream (Adult)</span>
+                            @else
+                                <span class="px-2.5 py-1 rounded-lg bg-gray-50 border border-gray-100 text-xs font-semibold text-gray-600">All Traffic</span>
+                            @endif
+                        </dd>
+                    </div>
+                    @if(!empty($campaign['targeting_ip_include']))
+                    <div>
+                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">IP Whitelist</dt>
+                        <dd class="mt-1.5 flex flex-wrap gap-1.5">
+                            @foreach($campaign['targeting_ip_include'] as $ip)
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-100 text-xs font-mono font-semibold text-emerald-700">{{ $ip }}</span>
+                            @endforeach
+                        </dd>
+                    </div>
+                    @endif
+                    @if(!empty($campaign['targeting_ip_exclude']))
+                    <div>
+                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">IP Blacklist</dt>
+                        <dd class="mt-1.5 flex flex-wrap gap-1.5">
+                            @foreach($campaign['targeting_ip_exclude'] as $ip)
+                                <span class="px-2.5 py-1 rounded-lg bg-red-50 border border-red-100 text-xs font-mono font-semibold text-red-600">{{ $ip }}</span>
+                            @endforeach
+                        </dd>
+                    </div>
+                    @endif
+
                     <div>
                         <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Ad Formats</dt>
                         <dd class="mt-1.5">
@@ -418,6 +570,55 @@
                             @endif
                         </dd>
                     </div>
+                </div>
+            </div>
+
+            {{-- S2S Postback Tracking --}}
+            <div class="bg-white rounded-xl border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h2 class="text-base font-semibold text-gray-900">S2S Postback Tracking</h2>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Status</dt>
+                        <dd class="mt-1.5">
+                            @if(!empty($campaign['s2s_enabled']))
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-50 border border-green-100 text-xs font-semibold text-green-700">
+                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    Enabled
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-500">
+                                    Disabled
+                                </span>
+                            @endif
+                        </dd>
+                    </div>
+                    @if(!empty($campaign['s2s_enabled']))
+                        @if(!empty($campaign['s2s_postback_url']))
+                        <div>
+                            <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Advertiser Postback URL</dt>
+                            <dd class="mt-1.5 bg-gray-50 rounded-lg p-3">
+                                <p class="text-[11px] font-mono text-gray-700 break-all">{{ $campaign['s2s_postback_url'] }}</p>
+                            </dd>
+                        </div>
+                        @endif
+                        <div>
+                            <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Your Postback Endpoint</dt>
+                            <dd class="mt-1.5 bg-blue-50 rounded-lg p-3">
+                                <p class="text-[11px] font-mono text-blue-700 break-all">{{ url('/track/campaign/' . $campaign['id'] . '/postback') }}?click_id={click_id}&payout={payout}&tx_id={tx_id}</p>
+                                <p class="text-[10px] text-blue-500 mt-2">Send a GET or POST request to this URL when a conversion occurs.</p>
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Available Macros</dt>
+                            <dd class="mt-1.5 flex flex-wrap gap-1">
+                                @foreach(['{click_id}', '{payout}', '{tx_id}', '{goal}', '{campaign_id}', '{ad_id}', '{country}', '{device}', '{timestamp}'] as $macro)
+                                    <span class="px-2 py-0.5 rounded bg-gray-100 border border-gray-200 text-[10px] font-mono text-gray-600">{{ $macro }}</span>
+                                @endforeach
+                            </dd>
+                        </div>
+                    @endif
                 </div>
             </div>
 

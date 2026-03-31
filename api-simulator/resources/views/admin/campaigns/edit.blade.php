@@ -97,6 +97,32 @@
                 </div>
             </div>
 
+            {{-- S2S Postback Tracking --}}
+            <div class="mt-5 pt-5 border-t border-gray-100">
+                <div class="flex items-center gap-3 mb-4">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="s2s_enabled" value="1" id="s2sEnabledToggle" class="sr-only peer" onchange="toggleS2sSection()" {{ !empty($campaign['s2s_enabled']) ? 'checked' : '' }}>
+                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-500/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-500"></div>
+                    </label>
+                    <div>
+                        <span class="text-xs font-semibold text-gray-700 uppercase tracking-wider">S2S (Server-to-Server) Postback</span>
+                        <p class="text-[10px] text-gray-400">Cookie-free conversion tracking. iOS 14+ compatible. Industry standard for 2026.</p>
+                    </div>
+                </div>
+                <div id="s2sSection" style="{{ !empty($campaign['s2s_enabled']) ? '' : 'display:none' }}">
+                    <div class="bg-gray-50 rounded-lg p-4 mb-3">
+                        <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Postback URL (Advertiser)</label>
+                        <input type="text" name="s2s_postback_url" value="{{ $campaign['s2s_postback_url'] ?? '' }}" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white font-mono" placeholder="https://your-tracker.com/postback?click_id={click_id}&payout={payout}&tx_id={tx_id}">
+                        <p class="text-[10px] text-gray-400 mt-1">The URL where we'll fire a postback when a conversion is received. Available macros: <code class="text-[10px] bg-gray-200 px-1 rounded">{click_id}</code> <code class="text-[10px] bg-gray-200 px-1 rounded">{payout}</code> <code class="text-[10px] bg-gray-200 px-1 rounded">{tx_id}</code> <code class="text-[10px] bg-gray-200 px-1 rounded">{goal}</code> <code class="text-[10px] bg-gray-200 px-1 rounded">{campaign_id}</code> <code class="text-[10px] bg-gray-200 px-1 rounded">{ad_id}</code> <code class="text-[10px] bg-gray-200 px-1 rounded">{country}</code> <code class="text-[10px] bg-gray-200 px-1 rounded">{device}</code> <code class="text-[10px] bg-gray-200 px-1 rounded">{timestamp}</code></p>
+                    </div>
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <p class="text-xs font-semibold text-blue-700 mb-2">Your S2S Postback Endpoint</p>
+                        <p class="text-[11px] text-blue-600 font-mono break-all">{{ url('/track/campaign/' . $campaign['id'] . '/postback') }}?click_id=<span class="text-blue-800 font-bold">CLICK_ID</span>&payout=<span class="text-blue-800 font-bold">AMOUNT</span>&tx_id=<span class="text-blue-800 font-bold">TX_ID</span></p>
+                        <p class="text-[10px] text-blue-500 mt-2">Send a GET or POST request to this URL when a conversion occurs. The <code class="bg-blue-100 px-1 rounded">click_id</code> is automatically appended to your destination URL on each click.</p>
+                    </div>
+                </div>
+            </div>
+
             {{-- Row: Description --}}
             <div>
                 <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Description</label>
@@ -358,6 +384,124 @@
                     @endforeach
                 </select>
                 <p class="text-[10px] text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple countries</p>
+            </div>
+
+            {{-- City-Level Targeting --}}
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider">City Targeting</label>
+                    <button type="button" id="addCityBtn" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-brand-50 border border-brand-200 text-brand-600 hover:bg-brand-100 transition text-xs font-semibold">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                        Add City
+                    </button>
+                </div>
+                <div id="cityTargetingList" class="space-y-2">
+                    {{-- Dynamic city rows will be added here; existing ones populated via JS --}}
+                </div>
+                <p class="text-[10px] text-gray-400 mt-1">Select a country first, then pick a city. Click + to add more.</p>
+            </div>
+
+            {{-- OS Targeting --}}
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider">Operating System Targeting</label>
+                    <button type="button" id="addOsBtn" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-brand-50 border border-brand-200 text-brand-600 hover:bg-brand-100 transition text-xs font-semibold">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                        Add OS
+                    </button>
+                </div>
+                <div id="osTargetingList" class="space-y-2"></div>
+                <p class="text-[10px] text-gray-400 mt-1">Select an OS, then optionally pick a version. Click + to add more.</p>
+            </div>
+
+            {{-- Browser Targeting --}}
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider">Browser Targeting</label>
+                    <button type="button" id="addBrowserBtn" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-brand-50 border border-brand-200 text-brand-600 hover:bg-brand-100 transition text-xs font-semibold">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                        Add Browser
+                    </button>
+                </div>
+                <div id="browserTargetingList" class="space-y-2"></div>
+                <p class="text-[10px] text-gray-400 mt-1">Select a browser, then optionally pick a version. Click + to add more.</p>
+            </div>
+
+            {{-- Connection Type Targeting --}}
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Connection Type</label>
+                <div class="flex flex-wrap gap-3">
+                    @foreach($connectionTypes as $ct)
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" class="connection-type-cb rounded border-gray-300 text-brand-600 focus:ring-brand-500" value="{{ $ct }}"
+                                @if(!empty($campaign['targeting_connection_type']) && in_array($ct, $campaign['targeting_connection_type'])) checked @endif>
+                            <span class="text-sm text-gray-700">{{ $ct }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                <input type="hidden" name="targeting_connection_type" id="targeting_connection_type">
+                <p class="text-[10px] text-gray-400 mt-1">Leave unchecked to target all connection types.</p>
+            </div>
+
+            {{-- Carrier Targeting --}}
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider">Mobile Carrier Targeting</label>
+                    <button type="button" id="addCarrierBtn" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-brand-50 border border-brand-200 text-brand-600 hover:bg-brand-100 transition text-xs font-semibold">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                        Add Carrier
+                    </button>
+                </div>
+                <div id="carrierTargetingList" class="space-y-2"></div>
+                <p class="text-[10px] text-gray-400 mt-1">Select a country, then pick a mobile carrier. Click + to add more.</p>
+            </div>
+
+            {{-- Language Targeting --}}
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Language Targeting</label>
+                @php $existingLangs = $campaign['targeting_language'] ?? []; @endphp
+                <select id="languageSelect" multiple class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white min-h-[120px]">
+                    @foreach($languages as $code => $name)
+                        <option value="{{ $code }}" @if(is_array($existingLangs) && in_array($code, $existingLangs)) selected @endif>{{ $name }} ({{ $code }})</option>
+                    @endforeach
+                </select>
+                <input type="hidden" name="targeting_language" id="targeting_language">
+                <p class="text-[10px] text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple languages. Leave empty to target all languages.</p>
+            </div>
+
+            {{-- Traffic Type Targeting --}}
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Traffic Type</label>
+                @php $trafficType = $campaign['targeting_traffic_type'] ?? 'all'; @endphp
+                <div class="flex flex-wrap gap-4">
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="targeting_traffic_type" value="all" {{ $trafficType === 'all' ? 'checked' : '' }} class="text-brand-600 focus:ring-brand-500">
+                        <span class="text-sm text-gray-700">All Traffic</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="targeting_traffic_type" value="mainstream" {{ $trafficType === 'mainstream' ? 'checked' : '' }} class="text-brand-600 focus:ring-brand-500">
+                        <span class="text-sm text-gray-700">Mainstream</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="targeting_traffic_type" value="non-mainstream" {{ $trafficType === 'non-mainstream' ? 'checked' : '' }} class="text-brand-600 focus:ring-brand-500">
+                        <span class="text-sm text-gray-700">Non-Mainstream (Adult)</span>
+                    </label>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-1">Choose whether the campaign targets mainstream or non-mainstream (adult) traffic.</p>
+            </div>
+
+            {{-- IP Targeting --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">IP Include (Whitelist)</label>
+                    <textarea name="targeting_ip_include" rows="4" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white font-mono" placeholder="192.168.1.0/24&#10;10.0.0.1&#10;203.0.113.0/28">{{ !empty($campaign['targeting_ip_include']) ? implode("\n", $campaign['targeting_ip_include']) : '' }}</textarea>
+                    <p class="text-[10px] text-gray-400 mt-1">One IP or CIDR range per line. Only these IPs will see the ad. Leave empty to allow all.</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">IP Exclude (Blacklist)</label>
+                    <textarea name="targeting_ip_exclude" rows="4" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white font-mono" placeholder="192.168.1.100&#10;10.0.0.0/8">{{ !empty($campaign['targeting_ip_exclude']) ? implode("\n", $campaign['targeting_ip_exclude']) : '' }}</textarea>
+                    <p class="text-[10px] text-gray-400 mt-1">One IP or CIDR range per line. These IPs will be blocked from seeing the ad.</p>
+                </div>
             </div>
 
             {{-- Device Targeting --}}
@@ -839,6 +983,12 @@
 </form>
 
 <script>
+// ─── S2S Toggle ───
+function toggleS2sSection() {
+    var enabled = document.getElementById('s2sEnabledToggle').checked;
+    document.getElementById('s2sSection').style.display = enabled ? 'block' : 'none';
+}
+
 // ─── Ad Formats Data (from PHP) ───
 const adFormats = @json($adFormats);
 
@@ -1495,6 +1645,285 @@ document.getElementById('deviceTypeSelect').addEventListener('change', function(
 });
 document.getElementById('deviceTypeSelect').dispatchEvent(new Event('change'));
 
+// ─── City Targeting: dynamic add/remove rows ───
+const citiesByCountry = @json($cities);
+const existingCities = @json($campaign['targeting_city'] ?? []);
+let cityRowIndex = 0;
+
+function createCityRow(selectedCountry = '', selectedCity = '') {
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-2 city-row';
+    row.dataset.index = cityRowIndex;
+
+    // Country select
+    const countrySelect = document.createElement('select');
+    countrySelect.className = 'w-1/3 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white city-country-select';
+    countrySelect.innerHTML = '<option value="">Select Country</option>';
+    Object.keys(citiesByCountry).forEach(code => {
+        const opt = document.createElement('option');
+        opt.value = code;
+        const countryNames = {AL:'Albania',BA:'Bosnia and Herzegovina',BG:'Bulgaria',HR:'Croatia',GR:'Greece',XK:'Kosovo',ME:'Montenegro',MK:'North Macedonia',RO:'Romania',RS:'Serbia',SI:'Slovenia',TR:'Turkey'};
+        opt.textContent = (countryNames[code] || code) + ' (' + code + ')';
+        if (code === selectedCountry) opt.selected = true;
+        countrySelect.appendChild(opt);
+    });
+
+    // City select
+    const citySelect = document.createElement('select');
+    citySelect.className = 'flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white city-city-select';
+    citySelect.innerHTML = '<option value="">Select City</option>';
+    citySelect.disabled = !selectedCountry;
+
+    if (selectedCountry && citiesByCountry[selectedCountry]) {
+        citiesByCountry[selectedCountry].forEach(city => {
+            const opt = document.createElement('option');
+            opt.value = city;
+            opt.textContent = city;
+            if (city === selectedCity) opt.selected = true;
+            citySelect.appendChild(opt);
+        });
+    }
+
+    countrySelect.addEventListener('change', function() {
+        const code = this.value;
+        citySelect.innerHTML = '<option value="">Select City</option>';
+        citySelect.disabled = !code;
+        if (code && citiesByCountry[code]) {
+            citiesByCountry[code].forEach(city => {
+                const opt = document.createElement('option');
+                opt.value = city;
+                opt.textContent = city;
+                citySelect.appendChild(opt);
+            });
+        }
+    });
+
+    // Remove button
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'p-2 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition';
+    removeBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
+    removeBtn.addEventListener('click', function() {
+        row.remove();
+    });
+
+    row.appendChild(countrySelect);
+    row.appendChild(citySelect);
+    row.appendChild(removeBtn);
+
+    document.getElementById('cityTargetingList').appendChild(row);
+    cityRowIndex++;
+}
+
+// Populate existing city targeting rows
+if (Array.isArray(existingCities)) {
+    existingCities.forEach(entry => {
+        createCityRow(entry.country || '', entry.city || '');
+    });
+}
+
+document.getElementById('addCityBtn').addEventListener('click', function() {
+    createCityRow();
+});
+
+// ─── OS Targeting: dynamic add/remove rows ───
+const osList = @json($operatingSystems);
+const existingOs = @json($campaign['targeting_os'] ?? []);
+const existingOsVersions = @json($campaign['targeting_os_version'] ?? []);
+
+function createOsRow(selectedOs = '', selectedVersion = '') {
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-2 os-row';
+
+    const osSelect = document.createElement('select');
+    osSelect.className = 'w-1/3 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white os-name-select';
+    osSelect.innerHTML = '<option value="">Select OS</option>';
+    Object.keys(osList).forEach(os => {
+        const opt = document.createElement('option');
+        opt.value = os; opt.textContent = os;
+        if (os === selectedOs) opt.selected = true;
+        osSelect.appendChild(opt);
+    });
+
+    const versionSelect = document.createElement('select');
+    versionSelect.className = 'flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white os-version-select';
+    versionSelect.innerHTML = '<option value="">All Versions</option>';
+    versionSelect.disabled = !selectedOs;
+    if (selectedOs && osList[selectedOs]) {
+        osList[selectedOs].forEach(ver => {
+            const opt = document.createElement('option');
+            opt.value = ver; opt.textContent = ver;
+            if (ver === selectedVersion) opt.selected = true;
+            versionSelect.appendChild(opt);
+        });
+    }
+
+    osSelect.addEventListener('change', function() {
+        const os = this.value;
+        versionSelect.innerHTML = '<option value="">All Versions</option>';
+        versionSelect.disabled = !os;
+        if (os && osList[os]) {
+            osList[os].forEach(ver => {
+                const opt = document.createElement('option');
+                opt.value = ver; opt.textContent = ver;
+                versionSelect.appendChild(opt);
+            });
+        }
+    });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'p-2 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition';
+    removeBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
+    removeBtn.addEventListener('click', () => row.remove());
+
+    row.appendChild(osSelect);
+    row.appendChild(versionSelect);
+    row.appendChild(removeBtn);
+    document.getElementById('osTargetingList').appendChild(row);
+}
+
+// Populate existing OS targeting
+if (Array.isArray(existingOsVersions) && existingOsVersions.length > 0) {
+    existingOsVersions.forEach(entry => createOsRow(entry.os || '', entry.version || ''));
+} else if (Array.isArray(existingOs)) {
+    existingOs.forEach(os => createOsRow(os, ''));
+}
+
+document.getElementById('addOsBtn').addEventListener('click', () => createOsRow());
+
+// ─── Browser Targeting: dynamic add/remove rows ───
+const browserList = @json($browsers);
+const existingBrowsers = @json($campaign['targeting_browser'] ?? []);
+const existingBrowserVersions = @json($campaign['targeting_browser_version'] ?? []);
+
+function createBrowserRow(selectedBrowser = '', selectedVersion = '') {
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-2 browser-row';
+
+    const browserSelect = document.createElement('select');
+    browserSelect.className = 'w-1/3 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white browser-name-select';
+    browserSelect.innerHTML = '<option value="">Select Browser</option>';
+    Object.keys(browserList).forEach(br => {
+        const opt = document.createElement('option');
+        opt.value = br; opt.textContent = br;
+        if (br === selectedBrowser) opt.selected = true;
+        browserSelect.appendChild(opt);
+    });
+
+    const versionSelect = document.createElement('select');
+    versionSelect.className = 'flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white browser-version-select';
+    versionSelect.innerHTML = '<option value="">All Versions</option>';
+    versionSelect.disabled = !selectedBrowser;
+    if (selectedBrowser && browserList[selectedBrowser]) {
+        browserList[selectedBrowser].forEach(ver => {
+            const opt = document.createElement('option');
+            opt.value = ver; opt.textContent = ver;
+            if (ver === selectedVersion) opt.selected = true;
+            versionSelect.appendChild(opt);
+        });
+    }
+
+    browserSelect.addEventListener('change', function() {
+        const br = this.value;
+        versionSelect.innerHTML = '<option value="">All Versions</option>';
+        versionSelect.disabled = !br;
+        if (br && browserList[br]) {
+            browserList[br].forEach(ver => {
+                const opt = document.createElement('option');
+                opt.value = ver; opt.textContent = ver;
+                versionSelect.appendChild(opt);
+            });
+        }
+    });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'p-2 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition';
+    removeBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
+    removeBtn.addEventListener('click', () => row.remove());
+
+    row.appendChild(browserSelect);
+    row.appendChild(versionSelect);
+    row.appendChild(removeBtn);
+    document.getElementById('browserTargetingList').appendChild(row);
+}
+
+// Populate existing Browser targeting
+if (Array.isArray(existingBrowserVersions) && existingBrowserVersions.length > 0) {
+    existingBrowserVersions.forEach(entry => createBrowserRow(entry.browser || '', entry.version || ''));
+} else if (Array.isArray(existingBrowsers)) {
+    existingBrowsers.forEach(br => createBrowserRow(br, ''));
+}
+
+document.getElementById('addBrowserBtn').addEventListener('click', () => createBrowserRow());
+
+// ─── Carrier Targeting: dynamic add/remove rows ───
+const carriersByCountry = @json($mobileCarriers);
+const existingCarriers = @json($campaign['targeting_carrier'] ?? []);
+
+function createCarrierRow(selectedCountry = '', selectedCarrier = '') {
+    const row = document.createElement('div');
+    row.className = 'carrier-row flex items-center gap-2';
+
+    const countrySelect = document.createElement('select');
+    countrySelect.className = 'carrier-country-select flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white';
+    countrySelect.innerHTML = '<option value="">Select Country...</option>';
+    Object.keys(carriersByCountry).forEach(code => {
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.textContent = code;
+        if (code === selectedCountry) opt.selected = true;
+        countrySelect.appendChild(opt);
+    });
+
+    const carrierSelect = document.createElement('select');
+    carrierSelect.className = 'carrier-name-select flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white';
+    carrierSelect.disabled = !selectedCountry;
+    carrierSelect.innerHTML = '<option value="">Select Carrier...</option>';
+    if (selectedCountry && carriersByCountry[selectedCountry]) {
+        carriersByCountry[selectedCountry].forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c;
+            if (c === selectedCarrier) opt.selected = true;
+            carrierSelect.appendChild(opt);
+        });
+    }
+
+    countrySelect.addEventListener('change', function() {
+        const code = this.value;
+        carrierSelect.innerHTML = '<option value="">Select Carrier...</option>';
+        carrierSelect.disabled = !code;
+        if (code && carriersByCountry[code]) {
+            carriersByCountry[code].forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                carrierSelect.appendChild(opt);
+            });
+        }
+    });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'p-2 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition';
+    removeBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
+    removeBtn.addEventListener('click', () => row.remove());
+
+    row.appendChild(countrySelect);
+    row.appendChild(carrierSelect);
+    row.appendChild(removeBtn);
+    document.getElementById('carrierTargetingList').appendChild(row);
+}
+
+// Populate existing Carrier targeting
+if (Array.isArray(existingCarriers) && existingCarriers.length > 0) {
+    existingCarriers.forEach(entry => createCarrierRow(entry.country || '', entry.carrier || ''));
+}
+
+document.getElementById('addCarrierBtn').addEventListener('click', () => createCarrierRow());
+
 // ─── Form submission: Convert multi-select to JSON ───
 document.getElementById('editCampaignForm').addEventListener('submit', function(e) {
     // Convert targeting_geo multi-select to JSON
@@ -1521,6 +1950,101 @@ document.getElementById('editCampaignForm').addEventListener('submit', function(
             hiddenDevice.name = 'targeting_device';
             hiddenDevice.value = JSON.stringify(selectedDevices);
             this.appendChild(hiddenDevice);
+        }
+    }
+
+    // Collect city targeting rows into JSON
+    const cityRows = document.querySelectorAll('.city-row');
+    const cityData = [];
+    cityRows.forEach(row => {
+        const country = row.querySelector('.city-country-select')?.value;
+        const city = row.querySelector('.city-city-select')?.value;
+        if (country && city) {
+            cityData.push({ country: country, city: city });
+        }
+    });
+    if (cityData.length > 0) {
+        const hiddenCity = document.createElement('input');
+        hiddenCity.type = 'hidden';
+        hiddenCity.name = 'targeting_city';
+        hiddenCity.value = JSON.stringify(cityData);
+        this.appendChild(hiddenCity);
+    }
+
+    // Collect OS targeting rows
+    const osRows = document.querySelectorAll('.os-row');
+    const osData = [];
+    const osVersionData = [];
+    osRows.forEach(row => {
+        const os = row.querySelector('.os-name-select')?.value;
+        const version = row.querySelector('.os-version-select')?.value;
+        if (os) {
+            if (!osData.includes(os)) osData.push(os);
+            if (version) osVersionData.push({ os: os, version: version });
+        }
+    });
+    if (osData.length > 0) {
+        const h = document.createElement('input');
+        h.type = 'hidden'; h.name = 'targeting_os'; h.value = JSON.stringify(osData);
+        this.appendChild(h);
+    }
+    if (osVersionData.length > 0) {
+        const h = document.createElement('input');
+        h.type = 'hidden'; h.name = 'targeting_os_version'; h.value = JSON.stringify(osVersionData);
+        this.appendChild(h);
+    }
+
+    // Collect Browser targeting rows
+    const browserRows = document.querySelectorAll('.browser-row');
+    const browserData = [];
+    const browserVersionData = [];
+    browserRows.forEach(row => {
+        const br = row.querySelector('.browser-name-select')?.value;
+        const version = row.querySelector('.browser-version-select')?.value;
+        if (br) {
+            if (!browserData.includes(br)) browserData.push(br);
+            if (version) browserVersionData.push({ browser: br, version: version });
+        }
+    });
+    if (browserData.length > 0) {
+        const h = document.createElement('input');
+        h.type = 'hidden'; h.name = 'targeting_browser'; h.value = JSON.stringify(browserData);
+        this.appendChild(h);
+    }
+    if (browserVersionData.length > 0) {
+        const h = document.createElement('input');
+        h.type = 'hidden'; h.name = 'targeting_browser_version'; h.value = JSON.stringify(browserVersionData);
+        this.appendChild(h);
+    }
+
+    // Collect Connection Type checkboxes
+    const connChecked = Array.from(document.querySelectorAll('.connection-type-cb:checked')).map(cb => cb.value);
+    if (connChecked.length > 0) {
+        document.getElementById('targeting_connection_type').value = JSON.stringify(connChecked);
+    }
+
+    // Collect Carrier targeting rows
+    const carrierRows = document.querySelectorAll('.carrier-row');
+    const carrierData = [];
+    carrierRows.forEach(row => {
+        const country = row.querySelector('.carrier-country-select')?.value;
+        const carrier = row.querySelector('.carrier-name-select')?.value;
+        if (country && carrier) {
+            carrierData.push({ country: country, carrier: carrier });
+        }
+    });
+    if (carrierData.length > 0) {
+        const h = document.createElement('input');
+        h.type = 'hidden'; h.name = 'targeting_carrier'; h.value = JSON.stringify(carrierData);
+        this.appendChild(h);
+    }
+
+    // Collect Language targeting
+    const langSelect = document.getElementById('languageSelect');
+    if (langSelect) {
+        const selectedLangs = Array.from(langSelect.selectedOptions).map(opt => opt.value);
+        if (selectedLangs.length > 0) {
+            document.getElementById('targeting_language').value = JSON.stringify(selectedLangs);
         }
     }
 });

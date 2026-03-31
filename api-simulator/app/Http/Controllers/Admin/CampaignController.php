@@ -15,6 +15,131 @@ use Illuminate\Http\Request;
 class CampaignController extends Controller
 {
     /**
+     * Balkan cities grouped by country code.
+     */
+    private function getBalkanCities(): array
+    {
+        return [
+            'AL' => ['Tirana', 'Durrës', 'Vlorë', 'Elbasan', 'Shkodër', 'Korçë', 'Fier', 'Berat', 'Lushnjë', 'Pogradec', 'Kavajë', 'Gjirokastër', 'Sarandë', 'Lezhë', 'Kukës', 'Peshkopi'],
+            'BA' => ['Sarajevo', 'Banja Luka', 'Tuzla', 'Zenica', 'Mostar', 'Bijeljina', 'Brčko', 'Prijedor', 'Doboj', 'Cazin', 'Trebinje', 'Livno'],
+            'BG' => ['Sofia', 'Plovdiv', 'Varna', 'Burgas', 'Ruse', 'Stara Zagora', 'Pleven', 'Sliven', 'Dobrich', 'Shumen', 'Pernik', 'Blagoevgrad', 'Veliko Tarnovo', 'Gabrovo'],
+            'HR' => ['Zagreb', 'Split', 'Rijeka', 'Osijek', 'Zadar', 'Pula', 'Slavonski Brod', 'Karlovac', 'Varaždin', 'Dubrovnik', 'Šibenik', 'Sisak'],
+            'GR' => ['Athens', 'Thessaloniki', 'Patras', 'Heraklion', 'Larissa', 'Volos', 'Ioannina', 'Kavala', 'Chania', 'Rhodes', 'Alexandroupoli', 'Serres', 'Katerini', 'Corfu'],
+            'XK' => ['Prishtina', 'Prizren', 'Peja', 'Mitrovica', 'Gjilan', 'Ferizaj', 'Gjakova', 'Podujeva', 'Vushtrri', 'Suhareka', 'Rahovec', 'Drenas', 'Lipjan', 'Malisheva', 'Kamenica', 'Deçan', 'Istog', 'Skenderaj', 'Klinë', 'Kaçanik', 'Shtime', 'Fushë Kosovë', 'Obiliq', 'Viti'],
+            'ME' => ['Podgorica', 'Nikšić', 'Bijelo Polje', 'Herceg Novi', 'Budva', 'Bar', 'Cetinje', 'Kotor', 'Tivat', 'Ulcinj', 'Berane', 'Pljevlja'],
+            'MK' => ['Skopje', 'Bitola', 'Kumanovo', 'Prilep', 'Tetovo', 'Ohrid', 'Veles', 'Štip', 'Strumica', 'Gostivar', 'Kavadarci', 'Kočani'],
+            'RO' => ['Bucharest', 'Cluj-Napoca', 'Timișoara', 'Iași', 'Constanța', 'Craiova', 'Brașov', 'Galați', 'Ploiești', 'Oradea', 'Brăila', 'Arad', 'Pitești', 'Sibiu', 'Bacău', 'Târgu Mureș'],
+            'RS' => ['Belgrade', 'Novi Sad', 'Niš', 'Kragujevac', 'Subotica', 'Zrenjanin', 'Pančevo', 'Čačak', 'Novi Pazar', 'Kraljevo', 'Smederevo', 'Leskovac', 'Užice', 'Vranje'],
+            'SI' => ['Ljubljana', 'Maribor', 'Celje', 'Kranj', 'Koper', 'Velenje', 'Novo Mesto', 'Ptuj', 'Trbovlje', 'Kamnik', 'Nova Gorica', 'Murska Sobota'],
+            'TR' => ['Istanbul', 'Ankara', 'Izmir', 'Bursa', 'Antalya', 'Adana', 'Konya', 'Gaziantep', 'Mersin', 'Diyarbakır', 'Kayseri', 'Eskişehir', 'Trabzon', 'Samsun', 'Denizli', 'Malatya'],
+        ];
+    }
+
+    /**
+     * Operating systems with their versions.
+     */
+    private function getOperatingSystems(): array
+    {
+        return [
+            'Windows' => ['Windows 11', 'Windows 10', 'Windows 8.1', 'Windows 8', 'Windows 7'],
+            'macOS' => ['macOS 15 Sequoia', 'macOS 14 Sonoma', 'macOS 13 Ventura', 'macOS 12 Monterey', 'macOS 11 Big Sur'],
+            'Android' => ['Android 15', 'Android 14', 'Android 13', 'Android 12', 'Android 11', 'Android 10', 'Android 9'],
+            'iOS' => ['iOS 18', 'iOS 17', 'iOS 16', 'iOS 15', 'iOS 14'],
+            'iPadOS' => ['iPadOS 18', 'iPadOS 17', 'iPadOS 16', 'iPadOS 15'],
+            'Linux' => ['Ubuntu', 'Fedora', 'Debian', 'Arch', 'CentOS'],
+            'Chrome OS' => ['Chrome OS 130', 'Chrome OS 125', 'Chrome OS 120'],
+        ];
+    }
+
+    /**
+     * Browsers with their versions.
+     */
+    private function getBrowsers(): array
+    {
+        return [
+            'Chrome' => ['Chrome 131', 'Chrome 130', 'Chrome 129', 'Chrome 128', 'Chrome 125', 'Chrome 120', 'Chrome 115'],
+            'Firefox' => ['Firefox 133', 'Firefox 132', 'Firefox 131', 'Firefox 130', 'Firefox 125', 'Firefox 120', 'Firefox 115'],
+            'Safari' => ['Safari 18', 'Safari 17', 'Safari 16', 'Safari 15'],
+            'Edge' => ['Edge 131', 'Edge 130', 'Edge 129', 'Edge 125', 'Edge 120'],
+            'Opera' => ['Opera 114', 'Opera 113', 'Opera 110', 'Opera 105', 'Opera 100'],
+            'Samsung Internet' => ['Samsung Internet 26', 'Samsung Internet 25', 'Samsung Internet 24', 'Samsung Internet 23'],
+            'Brave' => ['Brave 1.73', 'Brave 1.72', 'Brave 1.70', 'Brave 1.65'],
+            'UC Browser' => ['UC Browser 15', 'UC Browser 14', 'UC Browser 13'],
+            'Vivaldi' => ['Vivaldi 7.0', 'Vivaldi 6.9', 'Vivaldi 6.8'],
+        ];
+    }
+
+    /**
+     * Connection types available for targeting.
+     */
+    private function getConnectionTypes(): array
+    {
+        return ['Wi-Fi', '3G', '4G/LTE', '5G'];
+    }
+
+    /**
+     * Mobile carriers grouped by country code (Balkan region).
+     */
+    private function getMobileCarriers(): array
+    {
+        return [
+            'AL' => ['Vodafone Albania', 'One Telecommunications (ONE)', 'ALBtelecom'],
+            'BA' => ['BH Telecom', 'HT Eronet', 'm:tel (Telekom Srpske)'],
+            'BG' => ['A1 Bulgaria', 'Yettel Bulgaria', 'Vivacom'],
+            'HR' => ['Hrvatski Telekom', 'A1 Croatia', 'Telemach Croatia'],
+            'GR' => ['Cosmote', 'Vodafone Greece', 'WIND Hellas (Nova)'],
+            'XK' => ['IPKO', 'Vala (Kosovo Telecom)', 'Z Mobile'],
+            'ME' => ['Crnogorski Telekom', 'One Montenegro', 'Telenor Montenegro'],
+            'MK' => ['Makedonski Telekom', 'A1 Macedonia', 'Lycamobile MK'],
+            'RO' => ['Orange Romania', 'Vodafone Romania', 'Digi Mobil (RCS & RDS)', 'Telekom Romania'],
+            'RS' => ['Telekom Srbija (MTS)', 'Telenor Serbia (Yettel)', 'A1 Serbia'],
+            'SI' => ['Telekom Slovenije', 'A1 Slovenia', 'Telemach Slovenia'],
+            'TR' => ['Turkcell', 'Vodafone Turkey', 'Türk Telekom (TT Mobil)'],
+        ];
+    }
+
+    /**
+     * Languages available for targeting (Balkan region + major web languages).
+     */
+    private function getLanguages(): array
+    {
+        return [
+            'sq' => 'Albanian',
+            'bs' => 'Bosnian',
+            'bg' => 'Bulgarian',
+            'hr' => 'Croatian',
+            'el' => 'Greek',
+            'mk' => 'Macedonian',
+            'me' => 'Montenegrin',
+            'ro' => 'Romanian',
+            'sr' => 'Serbian',
+            'sl' => 'Slovenian',
+            'tr' => 'Turkish',
+            'en' => 'English',
+            'de' => 'German',
+            'fr' => 'French',
+            'it' => 'Italian',
+            'es' => 'Spanish',
+            'pt' => 'Portuguese',
+            'ru' => 'Russian',
+            'ar' => 'Arabic',
+            'zh' => 'Chinese',
+            'ja' => 'Japanese',
+            'ko' => 'Korean',
+            'hi' => 'Hindi',
+            'nl' => 'Dutch',
+            'pl' => 'Polish',
+            'sv' => 'Swedish',
+            'da' => 'Danish',
+            'fi' => 'Finnish',
+            'no' => 'Norwegian',
+            'cs' => 'Czech',
+            'hu' => 'Hungarian',
+            'uk' => 'Ukrainian',
+        ];
+    }
+
+    /**
      * Display the campaigns listing page for admin.
      */
     public function index(Request $request)
@@ -289,6 +414,12 @@ class CampaignController extends Controller
             'campaignTypes' => $campaignTypes,
             'marketingObjectives' => $marketingObjectives,
             'countries' => $countries,
+            'cities' => $this->getBalkanCities(),
+            'operatingSystems' => $this->getOperatingSystems(),
+            'browsers' => $this->getBrowsers(),
+            'connectionTypes' => $this->getConnectionTypes(),
+            'mobileCarriers' => $this->getMobileCarriers(),
+            'languages' => $this->getLanguages(),
             'trafficSources' => $trafficSources,
             'pricingModels' => $pricingModels,
             'advertisers' => $advertisers,
@@ -320,6 +451,19 @@ class CampaignController extends Controller
             'targeting_device' => 'nullable|json',
             'targeting_region' => 'nullable|array',
             'targeting_region.*' => 'string',
+            'targeting_city' => 'nullable|json',
+            'targeting_os' => 'nullable|json',
+            'targeting_os_version' => 'nullable|json',
+            'targeting_browser' => 'nullable|json',
+            'targeting_browser_version' => 'nullable|json',
+            'targeting_connection_type' => 'nullable|json',
+            'targeting_carrier' => 'nullable|json',
+            'targeting_language' => 'nullable|json',
+            'targeting_traffic_type' => 'nullable|in:all,mainstream,non-mainstream',
+            'targeting_ip_include' => 'nullable|string',
+            'targeting_ip_exclude' => 'nullable|string',
+            's2s_enabled' => 'nullable|boolean',
+            's2s_postback_url' => 'nullable|string|max:2000',
             'traffic_sources' => 'nullable|array',
             'country_bids' => 'nullable|array',
             'ad_formats' => 'nullable|array',
@@ -356,6 +500,12 @@ class CampaignController extends Controller
             'pixel_tracker_id' => 'nullable|exists:aq_pixel_trackers,id',
         ]);
 
+        // Handle S2S checkbox (unchecked = not sent)
+        $validated['s2s_enabled'] = $request->has('s2s_enabled') ? true : false;
+        if (!$validated['s2s_enabled']) {
+            $validated['s2s_postback_url'] = null;
+        }
+
         // Set advertiser_id to logged-in user (or default to 1 for demo)
         $validated['advertiser_id'] = auth()->id() ?? 1;
 
@@ -368,6 +518,24 @@ class CampaignController extends Controller
         }
         if (isset($validated['targeting_device']) && is_string($validated['targeting_device'])) {
             $validated['targeting_device'] = json_decode($validated['targeting_device'], true);
+        }
+        if (isset($validated['targeting_city']) && is_string($validated['targeting_city'])) {
+            $validated['targeting_city'] = json_decode($validated['targeting_city'], true);
+        }
+        foreach (['targeting_os', 'targeting_os_version', 'targeting_browser', 'targeting_browser_version', 'targeting_connection_type', 'targeting_carrier', 'targeting_language'] as $field) {
+            if (isset($validated[$field]) && is_string($validated[$field])) {
+                $validated[$field] = json_decode($validated[$field], true);
+            }
+        }
+
+        // Parse IP include/exclude textarea (one per line) into JSON arrays
+        foreach (['targeting_ip_include', 'targeting_ip_exclude'] as $ipField) {
+            if (!empty($validated[$ipField]) && is_string($validated[$ipField])) {
+                $validated[$ipField] = array_values(array_filter(array_map('trim', preg_split('/[\r\n,]+/', $validated[$ipField]))));
+            }
+            if (empty($validated[$ipField])) {
+                $validated[$ipField] = null;
+            }
         }
 
         // Convert traffic_sources indexed array to clean array
@@ -586,12 +754,25 @@ class CampaignController extends Controller
             'frequency_cap_period' => $campaign->frequency_cap_period,
             'targeting_geo' => $campaign->targeting_geo,
             'targeting_device' => $campaign->targeting_device,
+            'targeting_os' => $campaign->targeting_os,
+            'targeting_os_version' => $campaign->targeting_os_version,
+            'targeting_browser' => $campaign->targeting_browser,
+            'targeting_browser_version' => $campaign->targeting_browser_version,
             'targeting_schedule' => $campaign->targeting_schedule,
             'weight' => $campaign->weight,
             'group' => $campaign->group ? $campaign->group->name : null,
             'group_name' => $campaign->group ? $campaign->group->name : null,
             'group_id' => $campaign->group_id,
             'targeting_region' => $campaign->targeting_region,
+            'targeting_city' => $campaign->targeting_city,
+            'targeting_connection_type' => $campaign->targeting_connection_type,
+            'targeting_carrier' => $campaign->targeting_carrier,
+            'targeting_language' => $campaign->targeting_language,
+            'targeting_traffic_type' => $campaign->targeting_traffic_type,
+            'targeting_ip_include' => $campaign->targeting_ip_include,
+            'targeting_ip_exclude' => $campaign->targeting_ip_exclude,
+            's2s_enabled' => (bool) $campaign->s2s_enabled,
+            's2s_postback_url' => $campaign->s2s_postback_url,
             'traffic_sources' => $campaign->traffic_sources,
             'country_bids' => $campaign->country_bids,
             'ad_formats' => $campaign->ad_formats,
@@ -673,6 +854,19 @@ class CampaignController extends Controller
             'targeting_region' => $campaign->targeting_region,
             'targeting_geo' => $campaign->targeting_geo,
             'targeting_device' => $campaign->targeting_device,
+            'targeting_city' => $campaign->targeting_city,
+            'targeting_connection_type' => $campaign->targeting_connection_type,
+            'targeting_carrier' => $campaign->targeting_carrier,
+            'targeting_language' => $campaign->targeting_language,
+            'targeting_traffic_type' => $campaign->targeting_traffic_type,
+            'targeting_ip_include' => $campaign->targeting_ip_include,
+            'targeting_ip_exclude' => $campaign->targeting_ip_exclude,
+            's2s_enabled' => (bool) $campaign->s2s_enabled,
+            's2s_postback_url' => $campaign->s2s_postback_url,
+            'targeting_os' => $campaign->targeting_os,
+            'targeting_os_version' => $campaign->targeting_os_version,
+            'targeting_browser' => $campaign->targeting_browser,
+            'targeting_browser_version' => $campaign->targeting_browser_version,
             'traffic_sources' => $campaign->traffic_sources,
             'country_bids' => $campaign->country_bids,
             'ad_formats' => $campaign->ad_formats,
@@ -776,6 +970,12 @@ class CampaignController extends Controller
             'campaignTypes' => $campaignTypes,
             'marketingObjectives' => $marketingObjectives,
             'countries' => $countries,
+            'cities' => $this->getBalkanCities(),
+            'operatingSystems' => $this->getOperatingSystems(),
+            'browsers' => $this->getBrowsers(),
+            'connectionTypes' => $this->getConnectionTypes(),
+            'mobileCarriers' => $this->getMobileCarriers(),
+            'languages' => $this->getLanguages(),
             'trafficSources' => $trafficSources,
             'pricingModels' => $pricingModels,
             'pixelTrackers' => $pixelTrackers,
@@ -816,6 +1016,19 @@ class CampaignController extends Controller
             'targeting_device' => 'nullable|json',
             'targeting_region' => 'nullable|array',
             'targeting_region.*' => 'string',
+            'targeting_city' => 'nullable|json',
+            'targeting_os' => 'nullable|json',
+            'targeting_os_version' => 'nullable|json',
+            'targeting_browser' => 'nullable|json',
+            'targeting_browser_version' => 'nullable|json',
+            'targeting_connection_type' => 'nullable|json',
+            'targeting_carrier' => 'nullable|json',
+            'targeting_language' => 'nullable|json',
+            'targeting_traffic_type' => 'nullable|in:all,mainstream,non-mainstream',
+            'targeting_ip_include' => 'nullable|string',
+            'targeting_ip_exclude' => 'nullable|string',
+            's2s_enabled' => 'nullable|boolean',
+            's2s_postback_url' => 'nullable|string|max:2000',
             'traffic_sources' => 'nullable|array',
             'country_bids' => 'nullable|array',
             'ad_formats' => 'nullable|array',
@@ -852,6 +1065,12 @@ class CampaignController extends Controller
             'pixel_tracker_id' => 'nullable|exists:aq_pixel_trackers,id',
         ]);
 
+        // Handle S2S checkbox (unchecked = not sent)
+        $validated['s2s_enabled'] = $request->has('s2s_enabled') ? true : false;
+        if (!$validated['s2s_enabled']) {
+            $validated['s2s_postback_url'] = null;
+        }
+
         // Convert traffic_sources indexed array to clean array
         if (isset($validated['traffic_sources'])) {
             $validated['traffic_sources'] = array_values($validated['traffic_sources']);
@@ -877,8 +1096,26 @@ class CampaignController extends Controller
         if (isset($validated['targeting_device']) && is_string($validated['targeting_device'])) {
             $validated['targeting_device'] = json_decode($validated['targeting_device'], true);
         }
+        if (isset($validated['targeting_city']) && is_string($validated['targeting_city'])) {
+            $validated['targeting_city'] = json_decode($validated['targeting_city'], true);
+        }
+        foreach (['targeting_os', 'targeting_os_version', 'targeting_browser', 'targeting_browser_version', 'targeting_connection_type', 'targeting_carrier', 'targeting_language'] as $field) {
+            if (isset($validated[$field]) && is_string($validated[$field])) {
+                $validated[$field] = json_decode($validated[$field], true);
+            }
+        }
 
-        // If region/formats/geo/device not sent, set to null (unchecked all)
+        // Parse IP include/exclude textarea (one per line) into JSON arrays
+        foreach (['targeting_ip_include', 'targeting_ip_exclude'] as $ipField) {
+            if (!empty($validated[$ipField]) && is_string($validated[$ipField])) {
+                $validated[$ipField] = array_values(array_filter(array_map('trim', preg_split('/[\r\n,]+/', $validated[$ipField]))));
+            }
+            if (empty($validated[$ipField])) {
+                $validated[$ipField] = null;
+            }
+        }
+
+        // If region/formats/geo/device/city/os/browser/connection/carrier not sent, set to null (unchecked all)
         if (!$request->has('targeting_region')) {
             $validated['targeting_region'] = null;
         }
@@ -887,6 +1124,14 @@ class CampaignController extends Controller
         }
         if (!$request->has('targeting_device')) {
             $validated['targeting_device'] = null;
+        }
+        if (!$request->has('targeting_city')) {
+            $validated['targeting_city'] = null;
+        }
+        foreach (['targeting_os', 'targeting_os_version', 'targeting_browser', 'targeting_browser_version', 'targeting_connection_type', 'targeting_carrier', 'targeting_language'] as $field) {
+            if (!$request->has($field)) {
+                $validated[$field] = null;
+            }
         }
         if (!$request->has('ad_formats')) {
             $validated['ad_formats'] = null;

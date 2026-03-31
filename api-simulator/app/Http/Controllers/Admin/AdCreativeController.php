@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ad;
+use App\Models\Campaign;
 use App\Models\StatDaily;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AdCreativeController extends Controller
 {
@@ -877,35 +880,139 @@ SCRIPT;
 
             // 4. Device targeting
             $ua = strtolower($request->userAgent() ?? '');
-            $visitorDevice = 'desktop';
-            if (str_contains($ua, 'mobile') || str_contains($ua, 'android')) {
-                $visitorDevice = (str_contains($ua, 'tablet') || str_contains($ua, 'ipad')) ? 'tablet' : 'mobile';
-            } elseif (str_contains($ua, 'tablet') || str_contains($ua, 'ipad')) {
-                $visitorDevice = 'tablet';
+
+            // Detect device type (desktop/mobile/tablet)
+            $deviceTypeOverride = $request->query('device');
+            if ($deviceTypeOverride && in_array(strtolower($deviceTypeOverride), ['desktop', 'mobile', 'tablet'])) {
+                $visitorDevice = strtolower($deviceTypeOverride);
+            } else {
+                $visitorDevice = 'desktop';
+                if (str_contains($ua, 'mobile') || str_contains($ua, 'android')) {
+                    $visitorDevice = (str_contains($ua, 'tablet') || str_contains($ua, 'ipad')) ? 'tablet' : 'mobile';
+                } elseif (str_contains($ua, 'tablet') || str_contains($ua, 'ipad')) {
+                    $visitorDevice = 'tablet';
+                }
+            }
+
+            // Detect specific device name (iPhone, Samsung, iPad, MacBook, etc.)
+            $deviceNameOverride = $request->query('device_name');
+            if ($deviceNameOverride && is_string($deviceNameOverride)) {
+                $visitorDeviceName = strtolower($deviceNameOverride);
+            } else {
+                $visitorDeviceName = $this->detectDeviceName($ua);
             }
 
             $targetDevices = $campaign->targeting_device;
             if (!empty($targetDevices) && is_array($targetDevices)) {
-                // Check if any targeted device name matches the visitor device type
                 $deviceMatched = false;
                 foreach ($targetDevices as $dev) {
                     $devLower = strtolower($dev);
-                    if ($visitorDevice === 'mobile' && (str_contains($devLower, 'iphone') || str_contains($devLower, 'samsung') || str_contains($devLower, 'pixel') || str_contains($devLower, 'huawei') || str_contains($devLower, 'xiaomi') || str_contains($devLower, 'oneplus') || str_contains($devLower, 'oppo') || str_contains($devLower, 'vivo') || str_contains($devLower, 'realme') || str_contains($devLower, 'nokia'))) {
+                    // Match specific device name (e.g., "iPhone" only matches iPhone, not Samsung)
+                    if ($visitorDeviceName && str_contains($devLower, $visitorDeviceName)) {
                         $deviceMatched = true;
                         break;
                     }
-                    if ($visitorDevice === 'desktop' && (str_contains($devLower, 'windows') || str_contains($devLower, 'macbook') || str_contains($devLower, 'imac') || str_contains($devLower, 'linux') || str_contains($devLower, 'chromebook'))) {
-                        $deviceMatched = true;
-                        break;
-                    }
-                    if ($visitorDevice === 'tablet' && (str_contains($devLower, 'ipad') || str_contains($devLower, 'tab') || str_contains($devLower, 'fire') || str_contains($devLower, 'surface'))) {
+                    // Also match if target is a generic type keyword
+                    if ($visitorDeviceName && str_contains($visitorDeviceName, $devLower)) {
                         $deviceMatched = true;
                         break;
                     }
                 }
                 if (!$deviceMatched) {
-                    if ($debug) return $this->adResponse('<pre>BLOCKED: device not targeted. Visitor: ' . $visitorDevice . ', Targeted devices: ' . json_encode($targetDevices) . '</pre>');
+                    if ($debug) return $this->adResponse('<pre>BLOCKED: device not targeted. Visitor device: ' . ($visitorDeviceName ?? 'unknown') . ' (' . $visitorDevice . '), Targeted devices: ' . json_encode($targetDevices) . '</pre>');
                     return $this->adResponse('<!-- device not targeted -->', 204);
+                }
+            }
+
+            // 4b. OS targeting
+            $targetOs = $campaign->targeting_os;
+            if (!empty($targetOs) && is_array($targetOs)) {
+                $visitorOs = $this->detectOs($ua);
+                if ($visitorOs) {
+                    $osMatched = false;
+                    foreach ($targetOs as $os) {
+                        if (strtolower($os) === strtolower($visitorOs)) {
+                            $osMatched = true;
+                            break;
+                        }
+                    }
+                    if (!$osMatched) {
+                        if ($debug) return $this->adResponse('<pre>BLOCKED: OS not targeted. Visitor OS: ' . $visitorOs . ', Targeted: ' . json_encode($targetOs) . '</pre>');
+                        return $this->adResponse('<!-- os not targeted -->', 204);
+                    }
+
+                    // Check OS version if specified
+                    $targetOsVersions = $campaign->targeting_os_version;
+                    if (!empty($targetOsVersions) && is_array($targetOsVersions)) {
+                        $visitorOsVersion = $this->detectOsVersion($ua);
+                        $versionMatched = false;
+                        $hasVersionForOs = false;
+                        foreach ($targetOsVersions as $entry) {
+                            if (strtolower($entry['os'] ?? '') === strtolower($visitorOs)) {
+                                $hasVersionForOs = true;
+                                $targetVer = $entry['version'] ?? '';
+                                $targetVerNum = preg_replace('/^[^0-9]*/', '', $targetVer);
+                                if ($targetVerNum && $visitorOsVersion) {
+                                    // Windows 10/11 are indistinguishable via UA (both NT 10.0)
+                                    // Accept both when either is targeted and detected version is 10
+                                    if ($visitorOs === 'Windows' && in_array($visitorOsVersion, ['10', '11']) && in_array($targetVerNum, ['10', '11'])) {
+                                        $versionMatched = true;
+                                        break;
+                                    }
+                                    if (str_starts_with($visitorOsVersion, $targetVerNum)) {
+                                        $versionMatched = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if ($hasVersionForOs && !$versionMatched) {
+                            if ($debug) return $this->adResponse('<pre>BLOCKED: OS version not targeted. Visitor: ' . $visitorOs . ' ' . ($visitorOsVersion ?? 'unknown') . ', Targeted versions: ' . json_encode($targetOsVersions) . '</pre>');
+                            return $this->adResponse('<!-- os version not targeted -->', 204);
+                        }
+                    }
+                }
+            }
+
+            // 4c. Browser targeting
+            $targetBrowsers = $campaign->targeting_browser;
+            if (!empty($targetBrowsers) && is_array($targetBrowsers)) {
+                $visitorBrowser = $this->detectBrowser($ua);
+                if ($visitorBrowser) {
+                    $browserMatched = false;
+                    foreach ($targetBrowsers as $br) {
+                        if (strtolower($br) === strtolower($visitorBrowser)) {
+                            $browserMatched = true;
+                            break;
+                        }
+                    }
+                    if (!$browserMatched) {
+                        if ($debug) return $this->adResponse('<pre>BLOCKED: browser not targeted. Visitor browser: ' . $visitorBrowser . ', Targeted: ' . json_encode($targetBrowsers) . '</pre>');
+                        return $this->adResponse('<!-- browser not targeted -->', 204);
+                    }
+
+                    // Check browser version if specified
+                    $targetBrowserVersions = $campaign->targeting_browser_version;
+                    if (!empty($targetBrowserVersions) && is_array($targetBrowserVersions)) {
+                        $visitorBrowserVersion = $this->detectBrowserVersion($ua);
+                        $versionMatched = false;
+                        $hasVersionForBrowser = false;
+                        foreach ($targetBrowserVersions as $entry) {
+                            if (strtolower($entry['browser'] ?? '') === strtolower($visitorBrowser)) {
+                                $hasVersionForBrowser = true;
+                                $targetVer = $entry['version'] ?? '';
+                                $targetVerNum = preg_replace('/^[^0-9]*/', '', $targetVer);
+                                if ($targetVerNum && $visitorBrowserVersion && str_starts_with($visitorBrowserVersion, $targetVerNum)) {
+                                    $versionMatched = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if ($hasVersionForBrowser && !$versionMatched) {
+                            if ($debug) return $this->adResponse('<pre>BLOCKED: browser version not targeted. Visitor: ' . $visitorBrowser . ' ' . ($visitorBrowserVersion ?? 'unknown') . ', Targeted versions: ' . json_encode($targetBrowserVersions) . '</pre>');
+                            return $this->adResponse('<!-- browser version not targeted -->', 204);
+                        }
+                    }
                 }
             }
 
@@ -919,7 +1026,142 @@ SCRIPT;
                 }
             }
 
-            // 6. Region targeting
+            // 6. City-level targeting
+            $targetCities = $campaign->targeting_city;
+            if (!empty($targetCities) && is_array($targetCities)) {
+                $visitorCountry = $visitorCountry ?? $this->detectCountry($request);
+                $visitorCity = $this->detectCity($request);
+                // Only enforce if we can detect the visitor's location
+                if ($visitorCountry && $visitorCity) {
+                    $cityMatched = false;
+                    foreach ($targetCities as $entry) {
+                        $entryCountry = $entry['country'] ?? null;
+                        $entryCity = $entry['city'] ?? null;
+                        if ($entryCountry && $entryCity) {
+                            if (
+                                strtoupper($entryCountry) === strtoupper($visitorCountry) &&
+                                strtolower($entryCity) === strtolower($visitorCity)
+                            ) {
+                                $cityMatched = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!$cityMatched) {
+                        if ($debug) return $this->adResponse('<pre>BLOCKED: city not targeted. Visitor country: ' . $visitorCountry . ', Visitor city: ' . $visitorCity . ', Targeted cities: ' . json_encode($targetCities) . '</pre>');
+                        return $this->adResponse('<!-- city not targeted -->', 204);
+                    }
+                }
+            }
+
+            // 6b. Connection type targeting (Wi-Fi, 3G, 4G/LTE, 5G)
+            $targetConnTypes = $campaign->targeting_connection_type;
+            if (!empty($targetConnTypes) && is_array($targetConnTypes)) {
+                $visitorConnType = $this->detectConnectionType($request);
+                if ($visitorConnType) {
+                    if (!in_array($visitorConnType, $targetConnTypes)) {
+                        if ($debug) return $this->adResponse('<pre>BLOCKED: connection type not targeted. Visitor: ' . $visitorConnType . ', Targeted: ' . json_encode($targetConnTypes) . '</pre>');
+                        return $this->adResponse('<!-- connection type not targeted -->', 204);
+                    }
+                }
+                // If connection type can't be detected, allow through
+            }
+
+            // 6c. Carrier targeting
+            $targetCarriers = $campaign->targeting_carrier;
+            if (!empty($targetCarriers) && is_array($targetCarriers)) {
+                $visitorCarrier = $this->detectCarrier($request);
+                $visitorCountry = $visitorCountry ?? $this->detectCountry($request);
+                if ($visitorCarrier && $visitorCountry) {
+                    $carrierMatched = false;
+                    foreach ($targetCarriers as $tc) {
+                        if (is_array($tc) && isset($tc['carrier'])) {
+                            // Match carrier name (case-insensitive partial match)
+                            if (stripos($visitorCarrier, $tc['carrier']) !== false || stripos($tc['carrier'], $visitorCarrier) !== false) {
+                                $carrierMatched = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!$carrierMatched) {
+                        if ($debug) return $this->adResponse('<pre>BLOCKED: carrier not targeted. Visitor carrier: ' . $visitorCarrier . ', Country: ' . $visitorCountry . ', Targeted: ' . json_encode($targetCarriers) . '</pre>');
+                        return $this->adResponse('<!-- carrier not targeted -->', 204);
+                    }
+                }
+                // If carrier can't be detected, allow through
+            }
+
+            // 6d. Language targeting (based on Accept-Language header)
+            $targetLanguages = $campaign->targeting_language;
+            if (!empty($targetLanguages) && is_array($targetLanguages)) {
+                $visitorLanguage = $this->detectLanguage($request);
+                if ($visitorLanguage) {
+                    $languageMatched = false;
+                    foreach ($targetLanguages as $targetLang) {
+                        // Match primary language code (e.g. "en" matches "en-US")
+                        if (strtolower($targetLang) === strtolower($visitorLanguage)) {
+                            $languageMatched = true;
+                            break;
+                        }
+                    }
+                    if (!$languageMatched) {
+                        if ($debug) return $this->adResponse('<pre>BLOCKED: language not targeted. Visitor language: ' . $visitorLanguage . ', Targeted: ' . json_encode($targetLanguages) . '</pre>');
+                        return $this->adResponse('<!-- language not targeted -->', 204);
+                    }
+                }
+                // If language can't be detected, allow through
+            }
+
+            // 6e. Traffic type targeting (mainstream vs non-mainstream)
+            $targetTrafficType = $campaign->targeting_traffic_type;
+            if ($targetTrafficType && $targetTrafficType !== 'all') {
+                // Check against ?traffic_type= override or zone's traffic type
+                $zoneTrafficType = $request->query('traffic_type') ?? $request->query('zone_type') ?? null;
+                if ($zoneTrafficType) {
+                    if (strtolower($zoneTrafficType) !== strtolower($targetTrafficType)) {
+                        if ($debug) return $this->adResponse('<pre>BLOCKED: traffic type mismatch. Campaign: ' . $targetTrafficType . ', Zone: ' . $zoneTrafficType . '</pre>');
+                        return $this->adResponse('<!-- traffic type mismatch -->', 204);
+                    }
+                }
+                // If no zone traffic type provided, allow through (zone info not available)
+            }
+
+            // 6f. IP targeting (whitelist / blacklist)
+            $ipInclude = $campaign->targeting_ip_include;
+            $ipExclude = $campaign->targeting_ip_exclude;
+            if ((!empty($ipInclude) && is_array($ipInclude)) || (!empty($ipExclude) && is_array($ipExclude))) {
+                $visitorIp = $request->query('ip') ?? $request->ip();
+
+                if ($visitorIp && !in_array($visitorIp, ['127.0.0.1', '::1'])) {
+                    // Check blacklist first — if IP is excluded, block
+                    if (!empty($ipExclude)) {
+                        foreach ($ipExclude as $range) {
+                            if ($this->ipMatchesCidr($visitorIp, $range)) {
+                                if ($debug) return $this->adResponse('<pre>BLOCKED: IP blacklisted. Visitor IP: ' . $visitorIp . ', Excluded: ' . json_encode($ipExclude) . '</pre>');
+                                return $this->adResponse('<!-- IP blacklisted -->', 204);
+                            }
+                        }
+                    }
+
+                    // Check whitelist — if set, IP must match at least one entry
+                    if (!empty($ipInclude)) {
+                        $ipWhitelisted = false;
+                        foreach ($ipInclude as $range) {
+                            if ($this->ipMatchesCidr($visitorIp, $range)) {
+                                $ipWhitelisted = true;
+                                break;
+                            }
+                        }
+                        if (!$ipWhitelisted) {
+                            if ($debug) return $this->adResponse('<pre>BLOCKED: IP not whitelisted. Visitor IP: ' . $visitorIp . ', Allowed: ' . json_encode($ipInclude) . '</pre>');
+                            return $this->adResponse('<!-- IP not whitelisted -->', 204);
+                        }
+                    }
+                }
+                // If IP can't be detected (localhost), allow through
+            }
+
+            // 7. Region targeting
             $targetRegion = $campaign->targeting_region;
             if (!empty($targetRegion) && is_array($targetRegion) && !in_array('all', $targetRegion)) {
                 $visitorCountry = $visitorCountry ?? $this->detectCountry($request);
@@ -930,7 +1172,7 @@ SCRIPT;
                 }
             }
 
-            // 7. Dayparting / weekly schedule
+            // 8. Dayparting / weekly schedule
             $schedule = $campaign->targeting_schedule;
             if (!empty($schedule) && is_array($schedule)) {
                 $currentDay = strtolower(now()->format('l')); // e.g. "monday"
@@ -947,7 +1189,7 @@ SCRIPT;
                 }
             }
 
-            // 8. Frequency cap (per user per day via session)
+            // 9. Frequency cap (per user per day via session)
             $freqCap = $campaign->frequency_cap;
             if ($freqCap && $freqCap > 0) {
                 $freqKey = "aq_freq_{$campaign->id}_{$ad->id}_" . now()->toDateString();
@@ -1153,10 +1395,12 @@ HTML;
 
             $w = $width ? "width=\"{$width}\"" : 'width="480"';
             $h = $height ? "height=\"{$height}\"" : 'height="320"';
-            $ctaText = e($ad->call_to_action ?: 'Claim Reward');
-            $headline = e($ad->headline ?: $ad->name);
-            $rewardAmount = e($ad->body_text ?: '');
-            $rewardType = e($ad->sponsored_label ?: 'Reward');
+            // Pull reward metadata from campaign ad_formats
+            $rewardMeta = $this->getAdFormatMeta($ad);
+            $ctaText = e($rewardMeta['video_cta'] ?? $ad->call_to_action ?: 'Claim Reward');
+            $headline = e($rewardMeta['video_headline'] ?? $ad->headline ?: $ad->name);
+            $rewardAmount = e($rewardMeta['reward_amount'] ?? $ad->body_text ?: '');
+            $rewardType = e($rewardMeta['reward_type'] ?? $ad->sponsored_label ?: 'Reward');
             $rewardLabel = $rewardAmount ? "{$rewardAmount} {$rewardType}" : $rewardType;
             $html = <<<HTML
 <!DOCTYPE html>
@@ -1580,6 +1824,27 @@ HTML;
     }
 
     /**
+     * Get the full ad format metadata array from campaign ad_formats.
+     */
+    private function getAdFormatMeta(Ad $ad): array
+    {
+        $campaign = $ad->campaign;
+        if (!$campaign || empty($campaign->ad_formats)) {
+            return [];
+        }
+
+        foreach ($campaign->ad_formats as $af) {
+            if (!is_array($af)) continue;
+            $afName = $af['ad_name'] ?? '';
+            if ($afName === $ad->name) {
+                return $af;
+            }
+        }
+
+        return [];
+    }
+
+    /**
      * Public: Track viewable impression (1x1 GIF beacon).
      */
     public function view(int $id)
@@ -1636,9 +1901,159 @@ HTML;
     }
 
     /**
-     * Public: Track click and redirect to destination URL.
+     * S2S (Server-to-Server) Postback endpoint.
+     * Records a conversion based on click_id, bypassing cookies (iOS 14+ compatible).
+     *
+     * URL: /track/campaign/{id}/postback
+     * Params: click_id (required), payout (optional), tx_id (optional), goal (optional)
      */
-    public function click(int $id)
+    public function postback(int $id, Request $request)
+    {
+        $campaign = Campaign::find($id);
+
+        if (!$campaign || $campaign->is_deleted) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Campaign not found.',
+            ], 404);
+        }
+
+        $clickId = $request->input('click_id');
+        if (empty($clickId)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Missing required parameter: click_id',
+            ], 400);
+        }
+
+        // Look up the original click record
+        $click = DB::table('aq_clicks')
+            ->where('campaign_id', $id)
+            ->where('id', $clickId)
+            ->first();
+
+        // If not found by numeric ID, try UUID match from viewer_id
+        if (!$click) {
+            $click = DB::table('aq_clicks')
+                ->where('campaign_id', $id)
+                ->where('viewer_id', $clickId)
+                ->orderByDesc('created_at')
+                ->first();
+        }
+
+        if (!$click) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Click not found for the given click_id.',
+            ], 404);
+        }
+
+        $payout = $request->input('payout', 0);
+        $txId = $request->input('tx_id');
+        $goal = $request->input('goal', 'sale');
+
+        // Prevent duplicate conversions for the same tx_id
+        if ($txId) {
+            $exists = DB::table('aq_conversions')
+                ->where('campaign_id', $id)
+                ->where('metadata->tx_id', $txId)
+                ->exists();
+
+            if ($exists) {
+                return response()->json([
+                    'status' => 'duplicate',
+                    'message' => 'Conversion already recorded for this tx_id.',
+                ], 200);
+            }
+        }
+
+        // Map goal to conversion_type enum
+        $conversionTypes = ['sale', 'lead', 'signup', 'install', 'custom'];
+        $conversionType = in_array($goal, $conversionTypes) ? $goal : 'custom';
+
+        // Record conversion
+        DB::table('aq_conversions')->insert([
+            'ad_id' => $click->ad_id,
+            'campaign_id' => $id,
+            'click_id' => $click->id,
+            'viewer_id' => $click->viewer_id,
+            'conversion_type' => $conversionType,
+            'revenue' => (float) $payout,
+            'payout' => (float) $payout,
+            'ip_address' => $request->ip(),
+            'country_code' => $click->country_code,
+            'metadata' => json_encode([
+                'tx_id' => $txId,
+                'goal' => $goal,
+                'source' => 's2s_postback',
+                'postback_ip' => $request->ip(),
+                'click_time' => $click->created_at,
+            ]),
+            'created_at' => now(),
+        ]);
+
+        // Track conversion stat
+        $ad = Ad::find($click->ad_id);
+        if ($ad) {
+            $this->trackStat($ad, 'conversion');
+        }
+
+        // Fire advertiser's postback URL if configured
+        $this->fireAdvertiserPostback($campaign, $click, $payout, $txId, $goal);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Conversion recorded.',
+            'click_id' => $clickId,
+            'tx_id' => $txId,
+        ], 200);
+    }
+
+    /**
+     * Fire the advertiser's S2S postback URL (if configured on the campaign).
+     */
+    private function fireAdvertiserPostback(Campaign $campaign, $click, $payout, $txId, $goal): void
+    {
+        $postbackUrl = $campaign->s2s_postback_url;
+        if (empty($postbackUrl)) {
+            return;
+        }
+
+        // Replace macros in the postback URL
+        $macros = [
+            '{click_id}' => $click->id,
+            '{payout}' => $payout,
+            '{tx_id}' => $txId ?? '',
+            '{goal}' => $goal,
+            '{campaign_id}' => $campaign->id,
+            '{ad_id}' => $click->ad_id,
+            '{country}' => $click->country_code ?? '',
+            '{device}' => $click->device_type ?? '',
+            '{timestamp}' => now()->toIso8601String(),
+        ];
+
+        $url = str_replace(array_keys($macros), array_values($macros), $postbackUrl);
+
+        // Fire-and-forget HTTP request (non-blocking)
+        try {
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'GET',
+                    'timeout' => 5,
+                    'ignore_errors' => true,
+                ],
+            ]);
+            @file_get_contents($url, false, $context);
+        } catch (\Exception $e) {
+            // Silently fail — postback delivery is best-effort
+        }
+    }
+
+    /**
+     * Public: Track click and redirect to destination URL.
+     * Generates a unique click_id for S2S postback attribution.
+     */
+    public function click(int $id, Request $request)
     {
         $ad = Ad::find($id);
 
@@ -1646,10 +2061,43 @@ HTML;
             return redirect('/');
         }
 
-        // Track click
+        // Track click stat
         $this->trackStat($ad, 'click');
 
-        return redirect($ad->destination_url);
+        // Generate unique click_id for S2S attribution
+        $clickId = Str::uuid()->toString();
+
+        // Detect device info
+        $ua = strtolower($request->userAgent() ?? '');
+        $deviceType = 'desktop';
+        if (str_contains($ua, 'mobile') || str_contains($ua, 'android')) {
+            $deviceType = str_contains($ua, 'tablet') || str_contains($ua, 'ipad') ? 'tablet' : 'mobile';
+        } elseif (str_contains($ua, 'tablet') || str_contains($ua, 'ipad')) {
+            $deviceType = 'tablet';
+        }
+
+        // Store click record in aq_clicks
+        DB::table('aq_clicks')->insert([
+            'ad_id' => $ad->id,
+            'campaign_id' => $ad->campaign_id,
+            'viewer_id' => $request->cookie('aq_viewer_id', $clickId),
+            'ip_address' => $request->ip(),
+            'user_agent' => substr($request->userAgent() ?? '', 0, 500),
+            'country_code' => $this->detectCountry($request),
+            'device_type' => $deviceType,
+            'is_unique' => true,
+            'created_at' => now(),
+        ]);
+
+        // Get the inserted click ID (auto-increment)
+        $dbClickId = DB::getPdo()->lastInsertId();
+
+        // Build destination URL with click_id appended for S2S tracking
+        $destinationUrl = $ad->destination_url;
+        $separator = str_contains($destinationUrl, '?') ? '&' : '?';
+        $destinationUrl .= $separator . 'click_id=' . $clickId . '&aq_cid=' . $dbClickId;
+
+        return redirect($destinationUrl);
     }
 
     /**
@@ -1706,6 +2154,222 @@ HTML;
     }
 
     /**
+     * Detect visitor city from IP address.
+     * Supports ?city=CityName override for local testing.
+     */
+    private function detectCity(Request $request): ?string
+    {
+        // Allow manual override via query param for local testing: ?city=Prishtina
+        $override = $request->query('city');
+        if ($override && is_string($override) && strlen($override) <= 100) {
+            return $override;
+        }
+
+        $ip = $request->ip();
+
+        // Local/private IPs can't be geolocated
+        if (in_array($ip, ['127.0.0.1', '::1']) || str_starts_with($ip, '192.168.') || str_starts_with($ip, '10.')) {
+            return null;
+        }
+
+        // Cache the result in session
+        $cacheKey = "aq_city_{$ip}";
+        try {
+            $cached = $request->session()->get($cacheKey);
+            if ($cached !== null) {
+                return $cached ?: null;
+            }
+        } catch (\Exception $e) {
+            // No session
+        }
+
+        try {
+            $response = @file_get_contents("http://ip-api.com/json/{$ip}?fields=city");
+            if ($response) {
+                $data = json_decode($response, true);
+                $city = $data['city'] ?? null;
+
+                try {
+                    $request->session()->put($cacheKey, $city ?? '');
+                } catch (\Exception $e) {
+                    // No session
+                }
+
+                return $city;
+            }
+        } catch (\Exception $e) {
+            // API call failed
+        }
+
+        return null;
+    }
+
+    /**
+     * Detect OS from User-Agent string.
+     * Supports ?os=Windows override for testing.
+     */
+    /**
+     * Detect specific device name from User-Agent.
+     * Returns lowercase device name: iphone, samsung, pixel, ipad, macbook, etc.
+     */
+    private function detectDeviceName(string $ua): ?string
+    {
+        // Mobile devices
+        if (str_contains($ua, 'iphone')) return 'iphone';
+        if (str_contains($ua, 'sm-') || str_contains($ua, 'samsung')) return 'samsung';
+        if (str_contains($ua, 'pixel')) return 'pixel';
+        if (str_contains($ua, 'huawei') || str_contains($ua, 'hms')) return 'huawei';
+        if (str_contains($ua, 'xiaomi') || str_contains($ua, 'redmi') || str_contains($ua, 'poco')) return 'xiaomi';
+        if (str_contains($ua, 'oneplus')) return 'oneplus';
+        if (str_contains($ua, 'oppo') || str_contains($ua, 'cph')) return 'oppo';
+        if (str_contains($ua, 'vivo')) return 'vivo';
+        if (str_contains($ua, 'realme') || str_contains($ua, 'rmx')) return 'realme';
+        if (str_contains($ua, 'nokia')) return 'nokia';
+
+        // Tablets
+        if (str_contains($ua, 'ipad')) return 'ipad';
+        if (str_contains($ua, 'sm-t') || str_contains($ua, 'galaxy tab')) return 'samsung tab';
+        if (str_contains($ua, 'kindle') || str_contains($ua, 'kftt') || str_contains($ua, 'fire')) return 'fire';
+        if (str_contains($ua, 'surface')) return 'surface';
+
+        // Desktop
+        if (str_contains($ua, 'macintosh') || str_contains($ua, 'mac os x')) return 'macbook';
+        if (str_contains($ua, 'windows')) return 'windows pc';
+        if (str_contains($ua, 'cros')) return 'chromebook';
+        if (str_contains($ua, 'linux')) return 'linux';
+
+        return null;
+    }
+
+    private function detectOs(string $ua): ?string
+    {
+        $override = request()->query('os');
+        if ($override && is_string($override)) {
+            return $override;
+        }
+
+        if (str_contains($ua, 'windows')) return 'Windows';
+        if (str_contains($ua, 'ipad')) return 'iPadOS';
+        if (str_contains($ua, 'iphone') || (str_contains($ua, 'like mac os x') && str_contains($ua, 'mobile'))) return 'iOS';
+        if (str_contains($ua, 'macintosh') || str_contains($ua, 'mac os x')) return 'macOS';
+        if (str_contains($ua, 'android')) return 'Android';
+        if (str_contains($ua, 'cros')) return 'Chrome OS';
+        if (str_contains($ua, 'linux')) return 'Linux';
+
+        return null;
+    }
+
+    /**
+     * Detect OS version from User-Agent string.
+     * Supports ?os_version=11 override for testing.
+     */
+    private function detectOsVersion(string $ua): ?string
+    {
+        $override = request()->query('os_version');
+        if ($override && is_string($override)) {
+            return $override;
+        }
+
+        // Windows: use Client Hints header first (reliable Win 10 vs 11 detection)
+        if (str_contains($ua, 'windows')) {
+            $platformVersion = request()->header('Sec-CH-UA-Platform-Version');
+            if ($platformVersion) {
+                $major = (int) trim($platformVersion, '"');
+                // Windows 11 reports major version >= 13, Windows 10 reports 0-12
+                return $major >= 13 ? '11' : '10';
+            }
+            // Fallback to UA string
+            if (preg_match('/windows nt ([\d.]+)/i', $ua, $m)) {
+                $ntVersion = $m[1];
+                $map = ['10.0' => '10', '6.3' => '8.1', '6.2' => '8', '6.1' => '7', '6.0' => 'Vista'];
+                if ($ntVersion === '10.0' && preg_match('/build\/(\d+)/i', $ua, $bm) && (int)$bm[1] >= 22000) {
+                    return '11';
+                }
+                return $map[$ntVersion] ?? $ntVersion;
+            }
+        }
+        // Android: "Android 14"
+        if (preg_match('/android\s*([\d.]+)/i', $ua, $m)) {
+            return $m[1];
+        }
+        // iOS/iPadOS: "CPU iPhone OS 17_5" or "CPU OS 17_5"
+        if (preg_match('/(?:iphone |cpu )os ([\d_]+)/i', $ua, $m)) {
+            return str_replace('_', '.', $m[1]);
+        }
+        // macOS: "Mac OS X 14_5" or "Mac OS X 10_15_7"
+        if (preg_match('/mac os x ([\d_]+)/i', $ua, $m)) {
+            $ver = str_replace('_', '.', $m[1]);
+            // macOS 11+ uses just the major version
+            $parts = explode('.', $ver);
+            return $parts[0] >= 11 ? $parts[0] : $ver;
+        }
+        // Chrome OS: "CrOS x86_64 14541.0.0"
+        if (preg_match('/cros\s+\w+\s+([\d.]+)/i', $ua, $m)) {
+            return $m[1];
+        }
+
+        return null;
+    }
+
+    /**
+     * Detect browser from User-Agent string.
+     * Supports ?browser=Chrome override for testing.
+     */
+    private function detectBrowser(string $ua): ?string
+    {
+        $override = request()->query('browser');
+        if ($override && is_string($override)) {
+            return $override;
+        }
+
+        // Order matters: check specific browsers before generic ones
+        if (str_contains($ua, 'samsungbrowser')) return 'Samsung Internet';
+        if (str_contains($ua, 'ucbrowser')) return 'UC Browser';
+        if (str_contains($ua, 'vivaldi')) return 'Vivaldi';
+        if (str_contains($ua, 'brave')) return 'Brave';
+        if (str_contains($ua, 'opr') || str_contains($ua, 'opera')) return 'Opera';
+        if (str_contains($ua, 'edg')) return 'Edge';
+        if (str_contains($ua, 'firefox') || str_contains($ua, 'fxios')) return 'Firefox';
+        if (str_contains($ua, 'crios') || (str_contains($ua, 'chrome') && !str_contains($ua, 'chromium'))) return 'Chrome';
+        if (str_contains($ua, 'safari') && !str_contains($ua, 'chrome')) return 'Safari';
+
+        return null;
+    }
+
+    /**
+     * Detect browser version from User-Agent string.
+     * Supports ?browser_version=131 override for testing.
+     */
+    private function detectBrowserVersion(string $ua): ?string
+    {
+        $override = request()->query('browser_version');
+        if ($override && is_string($override)) {
+            return $override;
+        }
+
+        // Edge: "Edg/131.0"
+        if (preg_match('/edg(?:e|a)?\/([\d.]+)/i', $ua, $m)) return $m[1];
+        // Opera: "OPR/114.0"
+        if (preg_match('/opr\/([\d.]+)/i', $ua, $m)) return $m[1];
+        // Samsung Internet: "SamsungBrowser/26.0"
+        if (preg_match('/samsungbrowser\/([\d.]+)/i', $ua, $m)) return $m[1];
+        // UC Browser: "UCBrowser/15.0"
+        if (preg_match('/ucbrowser\/([\d.]+)/i', $ua, $m)) return $m[1];
+        // Vivaldi: "Vivaldi/7.0"
+        if (preg_match('/vivaldi\/([\d.]+)/i', $ua, $m)) return $m[1];
+        // Brave: same engine as Chrome, reports Chrome version
+        if (str_contains($ua, 'brave') && preg_match('/chrome\/([\d.]+)/i', $ua, $m)) return $m[1];
+        // Firefox: "Firefox/133.0"
+        if (preg_match('/(?:firefox|fxios)\/([\d.]+)/i', $ua, $m)) return $m[1];
+        // Chrome: "Chrome/131.0"
+        if (preg_match('/(?:chrome|crios)\/([\d.]+)/i', $ua, $m)) return $m[1];
+        // Safari: "Version/18.0 Safari"
+        if (preg_match('/version\/([\d.]+).*safari/i', $ua, $m)) return $m[1];
+
+        return null;
+    }
+
+    /**
      * Map a 2-letter country code to a region/continent slug.
      * Returns the region slug (e.g. 'europe', 'asia', 'north_america') or null.
      */
@@ -1741,5 +2405,145 @@ HTML;
         }
 
         return null;
+    }
+
+    /**
+     * Detect connection type from IP using ip-api.com.
+     * Detects Wi-Fi vs mobile data (3G/4G/5G) based on ISP/AS info.
+     * Supports ?connection_type=Wi-Fi override for testing.
+     */
+    private function detectConnectionType(Request $request): ?string
+    {
+        $override = $request->query('connection_type');
+        if ($override && is_string($override)) {
+            return $override;
+        }
+
+        // Use ip-api.com to get ISP/mobile info
+        $ip = $request->query('ip') ?? $request->ip();
+        if (!$ip || in_array($ip, ['127.0.0.1', '::1'])) {
+            return null;
+        }
+
+        try {
+            $response = @file_get_contents("http://ip-api.com/json/{$ip}?fields=mobile,proxy,isp,as");
+            if ($response) {
+                $data = json_decode($response, true);
+                if (isset($data['mobile'])) {
+                    return $data['mobile'] ? '4G/LTE' : 'Wi-Fi';
+                }
+            }
+        } catch (\Exception $e) {
+            // Silently fail
+        }
+
+        return null;
+    }
+
+    /**
+     * Detect mobile carrier/ISP from IP using ip-api.com.
+     * Supports ?carrier=CarrierName override for testing.
+     */
+    private function detectCarrier(Request $request): ?string
+    {
+        $override = $request->query('carrier');
+        if ($override && is_string($override)) {
+            return $override;
+        }
+
+        $ip = $request->query('ip') ?? $request->ip();
+        if (!$ip || in_array($ip, ['127.0.0.1', '::1'])) {
+            return null;
+        }
+
+        try {
+            $response = @file_get_contents("http://ip-api.com/json/{$ip}?fields=isp,org,as,mobile");
+            if ($response) {
+                $data = json_decode($response, true);
+                // Return ISP name which is the carrier for mobile connections
+                return $data['isp'] ?? $data['org'] ?? null;
+            }
+        } catch (\Exception $e) {
+            // Silently fail
+        }
+
+        return null;
+    }
+
+    /**
+     * Detect visitor's primary language from Accept-Language header.
+     * Returns the 2-letter language code (e.g. "en", "sq", "de").
+     * Supports ?language=en override for testing.
+     */
+    private function detectLanguage(Request $request): ?string
+    {
+        $override = $request->query('language');
+        if ($override && is_string($override)) {
+            return strtolower(substr($override, 0, 2));
+        }
+
+        $acceptLanguage = $request->header('Accept-Language');
+        if (!$acceptLanguage) {
+            return null;
+        }
+
+        // Parse Accept-Language header: "en-US,en;q=0.9,sq;q=0.8"
+        // Get the primary (highest priority) language
+        $languages = [];
+        $parts = explode(',', $acceptLanguage);
+        foreach ($parts as $part) {
+            $part = trim($part);
+            $segments = explode(';', $part);
+            $lang = trim($segments[0]);
+            $q = 1.0;
+            if (isset($segments[1]) && preg_match('/q=([\d.]+)/', $segments[1], $m)) {
+                $q = (float) $m[1];
+            }
+            // Extract primary 2-letter code (e.g. "en" from "en-US")
+            $code = strtolower(substr($lang, 0, 2));
+            if ($code && $code !== '*') {
+                $languages[$code] = max($languages[$code] ?? 0, $q);
+            }
+        }
+
+        if (empty($languages)) {
+            return null;
+        }
+
+        // Return the language with highest quality value
+        arsort($languages);
+        return array_key_first($languages);
+    }
+
+    /**
+     * Check if an IP address matches a CIDR range or exact IP.
+     * Supports: "192.168.1.0/24", "10.0.0.1", "203.0.113.0/28"
+     */
+    private function ipMatchesCidr(string $ip, string $cidr): bool
+    {
+        $cidr = trim($cidr);
+
+        // Exact IP match
+        if (!str_contains($cidr, '/')) {
+            return $ip === $cidr;
+        }
+
+        // CIDR range match
+        [$subnet, $bits] = explode('/', $cidr, 2);
+        $bits = (int) $bits;
+
+        if ($bits < 0 || $bits > 32) {
+            return false;
+        }
+
+        $ipLong = ip2long($ip);
+        $subnetLong = ip2long($subnet);
+
+        if ($ipLong === false || $subnetLong === false) {
+            return false;
+        }
+
+        $mask = -1 << (32 - $bits);
+        return ($ipLong & $mask) === ($subnetLong & $mask);
     }
 }
