@@ -217,10 +217,78 @@
                         <span class="text-sm font-semibold">${{ number_format($balance ?? 172.12, 2) }}</span>
                     </div>
                     {{-- Notifications --}}
-                    <button class="relative p-2 rounded-lg hover:bg-gray-100" title="Notifications">
-                        <svg class="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                        <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500"></span>
-                    </button>
+                    <div class="relative" x-data="{ notifOpen: false, notifications: [], unreadCount: 0 }" x-init="
+                        fetch('/advertisers/notifications', { headers: { 'Accept': 'application/json' } })
+                            .then(r => r.json())
+                            .then(data => { notifications = data; unreadCount = data.filter(n => !n.is_read).length; });
+                        setInterval(() => {
+                            fetch('/advertisers/notifications', { headers: { 'Accept': 'application/json' } })
+                                .then(r => r.json())
+                                .then(data => { notifications = data; unreadCount = data.filter(n => !n.is_read).length; });
+                        }, 30000);
+                    ">
+                        <button @click="notifOpen = !notifOpen" class="relative p-2 rounded-lg hover:bg-gray-100" title="Notifications">
+                            <svg class="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            <span x-show="unreadCount > 0" class="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1" x-text="unreadCount > 9 ? '9+' : unreadCount"></span>
+                        </button>
+
+                        {{-- Notification Dropdown --}}
+                        <div x-show="notifOpen" @click.away="notifOpen = false"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute right-0 mt-2 w-96 bg-white rounded-xl border border-gray-200 shadow-xl z-50" style="display: none;">
+
+                            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                                <h4 class="text-sm font-bold text-gray-900">Notifications</h4>
+                                <button x-show="unreadCount > 0" @click="
+                                    fetch('/advertisers/notifications/read-all', {
+                                        method: 'POST',
+                                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' }
+                                    }).then(() => { notifications.forEach(n => { n.is_read = true; }); unreadCount = 0; });
+                                " class="text-xs text-brand-600 hover:text-brand-700 font-medium">Mark all read</button>
+                            </div>
+
+                            <div class="max-h-80 overflow-y-auto divide-y divide-gray-50">
+                                <template x-if="notifications.length === 0">
+                                    <div class="px-4 py-8 text-center">
+                                        <svg class="w-10 h-10 text-gray-300 mx-auto mb-2" viewBox="0 0 24 24" fill="none"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                        <p class="text-sm text-gray-400">No notifications yet</p>
+                                    </div>
+                                </template>
+                                <template x-for="notif in notifications" :key="notif.id">
+                                    <div @click="
+                                        if (!notif.is_read) {
+                                            fetch('/advertisers/notifications/' + notif.id + '/read', {
+                                                method: 'POST',
+                                                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' }
+                                            }).then(() => { notif.is_read = true; unreadCount = Math.max(0, unreadCount - 1); });
+                                        }
+                                        if (notif.action_url) window.location.href = notif.action_url;
+                                    " class="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors" :class="!notif.is_read ? 'bg-brand-50/30' : ''">
+                                        <div class="flex items-start gap-3">
+                                            <div class="flex-shrink-0 mt-0.5">
+                                                <template x-if="notif.type === 'success'"><span class="w-2 h-2 rounded-full bg-emerald-500 block"></span></template>
+                                                <template x-if="notif.type === 'warning'"><span class="w-2 h-2 rounded-full bg-amber-500 block"></span></template>
+                                                <template x-if="notif.type === 'error'"><span class="w-2 h-2 rounded-full bg-red-500 block"></span></template>
+                                                <template x-if="notif.type === 'info'"><span class="w-2 h-2 rounded-full bg-blue-500 block"></span></template>
+                                                <template x-if="notif.type === 'payment'"><span class="w-2 h-2 rounded-full bg-green-500 block"></span></template>
+                                                <template x-if="notif.type === 'campaign'"><span class="w-2 h-2 rounded-full bg-purple-500 block"></span></template>
+                                                <template x-if="notif.type === 'system'"><span class="w-2 h-2 rounded-full bg-gray-500 block"></span></template>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-medium text-gray-900" :class="!notif.is_read ? 'font-semibold' : ''" x-text="notif.title"></p>
+                                                <p class="text-xs text-gray-500 mt-0.5 line-clamp-2" x-text="notif.message"></p>
+                                                <p class="text-[10px] text-gray-400 mt-1" x-text="new Date(notif.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })"></p>
+                                            </div>
+                                            <span x-show="!notif.is_read" class="w-2 h-2 rounded-full bg-brand-500 flex-shrink-0 mt-2"></span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
                     {{-- Messages --}}
                     <button class="relative p-2 rounded-lg hover:bg-gray-100" title="Messages">
                         <svg class="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>

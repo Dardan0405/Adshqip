@@ -34,6 +34,16 @@ class User extends Authenticatable
         return $this->hasOne(UserProfile::class, 'user_id');
     }
 
+    public function campaigns()
+    {
+        return $this->hasMany(Campaign::class, 'advertiser_id');
+    }
+
+    public function ads()
+    {
+        return $this->hasManyThrough(Ad::class, Campaign::class, 'advertiser_id', 'campaign_id');
+    }
+
     protected $hidden = [
         'password_hash',
         'two_factor_secret',
