@@ -1,0 +1,28 @@
+﻿=== Direct Campaign Serve Engine Test ===
+
+Campaign found:
+  ID:          1
+  Name:        Premium Brand Awarnesss
+  Status:      active
+  Pricing:     cpc
+  Bid:         2.5000
+  Budget:      12000.0000
+  Remaining:   12000.0000
+  Destination: https://www.vodafone.al/oferta-speciale?utm_source=adshqip&utm_medium=direct&utm_campaign=q4_2026
+  Headline:    Vodafone ΓÇö Oferta me e Mire ne Shqiperi
+  Body:        Zbulo planet me te mira per internet dhe thirrje. Vodafone A
+  CTA:         Meso Me Shume
+  Creatives:   0
+  Targeting:   7 rules
+
+Stats BEFORE test: 0 impressions
+
+=== Endpoints to test ===
+  SERVE:      http://127.0.0.1:8000/serve/direct/1
+  CLICK:      http://127.0.0.1:8000/serve/direct/1/click
+  VIEW:       http://127.0.0.1:8000/serve/direct/1/view
+  CONVERSION: http://127.0.0.1:8000/serve/direct/1/conversion
+  DEBUG:      http://127.0.0.1:8000/serve/direct/1?debug=1
+  POSTBACK:   http://127.0.0.1:8000/track/direct/1/postback?click_id=test123
+
+Done.

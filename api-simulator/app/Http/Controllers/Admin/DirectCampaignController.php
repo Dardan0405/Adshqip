@@ -194,6 +194,34 @@ class DirectCampaignController extends Controller
                 'priority' => $campaign->priority,
                 'delivery_mode' => $campaign->delivery_mode,
                 'campaign_group_name' => $campaign->campaign_group_name,
+                // Ad creative fields for preview
+                'headline' => $campaign->headline,
+                'body_text' => $campaign->body_text,
+                'call_to_action' => $campaign->call_to_action,
+                'sponsored_label' => $campaign->sponsored_label,
+                'display_url' => $campaign->display_url,
+                'brand_logo_url' => $campaign->brand_logo_url,
+                'brand_tagline' => $campaign->brand_tagline,
+                'brand_color_primary' => $campaign->brand_color_primary,
+                'brand_color_secondary' => $campaign->brand_color_secondary,
+                // CTW Video
+                'ctw_enabled' => (bool) $campaign->ctw_enabled,
+                'ctw_video_url' => $campaign->ctw_video_url,
+                'ctw_thumbnail_url' => $campaign->ctw_thumbnail_url,
+                'ctw_video_title' => $campaign->ctw_video_title,
+                'ctw_video_description' => $campaign->ctw_video_description,
+                // End Card
+                'end_card_enabled' => (bool) $campaign->end_card_enabled,
+                'end_card_headline' => $campaign->end_card_headline,
+                'end_card_description' => $campaign->end_card_description,
+                'end_card_cta_text' => $campaign->end_card_cta_text,
+                'end_card_image_url' => $campaign->end_card_image_url,
+                // Clip Ad
+                'clip_enabled' => (bool) $campaign->clip_enabled,
+                'clip_video_url' => $campaign->clip_video_url,
+                'clip_thumbnail_url' => $campaign->clip_thumbnail_url,
+                'clip_caption' => $campaign->clip_caption,
+                'clip_cta_text' => $campaign->clip_cta_text,
             ];
         })->toArray();
 

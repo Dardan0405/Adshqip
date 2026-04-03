@@ -121,6 +121,16 @@ Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfTok
 
         // S2S (Server-to-Server) Postback endpoint — accepts GET or POST
         Route::match(['get', 'post'], '/track/campaign/{id}/postback', [\App\Http\Controllers\Admin\AdCreativeController::class, 'postback'])->name('track.postback');
+
+        // ─── Direct Campaign Serve & Tracking ───
+        Route::get('/serve/direct/{id}', [\App\Http\Controllers\Admin\DirectCampaignServeController::class, 'serve'])->name('direct.serve');
+        Route::get('/serve/direct/{id}/click', [\App\Http\Controllers\Admin\DirectCampaignServeController::class, 'click'])->name('direct.click');
+        Route::get('/serve/direct/{id}/view', [\App\Http\Controllers\Admin\DirectCampaignServeController::class, 'view'])->name('direct.view');
+        Route::get('/serve/direct/{id}/adblock', [\App\Http\Controllers\Admin\DirectCampaignServeController::class, 'adblock'])->name('direct.adblock');
+        Route::get('/serve/direct/{id}/conversion', [\App\Http\Controllers\Admin\DirectCampaignServeController::class, 'conversion'])->name('direct.conversion');
+
+        // Direct Campaign S2S Postback
+        Route::match(['get', 'post'], '/track/direct/{id}/postback', [\App\Http\Controllers\Admin\DirectCampaignServeController::class, 'postback'])->name('direct.postback');
     });
 
 // Protected dashboards (role-restricted)
