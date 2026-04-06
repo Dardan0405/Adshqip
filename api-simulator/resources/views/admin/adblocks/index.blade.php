@@ -149,7 +149,7 @@
                 <tbody class="divide-y divide-gray-100">
                     @forelse($zones as $zone)
                         @php
-                            $zoneStats = $stats[$zone->id] ?? null;
+                            $zoneStats = $stats[$zone->site_id] ?? null;
                             $impressions = $zoneStats->total_impressions ?? 0;
                             $clicks = $zoneStats->total_clicks ?? 0;
                             $ctr = $zoneStats->ctr ?? 0;
@@ -190,9 +190,9 @@
                                     <button onclick="deleteZone({{ $zone->id }})" class="p-1.5 rounded-lg hover:bg-red-50 text-gray-500 hover:text-red-600" title="Delete">
                                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                                     </button>
-                                    <button class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500" title="Reports (Coming Soon)">
+                                    <a href="{{ route('admin.adblocks.reports', $zone->id) }}" class="p-1.5 rounded-lg hover:bg-purple-50 text-gray-500 hover:text-purple-600 transition-colors" title="View Reports">
                                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                                    </button>
+                                    </a>
                                 </div>
                             </td>
                         </tr>

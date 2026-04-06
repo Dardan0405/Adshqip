@@ -204,6 +204,8 @@ Route::middleware('auth')->group(function () {
         // Sites Management
         Route::get('/sites', [\App\Http\Controllers\Admin\SitesController::class, 'index'])->name('admin.sites');
         Route::post('/sites', [\App\Http\Controllers\Admin\SitesController::class, 'store'])->name('admin.sites.store');
+        Route::get('/sites/{id}/reports', [\App\Http\Controllers\Admin\SitesController::class, 'reports'])->name('admin.sites.reports');
+        Route::get('/sites/{id}/reports/export', [\App\Http\Controllers\Admin\SitesController::class, 'exportReports'])->name('admin.sites.reports.export');
         Route::get('/sites/{id}', [\App\Http\Controllers\Admin\SitesController::class, 'show'])->name('admin.sites.show');
         Route::put('/sites/{id}', [\App\Http\Controllers\Admin\SitesController::class, 'update'])->name('admin.sites.update');
         Route::delete('/sites/{id}', [\App\Http\Controllers\Admin\SitesController::class, 'destroy'])->name('admin.sites.destroy');
@@ -214,6 +216,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/adblocks/serve-settings', [\App\Http\Controllers\Admin\AdBlocksController::class, 'updateServeSettings'])->name('admin.adblocks.serveSettings');
         Route::post('/adblocks', [\App\Http\Controllers\Admin\AdBlocksController::class, 'store'])->name('admin.adblocks.store');
         Route::get('/adblocks/sizes-by-format/{formatKey}', [\App\Http\Controllers\Admin\AdBlocksController::class, 'getSizesByFormat'])->name('admin.adblocks.sizes');
+        Route::get('/adblocks/{id}/reports', [\App\Http\Controllers\Admin\AdBlocksController::class, 'reports'])->name('admin.adblocks.reports');
+        Route::get('/adblocks/{id}/reports/export', [\App\Http\Controllers\Admin\AdBlocksController::class, 'exportReports'])->name('admin.adblocks.reports.export');
         Route::get('/adblocks/{id}/preview', [\App\Http\Controllers\Admin\AdBlocksController::class, 'preview'])->name('admin.adblocks.preview');
         Route::get('/adblocks/{id}', [\App\Http\Controllers\Admin\AdBlocksController::class, 'show'])->name('admin.adblocks.show');
         Route::put('/adblocks/{id}', [\App\Http\Controllers\Admin\AdBlocksController::class, 'update'])->name('admin.adblocks.update');

@@ -660,6 +660,12 @@ class AdCreativeController extends Controller
             $rowQuery->whereNull('zone_id');
         }
 
+        $zone = $zoneId
+            ? \App\Models\Zone::with('site:id,publisher_id')->find($zoneId)
+            : null;
+        $siteId = $zone?->site_id ?? $ad->campaign?->zone?->site_id;
+        $publisherId = $zone?->site?->publisher_id ?? $ad->campaign?->zone?->site?->publisher_id;
+
         $row = $rowQuery->first();
 
         if (!$row) {
@@ -667,6 +673,8 @@ class AdCreativeController extends Controller
                 'date' => $today,
                 'ad_id' => $ad->id,
                 'campaign_id' => $ad->campaign_id,
+                'site_id' => $siteId,
+                'publisher_id' => $publisherId,
                 'device_type' => $deviceType,
                 'country_code' => $countryCode,
                 'zone_id' => $zoneId,
@@ -679,6 +687,20 @@ class AdCreativeController extends Controller
                 'revenue' => 0,
                 'publisher_earnings' => 0,
             ]);
+        } else {
+            $updates = [];
+
+            if (! $row->site_id && $siteId) {
+                $updates['site_id'] = $siteId;
+            }
+
+            if (! $row->publisher_id && $publisherId) {
+                $updates['publisher_id'] = $publisherId;
+            }
+
+            if ($updates) {
+                $row->update($updates);
+            }
         }
 
         // Get campaign pricing info for revenue calculation

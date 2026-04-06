@@ -162,4 +162,146 @@ class SitesController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Status updated.']);
     }
+
+    public function reports(Request $request, $id)
+    {
+        $site = Site::where('is_deleted', false)
+            ->with('publisher')
+            ->findOrFail($id);
+
+        // Date filters
+        $startDate = $request->input('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->format('Y-m-d'));
+        $groupBy = $request->input('group_by', 'day'); // day, week, month
+
+        // Build query
+        $query = StatDaily::where('site_id', $id)
+            ->whereBetween('date', [$startDate, $endDate]);
+
+        // Get stats grouped by date
+        $statsQuery = clone $query;
+
+        switch ($groupBy) {
+            case 'week':
+                $statsQuery->selectRaw("DATE_FORMAT(date, '%Y-%u') as period, MIN(date) as period_start");
+                break;
+            case 'month':
+                $statsQuery->selectRaw("DATE_FORMAT(date, '%Y-%m') as period, MIN(date) as period_start");
+                break;
+            default: // day
+                $statsQuery->selectRaw("date as period, date as period_start");
+                break;
+        }
+
+        $stats = $statsQuery
+            ->selectRaw('
+                SUM(impressions) as impressions,
+                SUM(unique_impressions) as unique_impressions,
+                SUM(clicks) as clicks,
+                SUM(unique_clicks) as unique_clicks,
+                SUM(conversions) as conversions,
+                SUM(revenue) as revenue,
+                CASE WHEN SUM(impressions) > 0 THEN (SUM(clicks) / SUM(impressions) * 100) ELSE 0 END as ctr,
+                CASE WHEN SUM(impressions) > 0 THEN (SUM(revenue) / SUM(impressions) * 1000) ELSE 0 END as ecpm,
+                CASE WHEN COUNT(DISTINCT zone_id) > 0 THEN (SUM(impressions) / COUNT(DISTINCT zone_id) * 100) ELSE 0 END as fill_rate,
+                COUNT(*) as requests
+            ')
+            ->groupBy('period')
+            ->orderBy('period_start', 'desc')
+            ->paginate(50)
+            ->withQueryString();
+
+        // Calculate totals
+        $totals = StatDaily::where('site_id', $id)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->selectRaw('
+                SUM(impressions) as total_impressions,
+                SUM(unique_impressions) as total_unique_impressions,
+                SUM(clicks) as total_clicks,
+                SUM(unique_clicks) as total_unique_clicks,
+                SUM(conversions) as total_conversions,
+                SUM(revenue) as total_revenue,
+                CASE WHEN SUM(impressions) > 0 THEN (SUM(clicks) / SUM(impressions) * 100) ELSE 0 END as avg_ctr,
+                CASE WHEN SUM(impressions) > 0 THEN (SUM(revenue) / SUM(impressions) * 1000) ELSE 0 END as avg_ecpm
+            ')
+            ->first();
+
+        // Get chart data (last 30 days for visualization)
+        $chartData = StatDaily::where('site_id', $id)
+            ->whereBetween('date', [now()->subDays(30)->format('Y-m-d'), now()->format('Y-m-d')])
+            ->selectRaw('
+                date,
+                SUM(impressions) as impressions,
+                SUM(clicks) as clicks,
+                SUM(revenue) as revenue
+            ')
+            ->groupBy('date')
+            ->orderBy('date', 'asc')
+            ->get();
+
+        return view('admin.sites.reports', compact('site', 'stats', 'totals', 'chartData', 'startDate', 'endDate', 'groupBy'));
+    }
+
+    public function exportReports(Request $request, $id)
+    {
+        $site = Site::where('is_deleted', false)->findOrFail($id);
+        $format = $request->input('format', 'excel');
+
+        $startDate = $request->input('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->format('Y-m-d'));
+
+        $stats = StatDaily::where('site_id', $id)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->selectRaw('
+                date,
+                SUM(impressions) as impressions,
+                SUM(unique_impressions) as unique_impressions,
+                SUM(clicks) as clicks,
+                SUM(unique_clicks) as unique_clicks,
+                SUM(conversions) as conversions,
+                SUM(revenue) as revenue,
+                CASE WHEN SUM(impressions) > 0 THEN (SUM(clicks) / SUM(impressions) * 100) ELSE 0 END as ctr,
+                CASE WHEN SUM(impressions) > 0 THEN (SUM(revenue) / SUM(impressions) * 1000) ELSE 0 END as ecpm,
+                COUNT(*) as requests
+            ')
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->get();
+
+        if ($format === 'csv') {
+            $filename = "site_{$id}_reports_" . date('Y-m-d') . ".csv";
+
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            ];
+
+            $callback = function() use ($stats, $site) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, ['Site Report - ' . $site->name]);
+                fputcsv($file, ['Date', 'Requests', 'Impressions', 'Unique Impressions', 'Clicks', 'Unique Clicks', 'Conversions', 'Revenue', 'CTR', 'eCPM']);
+
+                foreach ($stats as $stat) {
+                    fputcsv($file, [
+                        $stat->date,
+                        $stat->requests,
+                        $stat->impressions,
+                        $stat->unique_impressions,
+                        $stat->clicks,
+                        $stat->unique_clicks,
+                        $stat->conversions,
+                        number_format($stat->revenue, 2),
+                        number_format($stat->ctr, 2) . '%',
+                        number_format($stat->ecpm, 2),
+                    ]);
+                }
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        }
+
+        // Excel export would go here (requires PHPSpreadsheet or similar)
+        return response()->json(['error' => 'Format not yet implemented'], 400);
+    }
 }

@@ -116,14 +116,14 @@
                                     <button onclick="deleteSite({{ $site->id }})" class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
                                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                     </button>
-                                    {{-- Reports (placeholder) --}}
-                                    <button class="p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-600 transition-colors" title="Reports (Coming Soon)">
+                                    {{-- Reports --}}
+                                    <a href="{{ route('admin.sites.reports', $site->id) }}" class="p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-600 transition-colors inline-flex" title="View Reports">
                                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                                    </button>
-                                    {{-- Adblock (placeholder) --}}
-                                    <button class="p-1.5 rounded-lg hover:bg-emerald-50 text-gray-400 hover:text-emerald-600 transition-colors" title="Adblock (Coming Soon)">
+                                    </a>
+                                    {{-- Adblock --}}
+                                    <a href="{{ route('admin.adblocks', ['site_id' => $site->id]) }}" class="p-1.5 rounded-lg hover:bg-emerald-50 text-gray-400 hover:text-emerald-600 transition-colors inline-flex" title="View AdBlocks">
                                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                                    </button>
+                                    </a>
                                 </div>
                             </td>
                         </tr>

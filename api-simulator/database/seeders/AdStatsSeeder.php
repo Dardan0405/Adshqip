@@ -10,7 +10,7 @@ class AdStatsSeeder extends Seeder
 {
     public function run(): void
     {
-        $ads = Ad::with('campaign')->where('is_deleted', false)->get();
+        $ads = Ad::with('campaign.zone.site')->where('is_deleted', false)->get();
 
         if ($ads->isEmpty()) {
             $this->command->warn('No ads found. Please run AdCreativeSeeder first.');
@@ -23,6 +23,10 @@ class AdStatsSeeder extends Seeder
         $totalRows = 0;
 
         foreach ($ads as $ad) {
+            $zoneId = $ad->campaign?->zone_id;
+            $siteId = $ad->campaign?->zone?->site_id;
+            $publisherId = $ad->campaign?->zone?->site?->publisher_id;
+
             // Generate 30 days of stats per ad
             for ($daysAgo = 0; $daysAgo < 30; $daysAgo++) {
                 $date = now()->subDays($daysAgo)->format('Y-m-d');
@@ -55,7 +59,10 @@ class AdStatsSeeder extends Seeder
                     'date' => $date,
                     'ad_id' => $ad->id,
                     'campaign_id' => $ad->campaign_id,
+                    'zone_id' => $zoneId,
+                    'site_id' => $siteId,
                     'advertiser_id' => $ad->campaign?->advertiser_id,
+                    'publisher_id' => $publisherId,
                     'country_code' => $country,
                     'device_type' => $device,
                     'impressions' => $impressions,

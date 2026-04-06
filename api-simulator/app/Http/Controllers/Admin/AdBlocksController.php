@@ -7,6 +7,7 @@ use App\Http\Controllers\ZoneServeController;
 use App\Models\Ad;
 use App\Models\Campaign;
 use App\Models\DirectCampaign;
+use App\Models\DirectCampaignStat;
 use App\Models\DirectCampaignZone;
 use App\Models\PlatformSetting;
 use App\Models\Zone;
@@ -131,19 +132,49 @@ class AdBlocksController extends Controller
 
         $zones = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
 
-        // Load stats for each zone
-        $zoneIds = $zones->pluck('id');
-        $stats = StatDaily::whereIn('zone_id', $zoneIds)
-            ->selectRaw('zone_id,
+        // Load aggregated stats for each site shown in the current table page.
+        // The AdBlocks index displays site-level performance for the site each AdBlock belongs to.
+        $siteIds = $zones->pluck('site_id')->filter()->unique()->values();
+        $networkStats = StatDaily::whereIn('site_id', $siteIds)
+            ->selectRaw('site_id,
                 SUM(impressions) as total_impressions,
                 SUM(clicks) as total_clicks,
                 SUM(revenue) as total_revenue,
-                SUM(publisher_earnings) as total_earnings,
-                AVG(ecpm) as avg_ecpm,
-                CASE WHEN SUM(impressions) > 0 THEN (SUM(clicks) / SUM(impressions)) * 100 ELSE 0 END as ctr')
-            ->groupBy('zone_id')
+                SUM(publisher_earnings) as total_earnings')
+            ->groupBy('site_id')
             ->get()
-            ->keyBy('zone_id');
+            ->keyBy('site_id');
+
+        $directStats = DirectCampaignStat::query()
+            ->join('aq_zones', 'aq_zones.id', '=', 'aq_direct_campaign_stats.zone_id')
+            ->whereIn('aq_zones.site_id', $siteIds)
+            ->selectRaw('aq_zones.site_id as site_id,
+                SUM(aq_direct_campaign_stats.impressions) as total_impressions,
+                SUM(aq_direct_campaign_stats.clicks) as total_clicks,
+                SUM(aq_direct_campaign_stats.revenue) as total_revenue,
+                SUM(aq_direct_campaign_stats.publisher_earnings) as total_earnings')
+            ->groupBy('aq_zones.site_id')
+            ->get()
+            ->keyBy('site_id');
+
+        $stats = $siteIds->mapWithKeys(function ($siteId) use ($networkStats, $directStats) {
+            $network = $networkStats->get($siteId);
+            $direct = $directStats->get($siteId);
+
+            $impressions = (int) (($network->total_impressions ?? 0) + ($direct->total_impressions ?? 0));
+            $clicks = (int) (($network->total_clicks ?? 0) + ($direct->total_clicks ?? 0));
+            $revenue = (float) (($network->total_revenue ?? 0) + ($direct->total_revenue ?? 0));
+            $earnings = (float) (($network->total_earnings ?? 0) + ($direct->total_earnings ?? 0));
+
+            return [$siteId => (object) [
+                'total_impressions' => $impressions,
+                'total_clicks' => $clicks,
+                'total_revenue' => $revenue,
+                'total_earnings' => $earnings,
+                'avg_ecpm' => $impressions > 0 ? (($revenue / $impressions) * 1000) : 0,
+                'ctr' => $impressions > 0 ? (($clicks / $impressions) * 100) : 0,
+            ]];
+        });
 
         $sites = Site::where('is_deleted', false)
             ->where('status', 'active')
@@ -625,6 +656,242 @@ class AdBlocksController extends Controller
             'success' => true,
             'ad_code' => $adCode,
         ]);
+    }
+
+    public function reports(Request $request, $id)
+    {
+        $zone = Zone::where('is_deleted', false)
+            ->with('site')
+            ->findOrFail($id);
+
+        // Date filters
+        $startDate = $request->input('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->format('Y-m-d'));
+        $groupBy = $request->input('group_by', 'day'); // day, week, month
+
+        // Build query for both network and direct campaign stats
+        $query = StatDaily::where('zone_id', $id)
+            ->whereBetween('date', [$startDate, $endDate]);
+
+        // Get stats grouped by date
+        $statsQuery = clone $query;
+
+        switch ($groupBy) {
+            case 'week':
+                $statsQuery->selectRaw("DATE_FORMAT(date, '%Y-%u') as period, MIN(date) as period_start");
+                break;
+            case 'month':
+                $statsQuery->selectRaw("DATE_FORMAT(date, '%Y-%m') as period, MIN(date) as period_start");
+                break;
+            default: // day
+                $statsQuery->selectRaw("date as period, date as period_start");
+                break;
+        }
+
+        $stats = $statsQuery
+            ->selectRaw('
+                SUM(impressions) as impressions,
+                SUM(clicks) as clicks,
+                SUM(publisher_earnings) as earnings,
+                CASE WHEN SUM(impressions) > 0 THEN (SUM(publisher_earnings) / SUM(impressions) * 1000) ELSE 0 END as ecpm,
+                CASE WHEN SUM(impressions) > 0 THEN (SUM(clicks) / SUM(impressions) * 100) ELSE 0 END as ctr
+            ')
+            ->groupBy('period')
+            ->orderBy('period_start', 'desc')
+            ->paginate(50)
+            ->withQueryString();
+
+        // Add direct campaign stats
+        $directQuery = DirectCampaignStat::where('zone_id', $id)
+            ->whereBetween('date', [$startDate, $endDate]);
+
+        $directStatsQuery = clone $directQuery;
+
+        switch ($groupBy) {
+            case 'week':
+                $directStatsQuery->selectRaw("DATE_FORMAT(date, '%Y-%u') as period, MIN(date) as period_start");
+                break;
+            case 'month':
+                $directStatsQuery->selectRaw("DATE_FORMAT(date, '%Y-%m') as period, MIN(date) as period_start");
+                break;
+            default: // day
+                $directStatsQuery->selectRaw("date as period, date as period_start");
+                break;
+        }
+
+        $directStats = $directStatsQuery
+            ->selectRaw('
+                SUM(impressions) as impressions,
+                SUM(clicks) as clicks,
+                SUM(publisher_earnings) as earnings,
+                CASE WHEN SUM(impressions) > 0 THEN (SUM(publisher_earnings) / SUM(impressions) * 1000) ELSE 0 END as ecpm
+            ')
+            ->groupBy('period')
+            ->get()
+            ->keyBy('period');
+
+        // Merge network and direct stats
+        $stats->getCollection()->transform(function ($stat) use ($directStats) {
+            $direct = $directStats->get($stat->period);
+            if ($direct) {
+                $stat->impressions += $direct->impressions;
+                $stat->clicks += $direct->clicks;
+                $stat->earnings += $direct->earnings;
+                $stat->ecpm = $stat->impressions > 0 ? (($stat->earnings / $stat->impressions) * 1000) : 0;
+                $stat->ctr = $stat->impressions > 0 ? (($stat->clicks / $stat->impressions) * 100) : 0;
+            }
+            return $stat;
+        });
+
+        // Calculate totals
+        $networkTotals = StatDaily::where('zone_id', $id)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->selectRaw('
+                SUM(impressions) as total_impressions,
+                SUM(clicks) as total_clicks,
+                SUM(publisher_earnings) as total_earnings,
+                CASE WHEN SUM(impressions) > 0 THEN (SUM(publisher_earnings) / SUM(impressions) * 1000) ELSE 0 END as avg_ecpm
+            ')
+            ->first();
+
+        $directTotals = DirectCampaignStat::where('zone_id', $id)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->selectRaw('
+                SUM(impressions) as total_impressions,
+                SUM(clicks) as total_clicks,
+                SUM(publisher_earnings) as total_earnings
+            ')
+            ->first();
+
+        $totals = (object)[
+            'total_impressions' => ($networkTotals->total_impressions ?? 0) + ($directTotals->total_impressions ?? 0),
+            'total_clicks' => ($networkTotals->total_clicks ?? 0) + ($directTotals->total_clicks ?? 0),
+            'total_earnings' => ($networkTotals->total_earnings ?? 0) + ($directTotals->total_earnings ?? 0),
+        ];
+
+        $totals->avg_ecpm = $totals->total_impressions > 0 ? (($totals->total_earnings / $totals->total_impressions) * 1000) : 0;
+        $totals->avg_ctr = $totals->total_impressions > 0 ? (($totals->total_clicks / $totals->total_impressions) * 100) : 0;
+
+        // Get chart data (last 30 days)
+        $chartDates = [now()->subDays(30)->format('Y-m-d'), now()->format('Y-m-d')];
+
+        $networkChart = StatDaily::where('zone_id', $id)
+            ->whereBetween('date', $chartDates)
+            ->selectRaw('date, SUM(impressions) as impressions, SUM(clicks) as clicks, SUM(publisher_earnings) as earnings')
+            ->groupBy('date')
+            ->orderBy('date', 'asc')
+            ->get()
+            ->keyBy('date');
+
+        $directChart = DirectCampaignStat::where('zone_id', $id)
+            ->whereBetween('date', $chartDates)
+            ->selectRaw('date, SUM(impressions) as impressions, SUM(clicks) as clicks, SUM(publisher_earnings) as earnings')
+            ->groupBy('date')
+            ->orderBy('date', 'asc')
+            ->get()
+            ->keyBy('date');
+
+        // Merge chart data
+        $chartData = $networkChart->map(function ($item, $date) use ($directChart) {
+            $direct = $directChart->get($date);
+            if ($direct) {
+                $item->impressions += $direct->impressions;
+                $item->clicks += $direct->clicks;
+                $item->earnings += $direct->earnings;
+            }
+            return $item;
+        })->values();
+
+        // Add missing dates from direct stats
+        foreach ($directChart as $date => $direct) {
+            if (!$networkChart->has($date)) {
+                $chartData->push($direct);
+            }
+        }
+
+        $chartData = $chartData->sortBy('date')->values();
+
+        return view('admin.adblocks.reports', compact('zone', 'stats', 'totals', 'chartData', 'startDate', 'endDate', 'groupBy'));
+    }
+
+    public function exportReports(Request $request, $id)
+    {
+        $zone = Zone::where('is_deleted', false)->findOrFail($id);
+        $format = $request->input('format', 'csv');
+
+        $startDate = $request->input('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->format('Y-m-d'));
+
+        // Get network stats
+        $networkStats = StatDaily::where('zone_id', $id)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->selectRaw('date, SUM(impressions) as impressions, SUM(clicks) as clicks, SUM(publisher_earnings) as earnings')
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->get()
+            ->keyBy('date');
+
+        // Get direct campaign stats
+        $directStats = DirectCampaignStat::where('zone_id', $id)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->selectRaw('date, SUM(impressions) as impressions, SUM(clicks) as clicks, SUM(publisher_earnings) as earnings')
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->get()
+            ->keyBy('date');
+
+        // Merge stats
+        $stats = $networkStats->map(function ($item, $date) use ($directStats) {
+            $direct = $directStats->get($date);
+            if ($direct) {
+                $item->impressions += $direct->impressions;
+                $item->clicks += $direct->clicks;
+                $item->earnings += $direct->earnings;
+            }
+            $item->ecpm = $item->impressions > 0 ? (($item->earnings / $item->impressions) * 1000) : 0;
+            return $item;
+        });
+
+        // Add missing dates from direct stats
+        foreach ($directStats as $date => $direct) {
+            if (!$networkStats->has($date)) {
+                $direct->ecpm = $direct->impressions > 0 ? (($direct->earnings / $direct->impressions) * 1000) : 0;
+                $stats->put($date, $direct);
+            }
+        }
+
+        $stats = $stats->sortByDesc('date')->values();
+
+        if ($format === 'csv') {
+            $filename = "adblock_{$id}_reports_" . date('Y-m-d') . ".csv";
+
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            ];
+
+            $callback = function() use ($stats, $zone) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, ['AdBlock Report - ' . $zone->name]);
+                fputcsv($file, ['Date', 'Impressions', 'Clicks', 'Earnings', 'eCPM']);
+
+                foreach ($stats as $stat) {
+                    fputcsv($file, [
+                        $stat->date,
+                        $stat->impressions,
+                        $stat->clicks,
+                        number_format($stat->earnings, 2),
+                        number_format($stat->ecpm, 2),
+                    ]);
+                }
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        }
+
+        // Excel export would go here
+        return response()->json(['error' => 'Format not yet implemented'], 400);
     }
 
     private function generateAdCodeForZone(Zone $zone, array $queryOverrides = [])
