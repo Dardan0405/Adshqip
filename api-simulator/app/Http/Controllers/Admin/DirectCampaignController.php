@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\DirectCampaign;
 use App\Models\DirectCampaignCreative;
 use App\Models\DirectCampaignTargeting;
+use App\Models\DirectCampaignZone;
 use App\Models\User;
+use App\Models\Zone;
 use Illuminate\Http\Request;
 
 class DirectCampaignController extends Controller
@@ -142,6 +144,21 @@ class DirectCampaignController extends Controller
 
     private function getCommonViewData(): array
     {
+        $zones = Zone::with('site')
+            ->where('is_deleted', false)
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Zone $zone) => [
+                'id' => $zone->id,
+                'name' => $zone->name,
+                'site_name' => $zone->site->name ?? 'Unknown Site',
+                'format_key' => $zone->format_key,
+                'size_key' => $zone->size_key,
+            ])
+            ->values()
+            ->all();
+
         return [
             'pricingModels' => $this->getPricingModels(),
             'marketingObjectives' => $this->getMarketingObjectives(),
@@ -152,17 +169,35 @@ class DirectCampaignController extends Controller
             'connectionTypes' => $this->getConnectionTypes(),
             'mobileCarriers' => $this->getMobileCarriers(),
             'languages' => $this->getLanguages(),
+            'zones' => $zones,
         ];
+    }
+
+    private function syncZoneLink(DirectCampaign $campaign, ?int $zoneId): void
+    {
+        DirectCampaignZone::where('campaign_id', $campaign->id)->delete();
+
+        if (! $zoneId) {
+            return;
+        }
+
+        DirectCampaignZone::create([
+            'campaign_id' => $campaign->id,
+            'zone_id' => $zoneId,
+            'priority' => max(1, (int) ($campaign->priority ?? 1)),
+            'is_active' => true,
+        ]);
     }
 
     public function index(Request $request)
     {
-        $campaigns = DirectCampaign::with(['advertiser'])
+        $campaigns = DirectCampaign::with(['advertiser', 'zones.zone'])
             ->withSum('stats', 'impressions')
             ->withSum('stats', 'clicks')
             ->withSum('stats', 'conversions')
             ->withSum('stats', 'revenue')
             ->withSum('stats', 'viewable_impressions')
+            ->withSum('stats', 'adblock_detected')
             ->where('is_deleted', false)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -173,6 +208,7 @@ class DirectCampaignController extends Controller
             $conversions = (int) ($campaign->stats_sum_conversions ?? 0);
             $spend = (float) ($campaign->stats_sum_revenue ?? (($campaign->total_budget ?? 0) - ($campaign->remaining_budget ?? 0)));
             $views = (int) ($campaign->stats_sum_viewable_impressions ?? 0);
+            $linkedZone = $campaign->zones->where('is_active', true)->sortByDesc('priority')->first()?->zone;
 
             return [
                 'id' => $campaign->id,
@@ -190,10 +226,13 @@ class DirectCampaignController extends Controller
                 'budget' => (float) ($campaign->total_budget ?? 0),
                 'spend' => $spend,
                 'views' => $views,
+                'adblock_detected' => (int) ($campaign->stats_sum_adblock_detected ?? 0),
                 'destination_url' => $campaign->destination_url,
                 'priority' => $campaign->priority,
                 'delivery_mode' => $campaign->delivery_mode,
                 'campaign_group_name' => $campaign->campaign_group_name,
+                'zone_id' => $linkedZone?->id,
+                'zone_name' => $linkedZone?->name,
                 // Ad creative fields for preview
                 'headline' => $campaign->headline,
                 'body_text' => $campaign->body_text,
@@ -320,6 +359,7 @@ class DirectCampaignController extends Controller
             'delivery_mode' => 'nullable|in:standard,accelerated',
             'priority' => 'nullable|integer|min:1|max:10',
             'weight' => 'nullable|integer|min:1|max:10',
+            'zone_id' => 'nullable|exists:aq_zones,id',
             'frequency_cap' => 'nullable|integer|min:1',
             'frequency_cap_period' => 'nullable|in:hour,day,week,month,lifetime',
             'ctw_enabled' => 'nullable|boolean',
@@ -367,6 +407,7 @@ class DirectCampaignController extends Controller
 
         // Handle targeting from form
         $this->syncTargeting($campaign, $request);
+        $this->syncZoneLink($campaign, $request->integer('zone_id') ?: null);
 
         return redirect()
             ->route('admin.direct-campaigns')
@@ -375,11 +416,12 @@ class DirectCampaignController extends Controller
 
     public function show(int $id)
     {
-        $campaign = DirectCampaign::with(['advertiser', 'creatives', 'targeting'])
+        $campaign = DirectCampaign::with(['advertiser', 'creatives', 'targeting', 'zones.zone'])
             ->withSum('stats', 'impressions')
             ->withSum('stats', 'clicks')
             ->withSum('stats', 'conversions')
             ->withSum('stats', 'revenue')
+            ->withSum('stats', 'adblock_detected')
             ->find($id);
 
         if (!$campaign || $campaign->is_deleted) {
@@ -399,6 +441,8 @@ class DirectCampaignController extends Controller
             $targetingByType[$t->targeting_type] = $t->target_values;
         }
 
+        $linkedZone = $campaign->zones->where('is_active', true)->sortByDesc('priority')->first()?->zone;
+
         $campaignData = $campaign->toArray();
         $campaignData['impressions'] = $impressions;
         $campaignData['clicks'] = $clicks;
@@ -406,16 +450,20 @@ class DirectCampaignController extends Controller
         $campaignData['spend'] = $spend;
         $campaignData['budget'] = (float) ($campaign->total_budget ?? 0);
         $campaignData['ctr'] = $impressions > 0 ? round(($clicks / $impressions) * 100, 2) : 0.00;
+        $campaignData['adblock_detected'] = (int) ($campaign->stats_sum_adblock_detected ?? 0);
         $campaignData['advertiser_email'] = $campaign->advertiser->email ?? 'Unknown';
         $campaignData['targeting_by_type'] = $targetingByType;
         $campaignData['creatives'] = $campaign->creatives->toArray();
+        $campaignData['zone_id'] = $linkedZone?->id;
+        $campaignData['zone_name'] = $linkedZone?->name;
+        $campaignData['zone_site_name'] = $linkedZone?->site?->name;
 
         return view('admin.direct-campaigns.show', ['campaign' => $campaignData]);
     }
 
     public function edit(int $id)
     {
-        $campaign = DirectCampaign::with(['targeting'])->find($id);
+        $campaign = DirectCampaign::with(['targeting', 'zones.zone'])->find($id);
 
         if (!$campaign || $campaign->is_deleted) {
             return redirect()
@@ -431,11 +479,14 @@ class DirectCampaignController extends Controller
             $targetingByType[$t->targeting_type] = $t->target_values;
         }
 
+        $linkedZone = $campaign->zones->where('is_active', true)->sortByDesc('priority')->first()?->zone;
+
         $campaignData = $campaign->toArray();
         $campaignData['start_date'] = $campaign->start_date?->format('Y-m-d\TH:i');
         $campaignData['end_date'] = $campaign->end_date?->format('Y-m-d\TH:i');
         $campaignData['spend'] = $spend;
         $campaignData['targeting_by_type'] = $targetingByType;
+        $campaignData['zone_id'] = $linkedZone?->id;
 
         $viewData = $this->getCommonViewData();
         $viewData['campaign'] = $campaignData;
@@ -485,6 +536,7 @@ class DirectCampaignController extends Controller
             'delivery_mode' => 'nullable|in:standard,accelerated',
             'priority' => 'nullable|integer|min:1|max:10',
             'weight' => 'nullable|integer|min:1|max:10',
+            'zone_id' => 'nullable|exists:aq_zones,id',
             'frequency_cap' => 'nullable|integer|min:1',
             'frequency_cap_period' => 'nullable|in:hour,day,week,month,lifetime',
             'ctw_enabled' => 'nullable|boolean',
@@ -529,6 +581,7 @@ class DirectCampaignController extends Controller
 
         // Sync targeting
         $this->syncTargeting($campaign, $request);
+        $this->syncZoneLink($campaign, $request->integer('zone_id') ?: null);
 
         return redirect()
             ->route('admin.direct-campaigns.show', $id)
@@ -595,6 +648,12 @@ class DirectCampaignController extends Controller
             $newTargeting = $targeting->replicate();
             $newTargeting->campaign_id = $newCampaign->id;
             $newTargeting->save();
+        }
+
+        foreach ($campaign->zones as $zoneLink) {
+            $newZoneLink = $zoneLink->replicate();
+            $newZoneLink->campaign_id = $newCampaign->id;
+            $newZoneLink->save();
         }
 
         return redirect()

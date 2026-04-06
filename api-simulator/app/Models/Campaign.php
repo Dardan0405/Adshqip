@@ -17,6 +17,7 @@ class Campaign extends Model
     protected $fillable = [
         'advertiser_id',
         'group_id',
+        'zone_id',
         'name',
         'description',
         'format_id',
@@ -122,6 +123,11 @@ class Campaign extends Model
     public function pixelTracker()
     {
         return $this->belongsTo(PixelTracker::class, 'pixel_tracker_id');
+    }
+
+    public function zone()
+    {
+        return $this->belongsTo(Zone::class, 'zone_id');
     }
 
     public function ads()

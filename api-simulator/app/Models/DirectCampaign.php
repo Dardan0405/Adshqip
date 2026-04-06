@@ -201,6 +201,13 @@ class DirectCampaign extends Model
         return $this->hasMany(DirectCampaignZone::class, 'campaign_id');
     }
 
+    public function activeZoneLink()
+    {
+        return $this->hasOne(DirectCampaignZone::class, 'campaign_id')
+            ->where('is_active', true)
+            ->latestOfMany('id');
+    }
+
     public function stats()
     {
         return $this->hasMany(DirectCampaignStat::class, 'campaign_id');

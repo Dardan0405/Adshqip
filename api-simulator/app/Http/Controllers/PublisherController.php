@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -70,5 +71,32 @@ class PublisherController extends Controller
         return view('publisher.dashboard', compact(
             'earnings', 'metrics', 'chartData', 'adZones', 'deviceCpc', 'balance'
         ));
+    }
+
+    public function notifications()
+    {
+        $notifications = Notification::where('user_id', Auth::id())
+            ->orderByDesc('created_at')
+            ->limit(30)
+            ->get();
+
+        return response()->json($notifications);
+    }
+
+    public function markNotificationRead($id)
+    {
+        $notification = Notification::where('user_id', Auth::id())->findOrFail($id);
+        $notification->update(['is_read' => true, 'read_at' => now()]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function markAllNotificationsRead()
+    {
+        Notification::where('user_id', Auth::id())
+            ->where('is_read', false)
+            ->update(['is_read' => true, 'read_at' => now()]);
+
+        return response()->json(['success' => true]);
     }
 }

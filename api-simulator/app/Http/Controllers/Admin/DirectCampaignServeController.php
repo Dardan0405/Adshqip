@@ -117,8 +117,16 @@ class DirectCampaignServeController extends Controller
 
         // ── Build the ad HTML ──
         $countryParam = $request->query('country');
-        $clickUrl = route('direct.click', $id) . ($countryParam ? '?country=' . urlencode($countryParam) : '');
-        $tracking = $this->trackingScript($id, $countryParam);
+        $zoneId = $request->query('zone_id');
+        $query = [];
+        if ($countryParam) {
+            $query['country'] = $countryParam;
+        }
+        if ($zoneId) {
+            $query['zone_id'] = $zoneId;
+        }
+        $clickUrl = route('direct.click', $id) . (!empty($query) ? '?' . http_build_query($query) : '');
+        $tracking = $this->trackingScript($id, $countryParam, $zoneId ? (int) $zoneId : null);
 
         // Determine which creative to render
         if ($creative && $creative->creative_type === 'image' && $creative->file_path) {
@@ -236,8 +244,13 @@ class DirectCampaignServeController extends Controller
      */
     public function adblock(int $id)
     {
-        // Direct campaigns don't have a dedicated adblock column in stats,
-        // but we still accept the beacon gracefully.
+        $campaign = DirectCampaign::with('creatives')->find($id);
+
+        if ($campaign && ! $campaign->is_deleted) {
+            $creative = $this->selectCreative($campaign);
+            $this->trackStat($campaign, $creative, 'adblock');
+        }
+
         return $this->pixelResponse();
     }
 
@@ -334,6 +347,8 @@ class DirectCampaignServeController extends Controller
     {
         $today   = now()->toDateString();
         $request = request();
+        $zoneId = $request->query('zone_id');
+        $zoneId = is_numeric($zoneId) ? (int) $zoneId : null;
 
         // Detect device type
         $ua = strtolower($request->userAgent() ?? '');
@@ -369,14 +384,20 @@ class DirectCampaignServeController extends Controller
             $rowQuery->whereNull('country_code');
         }
 
-        $row = $rowQuery->whereNull('zone_id')->first();
+        if ($zoneId) {
+            $rowQuery->where('zone_id', $zoneId);
+        } else {
+            $rowQuery->whereNull('zone_id');
+        }
+
+        $row = $rowQuery->first();
 
         if (! $row) {
             $row = DirectCampaignStat::create([
                 'date'                => $today,
                 'campaign_id'         => $campaign->id,
                 'creative_id'         => $creativeId,
-                'zone_id'             => null,
+                'zone_id'             => $zoneId,
                 'country_code'        => $countryCode,
                 'device_type'         => $deviceType,
                 'impressions'         => 0,
@@ -421,6 +442,8 @@ class DirectCampaignServeController extends Controller
             if ($pricingModel === 'cpa' && $bidAmount > 0) {
                 $row->increment('revenue', $bidAmount);
             }
+        } elseif ($type === 'adblock') {
+            $row->increment('adblock_detected');
         }
 
         // Recalculate derived metrics
@@ -857,9 +880,16 @@ HTML;
     /**
      * Generate tracking JavaScript for view and adblock detection.
      */
-    private function trackingScript(int $campaignId, ?string $countryOverride = null): string
+    private function trackingScript(int $campaignId, ?string $countryOverride = null, ?int $zoneId = null): string
     {
-        $countrySuffix = $countryOverride ? '&country=' . urlencode($countryOverride) : '';
+        $extraParams = [];
+        if ($countryOverride) {
+            $extraParams[] = 'country=' . urlencode($countryOverride);
+        }
+        if ($zoneId) {
+            $extraParams[] = 'zone_id=' . $zoneId;
+        }
+        $suffix = !empty($extraParams) ? '&' . implode('&', $extraParams) : '';
         $viewUrl    = route('direct.view', $campaignId);
         $adblockUrl = route('direct.adblock', $campaignId);
 
@@ -870,7 +900,7 @@ HTML;
   var obs=new IntersectionObserver(function(entries){
     if(entries[0].isIntersecting&&!vFired){
       setTimeout(function(){
-        if(!vFired){vFired=true;new Image().src='{$viewUrl}?_='+Date.now()+'{$countrySuffix}';}
+        if(!vFired){vFired=true;new Image().src='{$viewUrl}?_='+Date.now()+'{$suffix}';}
       },1000);
     }
   },{threshold:0.5});
@@ -879,7 +909,7 @@ HTML;
 setTimeout(function(){
   var el=document.querySelector('#aq-ad,img,a');
   if(!el||el.offsetHeight===0||getComputedStyle(el).display==='none'){
-    new Image().src='{$adblockUrl}?_='+Date.now()+'{$countrySuffix}';
+    new Image().src='{$adblockUrl}?_='+Date.now()+'{$suffix}';
   }
 },2000);
 </script>

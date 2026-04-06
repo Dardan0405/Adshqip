@@ -140,6 +140,19 @@
                             <dd class="text-sm font-medium text-gray-900 mt-1">{{ ucwords(str_replace('_', ' ', $campaign['marketing_objective'] ?? 'Traffic')) }}</dd>
                         </div>
                         <div>
+                            <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Linked AdBlock</dt>
+                            <dd class="text-sm font-medium text-gray-900 mt-1">
+                                @if($campaign['zone_name'])
+                                    #{{ $campaign['zone_id'] }} - {{ $campaign['zone_name'] }}
+                                    @if($campaign['zone_site_name'])
+                                        <span class="text-gray-400">({{ $campaign['zone_site_name'] }})</span>
+                                    @endif
+                                @else
+                                    None linked
+                                @endif
+                            </dd>
+                        </div>
+                        <div>
                             <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Start Date</dt>
                             <dd class="text-sm font-medium text-gray-900 mt-1">{{ \Carbon\Carbon::parse($campaign['start_date'])->format('F d, Y') }}</dd>
                         </div>

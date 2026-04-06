@@ -173,6 +173,9 @@
                                 <div>
                                     <p class="font-semibold text-gray-900 truncate">{{ $campaign['name'] }}</p>
                                     <p class="text-[11px] text-gray-400 mt-0.5 truncate">{{ $campaign['brand_name'] ?? $campaign['advertiser'] }}</p>
+                                    @if($campaign['zone_id'])
+                                        <p class="text-[11px] text-brand-600 mt-0.5 truncate">AdBlock: #{{ $campaign['zone_id'] }} - {{ $campaign['zone_name'] }}</p>
+                                    @endif
                                 </div>
                             </td>
                             <td class="px-5 py-3.5">

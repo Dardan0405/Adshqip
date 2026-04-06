@@ -27,6 +27,7 @@ class User extends Authenticatable
         'referral_code',
         'last_login_at',
         'last_login_ip',
+        'is_deleted',
     ];
 
     public function profile()
@@ -42,6 +43,11 @@ class User extends Authenticatable
     public function ads()
     {
         return $this->hasManyThrough(Ad::class, Campaign::class, 'advertiser_id', 'campaign_id');
+    }
+
+    public function sites()
+    {
+        return $this->hasMany(Site::class, 'publisher_id');
     }
 
     protected $hidden = [

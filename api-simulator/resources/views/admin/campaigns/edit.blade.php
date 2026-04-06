@@ -97,6 +97,19 @@
                 </div>
             </div>
 
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Linked AdBlock</label>
+                <select name="zone_id" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white">
+                    <option value="">No AdBlock selected</option>
+                    @foreach($zones as $zone)
+                        <option value="{{ $zone['id'] }}" {{ ($campaign['zone_id'] ?? '') == $zone['id'] ? 'selected' : '' }}>
+                            #{{ $zone['id'] }} - {{ $zone['name'] }} ({{ $zone['site_name'] }} / {{ ucfirst($zone['placement']) }})
+                        </option>
+                    @endforeach
+                </select>
+                <p class="mt-1 text-xs text-gray-400">Select or update the AdBlock linked to this campaign.</p>
+            </div>
+
             {{-- S2S Postback Tracking --}}
             <div class="mt-5 pt-5 border-t border-gray-100">
                 <div class="flex items-center gap-3 mb-4">

@@ -651,7 +651,16 @@ class AdCreativeController extends Controller
             $rowQuery->whereNull('country_code');
         }
 
-        $row = $rowQuery->whereNull('zone_id')->first();
+        $zoneId = request()->query('zone_id');
+        $zoneId = is_numeric($zoneId) ? (int) $zoneId : null;
+
+        if ($zoneId) {
+            $rowQuery->where('zone_id', $zoneId);
+        } else {
+            $rowQuery->whereNull('zone_id');
+        }
+
+        $row = $rowQuery->first();
 
         if (!$row) {
             $row = StatDaily::create([
@@ -660,7 +669,7 @@ class AdCreativeController extends Controller
                 'campaign_id' => $ad->campaign_id,
                 'device_type' => $deviceType,
                 'country_code' => $countryCode,
-                'zone_id' => null,
+                'zone_id' => $zoneId,
                 'impressions' => 0,
                 'unique_impressions' => 0,
                 'clicks' => 0,
@@ -796,9 +805,10 @@ class AdCreativeController extends Controller
     /**
      * Generate tracking JavaScript for view and adblock detection.
      */
-    private function trackingScript(int $adId, ?string $countryOverride = null): string
+    private function trackingScript(int $adId, ?string $countryOverride = null, ?int $zoneOverride = null): string
     {
         $countrySuffix = $countryOverride ? '&country=' . urlencode($countryOverride) : '';
+        $zoneSuffix = $zoneOverride ? '&zone_id=' . $zoneOverride : '';
         $viewUrl = route('ad.view', $adId);
         $adblockUrl = route('ad.adblock', $adId);
 
@@ -809,7 +819,7 @@ class AdCreativeController extends Controller
   var obs=new IntersectionObserver(function(entries){
     if(entries[0].isIntersecting&&!vFired){
       setTimeout(function(){
-        if(!vFired){vFired=true;new Image().src='{$viewUrl}?_='+Date.now()+'{$countrySuffix}';}
+        if(!vFired){vFired=true;new Image().src='{$viewUrl}?_='+Date.now()+'{$countrySuffix}{$zoneSuffix}';}
       },1000);
     }
   },{threshold:0.5});
@@ -818,7 +828,7 @@ class AdCreativeController extends Controller
 setTimeout(function(){
   var el=document.querySelector('#aq-ad,img,a');
   if(!el||el.offsetHeight===0||getComputedStyle(el).display==='none'){
-    new Image().src='{$adblockUrl}?_='+Date.now()+'{$countrySuffix}';
+    new Image().src='{$adblockUrl}?_='+Date.now()+'{$countrySuffix}{$zoneSuffix}';
   }
 },2000);
 </script>
@@ -1212,10 +1222,21 @@ SCRIPT;
         $creative = $ad->primaryCreative;
         // Carry ?country= override through to click and tracking URLs (for local testing)
         $countryParam = request()->query('country');
-        $clickUrl = route('ad.click', $id) . ($countryParam ? '?country=' . urlencode($countryParam) : '');
+        $zoneParam = request()->query('zone_id');
+        $trackingParams = array_filter([
+            'country' => $countryParam,
+            'zone_id' => $zoneParam,
+            'device' => request()->query('device'),
+            'age' => request()->query('age'),
+            'gender' => request()->query('gender'),
+            'color' => request()->query('color'),
+            'height' => request()->query('height'),
+            'weight' => request()->query('weight'),
+        ], fn ($value) => $value !== null && $value !== '');
+        $clickUrl = route('ad.click', $id) . (!empty($trackingParams) ? ('?' . http_build_query($trackingParams)) : '');
         $width = $creative->width ?? null;
         $height = $creative->height ?? null;
-        $tracking = $this->trackingScript($id, $countryParam);
+        $tracking = $this->trackingScript($id, $countryParam, is_numeric($zoneParam) ? (int) $zoneParam : null);
 
         // Determine the ad format from campaign ad_formats metadata
         $adFormat = $this->getAdFormat($ad);

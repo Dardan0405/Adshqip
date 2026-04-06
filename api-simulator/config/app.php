@@ -123,4 +123,18 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Ad Serving Configuration
+    |--------------------------------------------------------------------------
+    |
+    | The domain and path used in publisher embed codes. Admins can rotate
+    | domains via aq_platform_settings (keys: ad_serve_domain, ad_serve_path).
+    | DB values take priority over these defaults.
+    |
+    */
+
+    'ad_serve_domain' => env('AD_SERVE_DOMAIN', env('APP_URL', 'http://localhost')),
+    'ad_serve_path' => env('AD_SERVE_PATH', '/d'),
+
 ];

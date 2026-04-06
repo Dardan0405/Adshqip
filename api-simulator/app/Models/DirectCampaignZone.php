@@ -34,4 +34,9 @@ class DirectCampaignZone extends Model
     {
         return $this->belongsTo(DirectCampaign::class, 'campaign_id');
     }
+
+    public function zone()
+    {
+        return $this->belongsTo(Zone::class, 'zone_id');
+    }
 }

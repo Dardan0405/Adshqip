@@ -83,7 +83,7 @@
     </div>
 
     {{-- Performance Stats --}}
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 mb-6">
         <div class="rounded-xl border border-gray-200 bg-white p-4">
             <div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Impressions</div>
             <div class="text-xl font-bold text-gray-900 mt-1">{{ number_format($campaign['impressions']) }}</div>
@@ -114,6 +114,10 @@
                 <span class="text-[10px] font-medium text-gray-400">{{ $spendPct }}%</span>
             </div>
         </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-4">
+            <div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">AdBlock Detected</div>
+            <div class="text-xl font-bold text-gray-900 mt-1">{{ number_format($campaign['adblock_detected'] ?? 0) }}</div>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -141,6 +145,19 @@
                         <div>
                             <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Marketing Objective</dt>
                             <dd class="text-sm font-medium text-gray-900 mt-1">{{ ucwords(str_replace('_', ' ', $campaign['marketing_objective'] ?? 'Traffic')) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Linked AdBlock</dt>
+                            <dd class="text-sm font-medium text-gray-900 mt-1">
+                                @if($campaign['zone_id'] ?? null)
+                                    #{{ $campaign['zone_id'] }} - {{ $campaign['zone_name'] }}
+                                @else
+                                    No AdBlock linked
+                                @endif
+                            </dd>
+                            @if($campaign['zone_site_name'] ?? null)
+                                <div class="text-xs text-gray-400 mt-1">{{ $campaign['zone_site_name'] }}</div>
+                            @endif
                         </div>
                         <div>
                             <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Start Date</dt>

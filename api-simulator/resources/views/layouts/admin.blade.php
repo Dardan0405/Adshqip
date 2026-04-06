@@ -71,6 +71,11 @@
                     Advertisers
                 </a>
 
+                <a href="{{ route('admin.publishers') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.publishers*') ? 'active' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Publishers
+                </a>
+
                 <a href="{{ route('admin.campaigns') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.campaigns*') && !request()->routeIs('admin.direct-campaigns*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Campaigns
@@ -81,9 +86,14 @@
                     Direct Campaigns
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('admin.sites') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.sites*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    Sites & Zones
+                    Sites
+                </a>
+
+                <a href="{{ route('admin.adblocks') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.adblocks*') ? 'active' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M4 6.5A2.5 2.5 0 016.5 4h11A2.5 2.5 0 0120 6.5v11a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 014 17.5v-11z" stroke="currentColor" stroke-width="1.5"/><path d="M4 9h16M9 20V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    AdBlocks
                 </a>
 
                 <a href="{{ route('admin.adformats') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.adformats*') ? 'active' : '' }}">

@@ -101,6 +101,20 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Linked AdBlock</label>
+                    <select name="zone_id" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white">
+                        <option value="">No AdBlock linked</option>
+                        @foreach($zones as $zone)
+                            <option value="{{ $zone['id'] }}" {{ old('zone_id', $campaign['zone_id'] ?? '') == $zone['id'] ? 'selected' : '' }}>
+                                #{{ $zone['id'] }} - {{ $zone['name'] }} @if(!empty($zone['site_name'])) ({{ $zone['site_name'] }}) @endif
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-gray-400 mt-1">Choose the AdBlock where this direct display, video, or clip ad should be served.</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Campaign Status</label>
                     <select name="status" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white">
                         @foreach(['draft'=>'Draft','pending_review'=>'Pending Review','active'=>'Active','paused'=>'Paused','completed'=>'Completed','rejected'=>'Rejected','archived'=>'Archived'] as $k => $v)

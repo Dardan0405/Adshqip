@@ -10,10 +10,30 @@ use App\Models\CampaignGroup;
 use App\Models\PixelTracker;
 use App\Models\StatDaily;
 use App\Models\User;
+use App\Models\Zone;
 use Illuminate\Http\Request;
 
 class CampaignController extends Controller
 {
+    private function getAvailableZones(): array
+    {
+        return Zone::with('site')
+            ->where('is_deleted', false)
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($zone) {
+                return [
+                    'id' => $zone->id,
+                    'name' => $zone->name,
+                    'site_name' => $zone->site->name ?? 'Unknown Site',
+                    'placement' => $zone->placement,
+                    'format_key' => $zone->format_key,
+                ];
+            })
+            ->toArray();
+    }
+
     /**
      * Balkan cities grouped by country code.
      */
@@ -145,7 +165,7 @@ class CampaignController extends Controller
     public function index(Request $request)
     {
         // Get all campaigns with their relationships and aggregated stats
-        $campaigns = Campaign::with(['group', 'advertiser'])
+        $campaigns = Campaign::with(['group', 'advertiser', 'zone.site'])
             ->withSum('stats', 'impressions')
             ->withSum('stats', 'clicks')
             ->withSum('stats', 'conversions')
@@ -184,6 +204,9 @@ class CampaignController extends Controller
                 'adblock_detected' => $adblockDetected,
                 'group' => $campaign->group ? $campaign->group->name : null,
                 'group_id' => $campaign->group_id,
+                'zone_id' => $campaign->zone_id,
+                'zone_name' => $campaign->zone?->name,
+                'zone_site_name' => $campaign->zone?->site?->name,
             ];
         })->toArray();
 
@@ -409,6 +432,7 @@ class CampaignController extends Controller
         return view('admin.campaigns.create', [
             'campaignGroups' => $campaignGroups,
             'groups' => $campaignGroups,
+            'zones' => $this->getAvailableZones(),
             'pixelTrackers' => $pixelTrackers,
             'pixels' => $pixelTrackers,
             'campaignTypes' => $campaignTypes,
@@ -439,6 +463,7 @@ class CampaignController extends Controller
             'campaign_type' => 'required|in:cpm,cpc,cpa,cpv,cpv_ctw',
             'marketing_objective' => 'required|in:brand_awareness,reach,traffic,engagement,app_installs,video_views,lead_generation,conversions,catalog_sales,store_visits',
             'group_id' => 'nullable|exists:aq_campaign_groups,id',
+            'zone_id' => 'nullable|exists:aq_zones,id',
             'status' => 'required|in:draft,pending_review,active,paused',
             'bid_amount' => 'required|numeric|min:0',
             'daily_budget' => 'nullable|numeric|min:0',
@@ -559,6 +584,9 @@ class CampaignController extends Controller
         // Handle empty pixel_tracker_id (empty string from select)
         if (empty($validated['pixel_tracker_id'])) {
             $validated['pixel_tracker_id'] = null;
+        }
+        if (empty($validated['zone_id'])) {
+            $validated['zone_id'] = null;
         }
 
         // Handle dayparting / targeting_schedule
@@ -714,7 +742,7 @@ class CampaignController extends Controller
      */
     public function show(int $id)
     {
-        $campaign = Campaign::with(['group', 'advertiser'])
+        $campaign = Campaign::with(['group', 'advertiser', 'zone.site'])
             ->withSum('stats', 'impressions')
             ->withSum('stats', 'clicks')
             ->withSum('stats', 'conversions')
@@ -763,6 +791,9 @@ class CampaignController extends Controller
             'group' => $campaign->group ? $campaign->group->name : null,
             'group_name' => $campaign->group ? $campaign->group->name : null,
             'group_id' => $campaign->group_id,
+            'zone_id' => $campaign->zone_id,
+            'zone_name' => $campaign->zone?->name,
+            'zone_site_name' => $campaign->zone?->site?->name,
             'targeting_region' => $campaign->targeting_region,
             'targeting_city' => $campaign->targeting_city,
             'targeting_connection_type' => $campaign->targeting_connection_type,
@@ -791,7 +822,7 @@ class CampaignController extends Controller
      */
     public function edit(int $id)
     {
-        $campaign = Campaign::with(['group'])->find($id);
+        $campaign = Campaign::with(['group', 'zone.site'])->find($id);
 
         if (!$campaign || $campaign->is_deleted) {
             return redirect()
@@ -872,6 +903,9 @@ class CampaignController extends Controller
             'ad_formats' => $campaign->ad_formats,
             'weight' => $campaign->weight,
             'group_id' => $campaign->group_id,
+            'zone_id' => $campaign->zone_id,
+            'zone_name' => $campaign->zone?->name,
+            'zone_site_name' => $campaign->zone?->site?->name,
             'pixel_tracker_id' => $campaign->pixel_tracker_id,
             'spend' => $spend,
         ];
@@ -967,6 +1001,7 @@ class CampaignController extends Controller
             'campaign' => $campaignData,
             'groups' => $campaignGroups,
             'campaignGroups' => $campaignGroups,
+            'zones' => $this->getAvailableZones(),
             'campaignTypes' => $campaignTypes,
             'marketingObjectives' => $marketingObjectives,
             'countries' => $countries,
@@ -1004,6 +1039,7 @@ class CampaignController extends Controller
             'campaign_type' => 'required|in:cpm,cpc,cpa,cpv,cpv_ctw',
             'marketing_objective' => 'required|in:brand_awareness,reach,traffic,engagement,app_installs,video_views,lead_generation,conversions,catalog_sales,store_visits',
             'group_id' => 'nullable|exists:aq_campaign_groups,id',
+            'zone_id' => 'nullable|exists:aq_zones,id',
             'status' => 'required|in:draft,pending_review,active,paused,completed,rejected',
             'bid_amount' => 'required|numeric|min:0',
             'daily_budget' => 'nullable|numeric|min:0',
@@ -1147,6 +1183,9 @@ class CampaignController extends Controller
         // Handle empty pixel_tracker_id (empty string from select)
         if (empty($validated['pixel_tracker_id'])) {
             $validated['pixel_tracker_id'] = null;
+        }
+        if (empty($validated['zone_id'])) {
+            $validated['zone_id'] = null;
         }
 
         // Handle dayparting / targeting_schedule

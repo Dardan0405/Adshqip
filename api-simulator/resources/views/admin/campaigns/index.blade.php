@@ -187,6 +187,9 @@
                                 <div>
                                     <p class="font-semibold text-gray-900 truncate">{{ $campaign['name'] }}</p>
                                     <p class="text-[11px] text-gray-400 mt-0.5 truncate">{{ $campaign['advertiser'] }}</p>
+                                    @if($campaign['zone_name'])
+                                        <p class="text-[11px] text-brand-600 mt-0.5 truncate">AdBlock: {{ $campaign['zone_name'] }}{{ $campaign['zone_site_name'] ? ' - ' . $campaign['zone_site_name'] : '' }}</p>
+                                    @endif
                                 </div>
                             </td>
                             {{-- Type --}}

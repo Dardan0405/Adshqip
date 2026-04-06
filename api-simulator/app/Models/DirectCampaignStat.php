@@ -24,6 +24,7 @@ class DirectCampaignStat extends Model
         'device_type',
         'impressions',
         'viewable_impressions',
+        'adblock_detected',
         'clicks',
         'unique_clicks',
         'conversions',
