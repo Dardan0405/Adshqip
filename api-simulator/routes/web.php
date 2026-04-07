@@ -238,5 +238,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/ad-formats/{id}/reports', [\App\Http\Controllers\Admin\AdCreativeController::class, 'reports'])->name('admin.adformats.reports');
         Route::get('/ad-formats/{id}/reports/export', [\App\Http\Controllers\Admin\AdCreativeController::class, 'exportReports'])->name('admin.adformats.reports.export');
         Route::delete('/ad-formats/{id}', [\App\Http\Controllers\Admin\AdCreativeController::class, 'destroy'])->name('admin.adformats.destroy');
+
+        // Country-wise Bidding
+        Route::get('/country-wise-bidding', [\App\Http\Controllers\Admin\CountryWiseBiddingController::class, 'index'])->name('admin.country-wise-bidding');
+        Route::post('/country-wise-bidding', [\App\Http\Controllers\Admin\CountryWiseBiddingController::class, 'store'])->name('admin.country-wise-bidding.store');
+        Route::get('/country-wise-bidding/export', [\App\Http\Controllers\Admin\CountryWiseBiddingController::class, 'export'])->name('admin.country-wise-bidding.export');
+        Route::get('/country-wise-bidding/campaigns/{advertiserId}', [\App\Http\Controllers\Admin\CountryWiseBiddingController::class, 'getCampaigns'])->name('admin.country-wise-bidding.campaigns');
+        Route::get('/country-wise-bidding/{id}', [\App\Http\Controllers\Admin\CountryWiseBiddingController::class, 'show'])->name('admin.country-wise-bidding.show');
+        Route::put('/country-wise-bidding/{id}', [\App\Http\Controllers\Admin\CountryWiseBiddingController::class, 'update'])->name('admin.country-wise-bidding.update');
+        Route::delete('/country-wise-bidding/{id}', [\App\Http\Controllers\Admin\CountryWiseBiddingController::class, 'destroy'])->name('admin.country-wise-bidding.destroy');
     });
 });
