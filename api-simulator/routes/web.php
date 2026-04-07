@@ -248,6 +248,13 @@ Route::middleware('auth')->group(function () {
         Route::put('/country-wise-bidding/{id}', [\App\Http\Controllers\Admin\CountryWiseBiddingController::class, 'update'])->name('admin.country-wise-bidding.update');
         Route::delete('/country-wise-bidding/{id}', [\App\Http\Controllers\Admin\CountryWiseBiddingController::class, 'destroy'])->name('admin.country-wise-bidding.destroy');
 
+        // Zone Limitations
+        Route::get('/zone-limitations', [\App\Http\Controllers\Admin\ZoneLimitationController::class, 'index'])->name('admin.zone-limitations');
+        Route::post('/zone-limitations', [\App\Http\Controllers\Admin\ZoneLimitationController::class, 'store'])->name('admin.zone-limitations.store');
+        Route::get('/zone-limitations/export', [\App\Http\Controllers\Admin\ZoneLimitationController::class, 'export'])->name('admin.zone-limitations.export');
+        Route::get('/zone-limitations/zones', [\App\Http\Controllers\Admin\ZoneLimitationController::class, 'getZones'])->name('admin.zone-limitations.zones');
+        Route::delete('/zone-limitations/{id}', [\App\Http\Controllers\Admin\ZoneLimitationController::class, 'destroy'])->name('admin.zone-limitations.destroy');
+
         // Traffic Sources
         Route::get('/traffic-sources', [\App\Http\Controllers\Admin\TrafficSourceController::class, 'index'])->name('admin.traffic-sources');
         Route::post('/traffic-sources', [\App\Http\Controllers\Admin\TrafficSourceController::class, 'store'])->name('admin.traffic-sources.store');

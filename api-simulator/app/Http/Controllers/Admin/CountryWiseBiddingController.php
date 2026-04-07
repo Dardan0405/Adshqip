@@ -236,6 +236,10 @@ class CountryWiseBiddingController extends Controller
         });
 
         if ($validator->fails()) {
+            if (! $request->expectsJson()) {
+                return back()->withErrors($validator)->withInput();
+            }
+
             return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
         }
 
@@ -247,6 +251,10 @@ class CountryWiseBiddingController extends Controller
             'country_code' => strtoupper($request->country_code),
             'bid_value' => $request->bid_value,
         ]);
+
+        if (! $request->expectsJson()) {
+            return redirect()->route('admin.country-wise-bidding');
+        }
 
         return response()->json(['success' => true, 'message' => 'Bidding rule updated successfully.']);
     }
