@@ -247,5 +247,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/country-wise-bidding/{id}', [\App\Http\Controllers\Admin\CountryWiseBiddingController::class, 'show'])->name('admin.country-wise-bidding.show');
         Route::put('/country-wise-bidding/{id}', [\App\Http\Controllers\Admin\CountryWiseBiddingController::class, 'update'])->name('admin.country-wise-bidding.update');
         Route::delete('/country-wise-bidding/{id}', [\App\Http\Controllers\Admin\CountryWiseBiddingController::class, 'destroy'])->name('admin.country-wise-bidding.destroy');
+
+        // Traffic Sources
+        Route::get('/traffic-sources', [\App\Http\Controllers\Admin\TrafficSourceController::class, 'index'])->name('admin.traffic-sources');
+        Route::post('/traffic-sources', [\App\Http\Controllers\Admin\TrafficSourceController::class, 'store'])->name('admin.traffic-sources.store');
+        Route::get('/traffic-sources/export', [\App\Http\Controllers\Admin\TrafficSourceController::class, 'export'])->name('admin.traffic-sources.export');
+        Route::delete('/traffic-sources/{id}', [\App\Http\Controllers\Admin\TrafficSourceController::class, 'destroy'])->name('admin.traffic-sources.destroy');
     });
 });

@@ -721,6 +721,19 @@ class AdCreativeController extends Controller
 
         // Traffic source bid override: match Referer header against configured sources
         $trafficSources = $campaign->traffic_sources;
+        if (empty($trafficSources) || ! is_array($trafficSources)) {
+            $trafficSources = \App\Models\TrafficSource::with('source')
+                ->where('campaign_id', $campaign->id)
+                ->where('campaign_type', 'network')
+                ->get()
+                ->map(fn ($ts) => [
+                    'name' => $ts->source?->name,
+                    'bid' => $ts->bid_rate,
+                    'status' => $ts->status,
+                ])
+                ->toArray();
+        }
+
         if (!empty($trafficSources) && is_array($trafficSources)) {
             $referer = strtolower($request->header('Referer', ''));
             $sourceKeywords = [
