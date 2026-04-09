@@ -132,6 +132,11 @@ Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfTok
         // Direct Campaign S2S Postback
         Route::match(['get', 'post'], '/track/direct/{id}/postback', [\App\Http\Controllers\Admin\DirectCampaignServeController::class, 'postback'])->name('direct.postback');
 
+        // ─── Pixel Tracker Fire Endpoints ───
+        Route::get('/track/pixel/{code}/pixel.js', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'fireJs'])->name('pixel.fire.js');
+        Route::get('/track/pixel/{code}/pixel.gif', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'fireGif'])->name('pixel.fire.gif');
+        Route::match(['get', 'post'], '/track/pixel/{code}/postback', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'firePostback'])->name('pixel.fire.postback');
+
         // ─── Zone Ad Serving (obfuscated path, token-based) ───
         Route::get('/d/{token}.js', [\App\Http\Controllers\ZoneServeController::class, 'serve'])->name('zone.serve');
     });
@@ -254,6 +259,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/zone-limitations/export', [\App\Http\Controllers\Admin\ZoneLimitationController::class, 'export'])->name('admin.zone-limitations.export');
         Route::get('/zone-limitations/zones', [\App\Http\Controllers\Admin\ZoneLimitationController::class, 'getZones'])->name('admin.zone-limitations.zones');
         Route::delete('/zone-limitations/{id}', [\App\Http\Controllers\Admin\ZoneLimitationController::class, 'destroy'])->name('admin.zone-limitations.destroy');
+
+        // Pixel Trackers
+        Route::get('/pixel-trackers', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'index'])->name('admin.pixel-trackers');
+        Route::post('/pixel-trackers', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'store'])->name('admin.pixel-trackers.store');
+        Route::get('/pixel-trackers/export', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'export'])->name('admin.pixel-trackers.export');
+        Route::get('/pixel-trackers/campaigns/{advertiserId}', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'getCampaigns'])->name('admin.pixel-trackers.campaigns');
+        Route::get('/pixel-trackers/{id}', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'show'])->name('admin.pixel-trackers.show');
+        Route::put('/pixel-trackers/{id}', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'update'])->name('admin.pixel-trackers.update');
+        Route::get('/pixel-trackers/{id}/code', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'getCode'])->name('admin.pixel-trackers.code');
+        Route::post('/pixel-trackers/{id}/link', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'linkCampaign'])->name('admin.pixel-trackers.link');
+        Route::delete('/pixel-trackers/{id}', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'destroy'])->name('admin.pixel-trackers.destroy');
 
         // Traffic Sources
         Route::get('/traffic-sources', [\App\Http\Controllers\Admin\TrafficSourceController::class, 'index'])->name('admin.traffic-sources');

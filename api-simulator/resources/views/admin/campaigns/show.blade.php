@@ -586,6 +586,152 @@
                 </div>
             </div>
 
+            {{-- Pixel Tracker --}}
+            <div class="bg-white rounded-xl border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h2 class="text-base font-semibold text-gray-900">Pixel Tracker</h2>
+                </div>
+                <div class="p-6 space-y-4">
+                    @if($campaign['pixel_tracker'])
+                        @php $pixel = $campaign['pixel_tracker']; @endphp
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg {{ $pixel['is_active'] ? 'bg-emerald-100' : 'bg-gray-100' }} flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 {{ $pixel['is_active'] ? 'text-emerald-600' : 'text-gray-400' }}" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-semibold text-gray-900">{{ $pixel['name'] }}</div>
+                                    <div class="text-xs font-mono text-gray-400">{{ $pixel['pixel_code'] }}</div>
+                                </div>
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold {{ $pixel['is_active'] ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600' }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $pixel['is_active'] ? 'bg-emerald-500' : 'bg-gray-400' }}"></span>
+                                {{ ucfirst($pixel['status']) }}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Type</dt>
+                                <dd class="mt-1">
+                                    @php
+                                        $pixelTypeColors = [
+                                            'html_pixel' => ['bg' => 'bg-blue-50', 'text' => 'text-blue-700', 'border' => 'border-blue-200', 'label' => 'HTML Pixel'],
+                                            's2s_pixel' => ['bg' => 'bg-purple-50', 'text' => 'text-purple-700', 'border' => 'border-purple-200', 'label' => 'S2S Pixel'],
+                                            'mobile_s2s' => ['bg' => 'bg-amber-50', 'text' => 'text-amber-700', 'border' => 'border-amber-200', 'label' => 'Mobile S2S'],
+                                        ];
+                                        $ptc = $pixelTypeColors[$pixel['type']] ?? ['bg' => 'bg-gray-50', 'text' => 'text-gray-700', 'border' => 'border-gray-200', 'label' => ucfirst($pixel['type'])];
+                                    @endphp
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $ptc['bg'] }} {{ $ptc['text'] }} border {{ $ptc['border'] }}">{{ $ptc['label'] }}</span>
+                                </dd>
+                            </div>
+                            @if($pixel['pixel_goal'])
+                            <div>
+                                <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Goal</dt>
+                                <dd class="text-sm font-medium text-gray-900 mt-1">{{ ucwords(str_replace('_', ' ', $pixel['pixel_goal'])) }}</dd>
+                            </div>
+                            @endif
+                            @if($pixel['category'])
+                            <div>
+                                <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Category</dt>
+                                <dd class="mt-1">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">{{ $pixel['category'] }}</span>
+                                </dd>
+                            </div>
+                            @endif
+                        </div>
+
+                        {{-- Tracking Status --}}
+                        <div class="rounded-lg border {{ $pixel['fire_count'] > 0 ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50' }} p-4">
+                            <div class="flex items-center gap-3">
+                                @if($pixel['fire_count'] > 0)
+                                    <div class="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4 text-emerald-700" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-semibold text-emerald-800">Tracking Active</div>
+                                        <div class="text-xs text-emerald-600">Fired <strong>{{ number_format($pixel['fire_count']) }}</strong> time{{ $pixel['fire_count'] !== 1 ? 's' : '' }}</div>
+                                        @if($pixel['last_fired_at'])
+                                            <div class="text-[10px] text-emerald-500 mt-0.5">Last fired: {{ $pixel['last_fired_at'] }}</div>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4 text-amber-700" viewBox="0 0 24 24" fill="none"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-semibold text-amber-800">No Fires Detected</div>
+                                        <div class="text-xs text-amber-600">This pixel has not fired yet. Ensure it is correctly installed.</div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Embed Code --}}
+                        @php
+                            $pxCode = $pixel['pixel_code'];
+                            $jsUrl = url("/track/pixel/{$pxCode}/pixel.js");
+                            $gifUrl = url("/track/pixel/{$pxCode}/pixel.gif");
+                            $postbackUrl = url("/track/pixel/{$pxCode}/postback");
+                        @endphp
+
+                        @if($pixel['type'] === 'html_pixel')
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Embed Code (HTML)</dt>
+                                    <button type="button" onclick="copyPixelCode()" class="text-[10px] font-semibold text-brand-600 hover:text-brand-700">Copy Code</button>
+                                </div>
+                                <dd>
+                                    <pre id="pixelEmbedCode" class="bg-gray-900 text-green-400 rounded-lg p-3 text-[11px] font-mono overflow-x-auto whitespace-pre-wrap leading-relaxed">&lt;!-- AdsHqip Pixel — {{ $pxCode }} --&gt;
+&lt;script type="text/javascript"&gt;
+  (function() {
+    var aq = document.createElement('script');
+    aq.type = 'text/javascript'; aq.async = true;
+    aq.src = '{{ $jsUrl }}';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(aq, s);
+  })();
+&lt;/script&gt;
+&lt;noscript&gt;&lt;img src="{{ $gifUrl }}" width="1" height="1" style="display:none" /&gt;&lt;/noscript&gt;</pre>
+                                </dd>
+                            </div>
+                            <div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                                <p class="text-[10px] text-blue-600">Place this code before the <code class="px-1 py-0.5 rounded bg-blue-100 text-blue-800 font-mono text-[10px]">&lt;/head&gt;</code> tag on all pages where you want to track conversions.</p>
+                            </div>
+                        @else
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Postback URL</dt>
+                                    <button type="button" onclick="copyPixelCode()" class="text-[10px] font-semibold text-brand-600 hover:text-brand-700">Copy URL</button>
+                                </div>
+                                <dd>
+                                    <pre id="pixelEmbedCode" class="bg-gray-900 text-green-400 rounded-lg p-3 text-[11px] font-mono overflow-x-auto whitespace-pre-wrap leading-relaxed">{{ $postbackUrl }}?click_id={click_id}&payout={payout}{{ $pixel['type'] === 'mobile_s2s' ? '&device_id={device_id}' : '' }}</pre>
+                                </dd>
+                            </div>
+                            <div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                                <p class="text-[10px] text-blue-600">Send a GET or POST request to this URL when a conversion occurs.</p>
+                            </div>
+                        @endif
+
+                        <div>
+                            <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Tracking URL</dt>
+                            <dd class="mt-1.5 bg-gray-50 rounded-lg p-3 flex items-center justify-between gap-2">
+                                <p class="text-[11px] font-mono text-gray-700 break-all">{{ $pixel['type'] === 'html_pixel' ? $gifUrl : $postbackUrl }}</p>
+                            </dd>
+                        </div>
+                    @else
+                        <div class="flex flex-col items-center py-4 text-center">
+                            <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mb-3">
+                                <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            </div>
+                            <p class="text-sm font-medium text-gray-600">No Pixel Tracker Assigned</p>
+                            <p class="text-xs text-gray-400 mt-1">Assign a pixel tracker when editing this campaign to track conversions.</p>
+                            <a href="{{ route('admin.campaigns.edit', $campaign['id']) }}" class="mt-3 text-xs font-medium text-brand-600 hover:text-brand-700">Edit Campaign to Add Pixel</a>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             {{-- S2S Postback Tracking --}}
             <div class="bg-white rounded-xl border border-gray-200">
                 <div class="px-6 py-4 border-b border-gray-100">
@@ -712,4 +858,17 @@
             </div>
         </div>
     </div>
+    @if($campaign['pixel_tracker'])
+    <script>
+    function copyPixelCode() {
+        var code = document.getElementById('pixelEmbedCode').textContent;
+        navigator.clipboard.writeText(code).then(function() {
+            var btn = event.target;
+            var originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(function() { btn.textContent = originalText; }, 2000);
+        });
+    }
+    </script>
+    @endif
 @endsection

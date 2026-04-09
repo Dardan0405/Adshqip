@@ -381,10 +381,18 @@ class CampaignController extends Controller
 
         $pricingModels = ['CPM', 'CPC', 'CPA', 'CPV'];
 
-        // Advertisers (demo data)
-        $advertisers = [
-            ['id' => 1, 'name' => 'Demo Advertiser', 'email' => 'demo@adshqip.com'],
-        ];
+        // Advertisers
+        $advertisers = User::where('role', 'advertiser')
+            ->where('is_deleted', false)
+            ->with('profile')
+            ->orderBy('email')
+            ->get()
+            ->map(function ($adv) {
+                $name = trim(($adv->profile->first_name ?? '') . ' ' . ($adv->profile->last_name ?? ''));
+                if (!$name) $name = $adv->email;
+                return ['id' => $adv->id, 'name' => $name, 'email' => $adv->email];
+            })
+            ->toArray();
 
         // Categories (demo data)
         $categories = [
@@ -742,7 +750,7 @@ class CampaignController extends Controller
      */
     public function show(int $id)
     {
-        $campaign = Campaign::with(['group', 'advertiser', 'zone.site'])
+        $campaign = Campaign::with(['group', 'advertiser', 'zone.site', 'pixelTracker'])
             ->withSum('stats', 'impressions')
             ->withSum('stats', 'clicks')
             ->withSum('stats', 'conversions')
@@ -804,6 +812,19 @@ class CampaignController extends Controller
             'targeting_ip_exclude' => $campaign->targeting_ip_exclude,
             's2s_enabled' => (bool) $campaign->s2s_enabled,
             's2s_postback_url' => $campaign->s2s_postback_url,
+            'pixel_tracker' => $campaign->pixelTracker ? [
+                'id' => $campaign->pixelTracker->id,
+                'name' => $campaign->pixelTracker->name,
+                'type' => $campaign->pixelTracker->type,
+                'pixel_code' => $campaign->pixelTracker->pixel_code,
+                'pixel_goal' => $campaign->pixelTracker->pixel_goal,
+                'category' => $campaign->pixelTracker->category,
+                'tracking_url' => $campaign->pixelTracker->tracking_url,
+                'status' => $campaign->pixelTracker->status ?? 'active',
+                'is_active' => (bool) $campaign->pixelTracker->is_active,
+                'fire_count' => (int) ($campaign->pixelTracker->fire_count ?? 0),
+                'last_fired_at' => $campaign->pixelTracker->last_fired_at?->format('M d, Y H:i:s'),
+            ] : null,
             'traffic_sources' => $campaign->traffic_sources,
             'country_bids' => $campaign->country_bids,
             'ad_formats' => $campaign->ad_formats,
@@ -951,9 +972,17 @@ class CampaignController extends Controller
             })
             ->toArray();
 
-        $advertisers = [
-            ['id' => 1, 'name' => 'Demo Advertiser', 'email' => 'demo@adshqip.com'],
-        ];
+        $advertisers = User::where('role', 'advertiser')
+            ->where('is_deleted', false)
+            ->with('profile')
+            ->orderBy('email')
+            ->get()
+            ->map(function ($adv) {
+                $name = trim(($adv->profile->first_name ?? '') . ' ' . ($adv->profile->last_name ?? ''));
+                if (!$name) $name = $adv->email;
+                return ['id' => $adv->id, 'name' => $name, 'email' => $adv->email];
+            })
+            ->toArray();
 
         $categories = [
             ['id' => 1, 'name' => 'E-commerce'],
