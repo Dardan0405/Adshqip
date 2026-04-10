@@ -35,6 +35,11 @@ class User extends Authenticatable
         return $this->hasOne(UserProfile::class, 'user_id');
     }
 
+    public function userProfile()
+    {
+        return $this->hasOne(UserProfile::class, 'user_id');
+    }
+
     public function campaigns()
     {
         return $this->hasMany(Campaign::class, 'advertiser_id');

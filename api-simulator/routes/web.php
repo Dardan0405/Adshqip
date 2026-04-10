@@ -276,5 +276,23 @@ Route::middleware('auth')->group(function () {
         Route::post('/traffic-sources', [\App\Http\Controllers\Admin\TrafficSourceController::class, 'store'])->name('admin.traffic-sources.store');
         Route::get('/traffic-sources/export', [\App\Http\Controllers\Admin\TrafficSourceController::class, 'export'])->name('admin.traffic-sources.export');
         Route::delete('/traffic-sources/{id}', [\App\Http\Controllers\Admin\TrafficSourceController::class, 'destroy'])->name('admin.traffic-sources.destroy');
+
+        // RTB - Real-Time Bidding
+        Route::get('/rtb', [\App\Http\Controllers\Admin\RtbController::class, 'index'])->name('admin.rtb');
+        Route::post('/rtb', [\App\Http\Controllers\Admin\RtbController::class, 'store'])->name('admin.rtb.store');
+        Route::get('/rtb/export', [\App\Http\Controllers\Admin\RtbController::class, 'export'])->name('admin.rtb.export');
+        Route::get('/rtb/{id}', [\App\Http\Controllers\Admin\RtbController::class, 'show'])->name('admin.rtb.show');
+        Route::put('/rtb/{id}', [\App\Http\Controllers\Admin\RtbController::class, 'update'])->name('admin.rtb.update');
+        Route::patch('/rtb/{id}/block', [\App\Http\Controllers\Admin\RtbController::class, 'block'])->name('admin.rtb.block');
+        Route::patch('/rtb/{id}/unblock', [\App\Http\Controllers\Admin\RtbController::class, 'unblock'])->name('admin.rtb.unblock');
+        Route::delete('/rtb/{id}', [\App\Http\Controllers\Admin\RtbController::class, 'destroy'])->name('admin.rtb.destroy');
+
+        // Advertiser Payment History
+        Route::get('/advertiser-payment-history', [\App\Http\Controllers\Admin\PaymentHistoryController::class, 'index'])->name('admin.advertiser-payment-history');
+        Route::get('/advertiser-payment-history/export', [\App\Http\Controllers\Admin\PaymentHistoryController::class, 'export'])->name('admin.advertiser-payment-history.export');
+
+        // Publisher Payment History
+        Route::get('/publisher-payment-history', [\App\Http\Controllers\Admin\PublisherPaymentHistoryController::class, 'index'])->name('admin.publisher-payment-history');
+        Route::get('/publisher-payment-history/export', [\App\Http\Controllers\Admin\PublisherPaymentHistoryController::class, 'export'])->name('admin.publisher-payment-history.export');
     });
 });
