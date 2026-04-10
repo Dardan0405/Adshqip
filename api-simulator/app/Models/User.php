@@ -55,6 +55,11 @@ class User extends Authenticatable
         return $this->hasMany(Site::class, 'publisher_id');
     }
 
+    public function referralPayouts()
+    {
+        return $this->hasMany(ReferralPayout::class, 'referrer_id');
+    }
+
     protected $hidden = [
         'password_hash',
         'two_factor_secret',

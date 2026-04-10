@@ -294,5 +294,17 @@ Route::middleware('auth')->group(function () {
         // Publisher Payment History
         Route::get('/publisher-payment-history', [\App\Http\Controllers\Admin\PublisherPaymentHistoryController::class, 'index'])->name('admin.publisher-payment-history');
         Route::get('/publisher-payment-history/export', [\App\Http\Controllers\Admin\PublisherPaymentHistoryController::class, 'export'])->name('admin.publisher-payment-history.export');
+
+        // Publisher Invoices
+        Route::get('/publisher-invoices', [\App\Http\Controllers\Admin\PublisherInvoiceController::class, 'index'])->name('admin.publisher-invoices');
+        Route::get('/publisher-invoices/export', [\App\Http\Controllers\Admin\PublisherInvoiceController::class, 'export'])->name('admin.publisher-invoices.export');
+        Route::get('/publisher-invoices/{id}', [\App\Http\Controllers\Admin\PublisherInvoiceController::class, 'show'])->name('admin.publisher-invoices.show');
+        Route::get('/publisher-invoices/{id}/download', [\App\Http\Controllers\Admin\PublisherInvoiceController::class, 'download'])->name('admin.publisher-invoices.download');
+
+        // Referral Invoices
+        Route::get('/referral-invoices', [\App\Http\Controllers\Admin\ReferralInvoiceController::class, 'index'])->name('admin.referral-invoices');
+        Route::get('/referral-invoices/export', [\App\Http\Controllers\Admin\ReferralInvoiceController::class, 'export'])->name('admin.referral-invoices.export');
+        Route::get('/referral-invoices/{id}/download', [\App\Http\Controllers\Admin\ReferralInvoiceController::class, 'download'])->name('admin.referral-invoices.download');
+        Route::patch('/referral-invoices/{id}/status', [\App\Http\Controllers\Admin\ReferralInvoiceController::class, 'updateStatus'])->name('admin.referral-invoices.update-status');
     });
 });
