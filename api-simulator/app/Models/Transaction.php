@@ -64,7 +64,7 @@ class Transaction extends Model
      */
     public function scopeDeposits($query)
     {
-        return $query->where('type', 'deposit');
+        return $query->where('aq_transactions.type', 'deposit');
     }
 
     /**
@@ -72,7 +72,7 @@ class Transaction extends Model
      */
     public function scopeAdSpend($query)
     {
-        return $query->where('type', 'ad_spend');
+        return $query->where('aq_transactions.type', 'ad_spend');
     }
 
     /**
@@ -80,7 +80,18 @@ class Transaction extends Model
      */
     public function scopeCompleted($query)
     {
-        return $query->where('status', 'completed');
+        return $query->where('aq_transactions.status', 'completed');
+    }
+
+    /**
+     * Scope a query to completed advertiser deposit transactions.
+     */
+    public function scopeCompletedAdvertiserDeposits($query)
+    {
+        return $query->deposits()
+            ->completed()
+            ->join('aq_users', 'aq_transactions.user_id', '=', 'aq_users.id')
+            ->where('aq_users.role', 'advertiser');
     }
 
     /**
@@ -88,7 +99,7 @@ class Transaction extends Model
      */
     public function scopeWithdrawals($query)
     {
-        return $query->where('type', 'withdrawal');
+        return $query->where('aq_transactions.type', 'withdrawal');
     }
 
     /**
@@ -96,7 +107,7 @@ class Transaction extends Model
      */
     public function scopeRefunds($query)
     {
-        return $query->where('type', 'refund');
+        return $query->where('aq_transactions.type', 'refund');
     }
 
     /**

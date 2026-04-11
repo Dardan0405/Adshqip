@@ -23,6 +23,9 @@ class DatabaseSeeder extends Seeder
             AdCreativeSeeder::class,
             AdStatsSeeder::class,
             ZoneLimitationSeeder::class,
+            BalanceSheetSeeder::class,
+            AdvertiserDepositSeeder::class,
+            PublisherEarningsSeeder::class,
         ]);
     }
 }

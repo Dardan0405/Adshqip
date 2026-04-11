@@ -104,6 +104,7 @@
                     </button>
                     <div id="statsMenu" class="ml-7 mt-1 space-y-0.5 hidden">
                         <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">overview</a>
+                        <a href="{{ route('publisher.earnings') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.earnings') ? 'active' : '' }}">your earnings</a>
                         <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">daily reports</a>
                         <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">geo breakdown</a>
                         <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">traffic sources</a>

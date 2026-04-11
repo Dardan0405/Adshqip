@@ -51,7 +51,7 @@ class Invoice extends Model
      */
     public function scopePublisherInvoices($query)
     {
-        return $query->where('type', 'publisher_payout');
+        return $query->where('aq_invoices.type', 'publisher_payout');
     }
 
     /**
@@ -59,7 +59,7 @@ class Invoice extends Model
      */
     public function scopeAdvertiserInvoices($query)
     {
-        return $query->where('type', 'advertiser_charge');
+        return $query->where('aq_invoices.type', 'advertiser_charge');
     }
 
     /**
@@ -67,7 +67,18 @@ class Invoice extends Model
      */
     public function scopePaid($query)
     {
-        return $query->where('status', 'paid');
+        return $query->where('aq_invoices.status', 'paid');
+    }
+
+    /**
+     * Scope a query to paid publisher payout invoices.
+     */
+    public function scopePaidPublisherPayouts($query)
+    {
+        return $query->publisherInvoices()
+            ->paid()
+            ->join('aq_users', 'aq_invoices.user_id', '=', 'aq_users.id')
+            ->where('aq_users.role', 'publisher');
     }
 
     /**
@@ -75,7 +86,7 @@ class Invoice extends Model
      */
     public function scopePending($query)
     {
-        return $query->whereIn('status', ['draft', 'sent']);
+        return $query->whereIn('aq_invoices.status', ['draft', 'sent']);
     }
 
     /**
@@ -83,7 +94,7 @@ class Invoice extends Model
      */
     public function scopeOverdue($query)
     {
-        return $query->where('status', 'overdue');
+        return $query->where('aq_invoices.status', 'overdue');
     }
 
     /**
