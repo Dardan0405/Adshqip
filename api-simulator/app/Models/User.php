@@ -28,6 +28,8 @@ class User extends Authenticatable
         'last_login_at',
         'last_login_ip',
         'is_deleted',
+        'security_question_id',
+        'security_answer_hash',
     ];
 
     public function profile()
@@ -58,6 +60,11 @@ class User extends Authenticatable
     public function referralPayouts()
     {
         return $this->hasMany(ReferralPayout::class, 'referrer_id');
+    }
+
+    public function securityQuestion()
+    {
+        return $this->belongsTo(SecurityQuestion::class, 'security_question_id');
     }
 
     protected $hidden = [

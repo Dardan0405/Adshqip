@@ -16,16 +16,26 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            SecurityQuestionSeeder::class,
             UserSeeder::class,
             CampaignGroupSeeder::class,
             PixelTrackerSeeder::class,
             CampaignSeeder::class,
+            CampaignApprovalSeeder::class,
+            ManageAdMarketCampaignSeeder::class,
             AdCreativeSeeder::class,
+            CreativeApprovalSeeder::class,
+            MobileApplicationApprovalSeeder::class,
             AdStatsSeeder::class,
             ZoneLimitationSeeder::class,
             BalanceSheetSeeder::class,
             AdvertiserDepositSeeder::class,
+            AdvertiserPaymentApprovalSeeder::class,
+            DirectCampaignApprovalSeeder::class,
+            DirectCampaignRequestApprovalSeeder::class,
             PublisherEarningsSeeder::class,
+            PublisherInvoiceSeeder::class,
+            PayoutSeeder::class,
         ]);
     }
 }

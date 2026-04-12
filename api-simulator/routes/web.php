@@ -171,6 +171,16 @@ Route::middleware('auth')->group(function () {
         Route::post('/campaigns/groups', [\App\Http\Controllers\Admin\CampaignController::class, 'storeGroup'])->name('admin.campaigns.groups.store');
         Route::post('/campaigns/pixels', [\App\Http\Controllers\Admin\CampaignController::class, 'storePixel'])->name('admin.campaigns.pixels.store');
 
+        // Campaign Approvals
+        Route::get('/campaign-approvals', [\App\Http\Controllers\Admin\CampaignApprovalController::class, 'index'])->name('admin.campaign-approvals');
+        Route::patch('/campaign-approvals/{id}/approve', [\App\Http\Controllers\Admin\CampaignApprovalController::class, 'approve'])->name('admin.campaign-approvals.approve');
+        Route::patch('/campaign-approvals/{id}/reject', [\App\Http\Controllers\Admin\CampaignApprovalController::class, 'reject'])->name('admin.campaign-approvals.reject');
+
+        // Manage AdMarket Campaigns
+        Route::get('/manage-admarket-campaigns', [\App\Http\Controllers\Admin\ManageAdMarketCampaignController::class, 'index'])->name('admin.manage-admarket-campaigns');
+        Route::patch('/manage-admarket-campaigns/{id}/disallow-advertiser', [\App\Http\Controllers\Admin\ManageAdMarketCampaignController::class, 'disallowAdvertiser'])->name('admin.manage-admarket-campaigns.disallow-advertiser');
+        Route::patch('/manage-admarket-campaigns/{id}/disallow-campaign', [\App\Http\Controllers\Admin\ManageAdMarketCampaignController::class, 'disallowCampaign'])->name('admin.manage-admarket-campaigns.disallow-campaign');
+
         // Direct Campaigns
         Route::get('/direct-campaigns', [\App\Http\Controllers\Admin\DirectCampaignController::class, 'index'])->name('admin.direct-campaigns');
         Route::get('/direct-campaigns/create', [\App\Http\Controllers\Admin\DirectCampaignController::class, 'create'])->name('admin.direct-campaigns.create');
@@ -182,6 +192,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/direct-campaigns/{id}', [\App\Http\Controllers\Admin\DirectCampaignController::class, 'show'])->name('admin.direct-campaigns.show');
         Route::get('/direct-campaigns/{id}/edit', [\App\Http\Controllers\Admin\DirectCampaignController::class, 'edit'])->name('admin.direct-campaigns.edit');
         Route::put('/direct-campaigns/{id}', [\App\Http\Controllers\Admin\DirectCampaignController::class, 'update'])->name('admin.direct-campaigns.update');
+
+        // Direct Campaign Approvals
+        Route::get('/direct-campaign-approvals', [\App\Http\Controllers\Admin\DirectCampaignApprovalController::class, 'index'])->name('admin.direct-campaign-approvals');
+        Route::get('/direct-campaign-approvals/export', [\App\Http\Controllers\Admin\DirectCampaignApprovalController::class, 'export'])->name('admin.direct-campaign-approvals.export');
+        Route::patch('/direct-campaign-approvals/{id}/approve', [\App\Http\Controllers\Admin\DirectCampaignApprovalController::class, 'approve'])->name('admin.direct-campaign-approvals.approve');
+        Route::patch('/direct-campaign-approvals/{id}/reject', [\App\Http\Controllers\Admin\DirectCampaignApprovalController::class, 'reject'])->name('admin.direct-campaign-approvals.reject');
+
+        // Direct Campaign Request Approvals
+        Route::get('/direct-campaign-request-approvals', [\App\Http\Controllers\Admin\DirectCampaignRequestApprovalController::class, 'index'])->name('admin.direct-campaign-request-approvals');
+        Route::patch('/direct-campaign-request-approvals/{id}/approve', [\App\Http\Controllers\Admin\DirectCampaignRequestApprovalController::class, 'approve'])->name('admin.direct-campaign-request-approvals.approve');
+        Route::patch('/direct-campaign-request-approvals/{id}/reject', [\App\Http\Controllers\Admin\DirectCampaignRequestApprovalController::class, 'reject'])->name('admin.direct-campaign-request-approvals.reject');
 
         // Advertisers Management
         Route::get('/advertisers-manage', [\App\Http\Controllers\Admin\AdvertiserController::class, 'index'])->name('admin.advertisers');
@@ -245,6 +266,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/ad-formats/{id}/reports/export', [\App\Http\Controllers\Admin\AdCreativeController::class, 'exportReports'])->name('admin.adformats.reports.export');
         Route::delete('/ad-formats/{id}', [\App\Http\Controllers\Admin\AdCreativeController::class, 'destroy'])->name('admin.adformats.destroy');
 
+        // Creative Approvals
+        Route::get('/creative-approvals', [\App\Http\Controllers\Admin\CreativeApprovalController::class, 'index'])->name('admin.creative-approvals');
+        Route::patch('/creative-approvals/{id}/approve', [\App\Http\Controllers\Admin\CreativeApprovalController::class, 'approve'])->name('admin.creative-approvals.approve');
+        Route::patch('/creative-approvals/{id}/reject', [\App\Http\Controllers\Admin\CreativeApprovalController::class, 'reject'])->name('admin.creative-approvals.reject');
+
+        // Mobile Application Approvals
+        Route::get('/mobile-application-approvals', [\App\Http\Controllers\Admin\MobileApplicationApprovalController::class, 'index'])->name('admin.mobile-application-approvals');
+        Route::patch('/mobile-application-approvals/{id}/approve', [\App\Http\Controllers\Admin\MobileApplicationApprovalController::class, 'approve'])->name('admin.mobile-application-approvals.approve');
+        Route::patch('/mobile-application-approvals/{id}/reject', [\App\Http\Controllers\Admin\MobileApplicationApprovalController::class, 'reject'])->name('admin.mobile-application-approvals.reject');
+
         // Country-wise Bidding
         Route::get('/country-wise-bidding', [\App\Http\Controllers\Admin\CountryWiseBiddingController::class, 'index'])->name('admin.country-wise-bidding');
         Route::post('/country-wise-bidding', [\App\Http\Controllers\Admin\CountryWiseBiddingController::class, 'store'])->name('admin.country-wise-bidding.store');
@@ -288,9 +319,30 @@ Route::middleware('auth')->group(function () {
         Route::patch('/rtb/{id}/unblock', [\App\Http\Controllers\Admin\RtbController::class, 'unblock'])->name('admin.rtb.unblock');
         Route::delete('/rtb/{id}', [\App\Http\Controllers\Admin\RtbController::class, 'destroy'])->name('admin.rtb.destroy');
 
+        // Advertiser Approvals
+        Route::get('/advertiser-approvals', [\App\Http\Controllers\Admin\AdvertiserApprovalController::class, 'index'])->name('admin.advertiser-approvals');
+        Route::post('/advertiser-approvals', [\App\Http\Controllers\Admin\AdvertiserApprovalController::class, 'store'])->name('admin.advertiser-approvals.store');
+        Route::get('/advertiser-approvals/export', [\App\Http\Controllers\Admin\AdvertiserApprovalController::class, 'export'])->name('admin.advertiser-approvals.export');
+        Route::patch('/advertiser-approvals/{id}/approve', [\App\Http\Controllers\Admin\AdvertiserApprovalController::class, 'approve'])->name('admin.advertiser-approvals.approve');
+        Route::patch('/advertiser-approvals/{id}/reject', [\App\Http\Controllers\Admin\AdvertiserApprovalController::class, 'reject'])->name('admin.advertiser-approvals.reject');
+
+        // Publisher Approvals
+        Route::get('/publisher-approvals', [\App\Http\Controllers\Admin\PublisherApprovalController::class, 'index'])->name('admin.publisher-approvals');
+        Route::post('/publisher-approvals', [\App\Http\Controllers\Admin\PublisherApprovalController::class, 'store'])->name('admin.publisher-approvals.store');
+        Route::get('/publisher-approvals/export', [\App\Http\Controllers\Admin\PublisherApprovalController::class, 'export'])->name('admin.publisher-approvals.export');
+        Route::patch('/publisher-approvals/{id}/approve', [\App\Http\Controllers\Admin\PublisherApprovalController::class, 'approve'])->name('admin.publisher-approvals.approve');
+        Route::patch('/publisher-approvals/{id}/reject', [\App\Http\Controllers\Admin\PublisherApprovalController::class, 'reject'])->name('admin.publisher-approvals.reject');
+
         // Advertiser Payment History
         Route::get('/advertiser-payment-history', [\App\Http\Controllers\Admin\PaymentHistoryController::class, 'index'])->name('admin.advertiser-payment-history');
         Route::get('/advertiser-payment-history/export', [\App\Http\Controllers\Admin\PaymentHistoryController::class, 'export'])->name('admin.advertiser-payment-history.export');
+
+        // Advertiser Payment Approvals
+        Route::get('/advertiser-payment-approvals', [\App\Http\Controllers\Admin\AdvertiserPaymentApprovalController::class, 'index'])->name('admin.advertiser-payment-approvals');
+        Route::get('/advertiser-payment-approvals/export', [\App\Http\Controllers\Admin\AdvertiserPaymentApprovalController::class, 'export'])->name('admin.advertiser-payment-approvals.export');
+        Route::get('/advertiser-payment-approvals/{id}', [\App\Http\Controllers\Admin\AdvertiserPaymentApprovalController::class, 'show'])->name('admin.advertiser-payment-approvals.show');
+        Route::patch('/advertiser-payment-approvals/{id}/approve', [\App\Http\Controllers\Admin\AdvertiserPaymentApprovalController::class, 'approve'])->name('admin.advertiser-payment-approvals.approve');
+        Route::patch('/advertiser-payment-approvals/{id}/reject', [\App\Http\Controllers\Admin\AdvertiserPaymentApprovalController::class, 'reject'])->name('admin.advertiser-payment-approvals.reject');
 
         // Advertiser Deposits
         Route::get('/advertiser-deposits', [\App\Http\Controllers\Admin\AdvertiserDepositController::class, 'index'])->name('admin.advertiser-deposits');
@@ -300,15 +352,29 @@ Route::middleware('auth')->group(function () {
         Route::get('/publisher-payment-history', [\App\Http\Controllers\Admin\PublisherPaymentHistoryController::class, 'index'])->name('admin.publisher-payment-history');
         Route::get('/publisher-payment-history/export', [\App\Http\Controllers\Admin\PublisherPaymentHistoryController::class, 'export'])->name('admin.publisher-payment-history.export');
 
+        // Publisher Payment Approvals
+        Route::get('/publisher-payment-approvals', [\App\Http\Controllers\Admin\PublisherPaymentApprovalController::class, 'index'])->name('admin.publisher-payment-approvals');
+        Route::get('/publisher-payment-approvals/export', [\App\Http\Controllers\Admin\PublisherPaymentApprovalController::class, 'export'])->name('admin.publisher-payment-approvals.export');
+        Route::get('/publisher-payment-approvals/{id}', [\App\Http\Controllers\Admin\PublisherPaymentApprovalController::class, 'show'])->name('admin.publisher-payment-approvals.show');
+        Route::patch('/publisher-payment-approvals/{id}/approve', [\App\Http\Controllers\Admin\PublisherPaymentApprovalController::class, 'approve'])->name('admin.publisher-payment-approvals.approve');
+
         // Publisher Invoices
         Route::get('/publisher-invoices', [\App\Http\Controllers\Admin\PublisherInvoiceController::class, 'index'])->name('admin.publisher-invoices');
         Route::get('/publisher-invoices/export', [\App\Http\Controllers\Admin\PublisherInvoiceController::class, 'export'])->name('admin.publisher-invoices.export');
         Route::get('/publisher-invoices/{id}', [\App\Http\Controllers\Admin\PublisherInvoiceController::class, 'show'])->name('admin.publisher-invoices.show');
+        Route::patch('/publisher-invoices/{id}/approve', [\App\Http\Controllers\Admin\PublisherInvoiceController::class, 'approve'])->name('admin.publisher-invoices.approve');
         Route::get('/publisher-invoices/{id}/download', [\App\Http\Controllers\Admin\PublisherInvoiceController::class, 'download'])->name('admin.publisher-invoices.download');
 
         // Balance Sheet
         Route::get('/balance-sheet', [\App\Http\Controllers\Admin\BalanceSheetController::class, 'index'])->name('admin.balance-sheet');
         Route::get('/balance-sheet/export', [\App\Http\Controllers\Admin\BalanceSheetController::class, 'export'])->name('admin.balance-sheet.export');
+
+        // Payouts
+        Route::get('/payouts', [\App\Http\Controllers\Admin\PayoutController::class, 'index'])->name('admin.payouts');
+        Route::get('/payouts/export', [\App\Http\Controllers\Admin\PayoutController::class, 'export'])->name('admin.payouts.export');
+        Route::get('/payouts/{id}', [\App\Http\Controllers\Admin\PayoutController::class, 'show'])->name('admin.payouts.show');
+        Route::patch('/payouts/{id}/approve', [\App\Http\Controllers\Admin\PayoutController::class, 'approve'])->name('admin.payouts.approve');
+        Route::patch('/payouts/{id}/reject', [\App\Http\Controllers\Admin\PayoutController::class, 'reject'])->name('admin.payouts.reject');
 
         // Referral Invoices
         Route::get('/referral-invoices', [\App\Http\Controllers\Admin\ReferralInvoiceController::class, 'index'])->name('admin.referral-invoices');
