@@ -333,6 +333,30 @@ Route::middleware('auth')->group(function () {
         Route::patch('/publisher-approvals/{id}/approve', [\App\Http\Controllers\Admin\PublisherApprovalController::class, 'approve'])->name('admin.publisher-approvals.approve');
         Route::patch('/publisher-approvals/{id}/reject', [\App\Http\Controllers\Admin\PublisherApprovalController::class, 'reject'])->name('admin.publisher-approvals.reject');
 
+        // Advertiser Reports
+        Route::get('/reports/advertiser', [\App\Http\Controllers\Admin\AdvertiserReportController::class, 'index'])->name('admin.reports.advertiser');
+        Route::get('/reports/advertiser/export', [\App\Http\Controllers\Admin\AdvertiserReportController::class, 'export'])->name('admin.reports.advertiser.export');
+
+        // Campaign Reports
+        Route::get('/reports/campaign', [\App\Http\Controllers\Admin\CampaignReportController::class, 'index'])->name('admin.reports.campaign');
+        Route::get('/reports/campaign/export', [\App\Http\Controllers\Admin\CampaignReportController::class, 'export'])->name('admin.reports.campaign.export');
+
+        // Creative Reports
+        Route::get('/reports/creative', [\App\Http\Controllers\Admin\CreativeReportController::class, 'index'])->name('admin.reports.creative');
+        Route::get('/reports/creative/export', [\App\Http\Controllers\Admin\CreativeReportController::class, 'export'])->name('admin.reports.creative.export');
+
+        // Publisher Reports
+        Route::get('/reports/publisher', [\App\Http\Controllers\Admin\PublisherReportController::class, 'index'])->name('admin.reports.publisher');
+        Route::get('/reports/publisher/export', [\App\Http\Controllers\Admin\PublisherReportController::class, 'export'])->name('admin.reports.publisher.export');
+
+        // Site Reports
+        Route::get('/reports/site', [\App\Http\Controllers\Admin\SiteReportController::class, 'index'])->name('admin.reports.site');
+        Route::get('/reports/site/export', [\App\Http\Controllers\Admin\SiteReportController::class, 'export'])->name('admin.reports.site.export');
+
+        // AdBlock Reports
+        Route::get('/reports/adblock', [\App\Http\Controllers\Admin\AdblockReportController::class, 'index'])->name('admin.reports.adblock');
+        Route::get('/reports/adblock/export', [\App\Http\Controllers\Admin\AdblockReportController::class, 'export'])->name('admin.reports.adblock.export');
+
         // Advertiser Payment History
         Route::get('/advertiser-payment-history', [\App\Http\Controllers\Admin\PaymentHistoryController::class, 'index'])->name('admin.advertiser-payment-history');
         Route::get('/advertiser-payment-history/export', [\App\Http\Controllers\Admin\PaymentHistoryController::class, 'export'])->name('admin.advertiser-payment-history.export');
