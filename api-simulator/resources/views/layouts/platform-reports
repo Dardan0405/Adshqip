@@ -1,0 +1,452 @@
+ADMIN PANEL PLATFORM REPORTING
+==============================
+
+Purpose
+-------
+Platform Reporting is an admin-side dynamic reporting screen that lets the team analyze ad performance by combining:
+
+- date range
+- device/environment
+- timezone
+- metrics
+- advertiser-side filters
+- publisher-side filters
+- grouping dimensions
+
+The page is available from:
+- Reports -> Platform Reporting
+
+URL
+---
+- admin/reports/platform_report
+
+Allowed roles
+-------------
+- ADMIN
+- MANAGER
+
+Main function
+-------------
+This page allows the admin or manager to build a custom cross-entity report table for ad-serving performance.
+
+It can report data using metrics like:
+- Request
+- Impression
+- Click
+- Conversion
+- Spend
+- Revenue
+- Profit
+- CTR
+- ECPM
+- ERPM
+- EPPM
+- Fill Rate
+
+It can group the result by dimensions like:
+- Advertiser
+- Campaign
+- Creative
+- Publisher
+- Site
+- Adblock
+- Country
+- Adsize
+- Revenue Type
+- Date
+
+Display interval options are:
+- CUMULATIVE
+- HOUR
+- MONTH
+
+Real page flow
+--------------
+1. Menu entry
+   Registered in:
+   - app/application/config/menu_configurations.php
+   Entry:
+   - ADMIN -> Reports -> Platform Reporting
+
+2. Access control
+   Protected in:
+   - app/application/config/autoacl.php
+   Route:
+   - admin/reports/platform_report/
+   Allowed:
+   - ADMIN
+   - MANAGER
+
+3. Controller page load
+   Starts in:
+   - app/application/modules/admin/controllers/reports.php
+   Method:
+   - platform_report()
+
+   This method prepares page data through REST API calls:
+   - api/v1/report/fetch_timezone
+   - api/v1/report/fetch_advertiser
+   - api/v1/report/fetch_campaigns
+   - api/v1/report/fetch_creatives
+   - api/v1/utilities/countrylist
+   - api/v1/utilities/fetch_type
+   - api/v1/utilities/sizelist
+   - api/v1/report/fetch_publisher
+   - api/v1/report/fetch_sites
+   - api/v1/report/fetch_adblocks
+
+   It also loads the default date range from:
+   - app/application/config/report_configurations.php
+   Config path:
+   - ADMIN -> PLATFORM_REPORT -> TABLE -> DEFAULT_INTERVAL
+
+   Current default interval:
+   - TODAY
+
+4. Wrapper view
+   The controller renders:
+   - app/application/modules/admin/views/report/platform_report.php
+
+   This file is only a wrapper.
+   It loads the widget:
+   - platform_report_chart
+
+5. Widget execution
+   Widget file:
+   - app/application/widgets/platform_report_chart.php
+   Widget class:
+   - Platform_report_chart
+   Widget method:
+   - display($data)
+
+   This method detects the current module and, for ADMIN, loads:
+   - app/application/views/widgets/charts/platform_report.php
+
+6. Real UI and client-side logic
+   The full screen UI lives in:
+   - app/application/views/widgets/charts/platform_report.php
+
+   The widget contains:
+   - export form
+   - no-data modals
+   - date-range picker
+   - timezone selector
+   - environment selector
+   - metric checkboxes
+   - filter multiselects
+   - dimension checkboxes
+   - interval radios
+   - Run button
+   - Export button
+
+7. User interaction
+   The page triggers report refresh through:
+   - onchange handlers on selectors and checkboxes
+   - daterangepicker callback
+   - Run button click
+
+   Main JavaScript function:
+   - run()
+
+   Supporting JavaScript functions and handlers:
+   - remove_all_data(type)
+   - jQuery('#save_search').on('click', ...)
+   - jQuery('.content-slideUp').click(...)
+   - jQuery(document).ready(...)
+   - DataTables fnServerParams(...)
+   - DataTables fnServerData(...)
+   - DataTables fnRowCallback(...)
+   - column mRender(...) callbacks
+
+8. What run() does
+   run() is the real frontend executor for the report.
+
+   It:
+   - checks that at least one metric is selected
+   - expands/collapses the filter box UI
+   - builds the dynamic DataTable column definitions
+   - builds the report table HTML
+   - collects selected filters
+   - expands custom ad sizes
+   - posts all parameters to:
+     - /admin/reports/fetch_platform_stats
+   - enables server-side DataTables processing
+   - shows or hides export depending on returned data
+
+9. Admin AJAX endpoint
+   AJAX request handler:
+   - fetch_platform_stats($format = 'json')
+   File:
+   - app/application/modules/admin/controllers/reports.php
+
+   It reads and sanitizes:
+   - interval
+   - timezone
+   - from_date
+   - to_date
+   - metrics
+   - advertiser
+   - campaign
+   - creative
+   - publisher
+   - site
+   - adblock
+   - country
+   - adsize
+   - revtype
+   - dimensions
+
+   It uses helper:
+   - clean_data()
+   From:
+   - app/application/helpers/utilities_helper.php
+
+   Then it:
+   - sets page = PLATFORM_REPORT
+   - sets display_type = TABLE
+   - sets stat_type = PLATFORM for AJAX mode
+   - converts CSV values into arrays
+   - injects interval into dimensions when interval is not CUMULATIVE
+   - merges metrics and dimensions into columns
+   - forwards DataTables search, paging, sorting, and request payload
+
+10. API controller entry
+   Admin controller posts to:
+   - api/v1/report/fetch
+
+   API controller file:
+   - app/application/modules/api.v_1/controllers/report.php
+
+   The real API entry function is:
+   - fetch_post()
+
+   This function is important because it is the actual dispatcher for the report flow.
+   It was missing from earlier documentation.
+
+11. What fetch_post() does
+   fetch_post() performs the shared reporting orchestration.
+
+   It:
+   - validates api_key in __construct()
+   - detects account type
+   - converts MANAGER to ADMIN reporting scope
+   - gets agency_id for admin/manager context
+   - loads reporting configuration
+   - reads datatable_obj
+   - builds search, group, order, and limit structures
+   - parses timezone into UTC offset
+   - converts date_from and date_to from selected timezone into UTC
+   - applies page-specific search filters
+   - converts DataTables sorting via convert_sorting_data()
+   - routes by stat_type
+
+12. PLATFORM routing
+   Inside fetch_post(), for:
+   - stat_type = PLATFORM
+
+   The API routes to:
+   - do_report->fetch($columns, $search, $group, $order, $limit, $dataTable, $page)
+
+   Important note:
+   There is also a method named:
+   - fetch_platform(...)
+   in do_report.php
+
+   But the current admin Platform Reporting flow does not call that method.
+   It uses the shared:
+   - fetch(...)
+   path.
+
+13. Query builder layer
+   Main model:
+   - app/application/modules/api.v_1/models/do_report.php
+   Main method used:
+   - fetch($columns, $search, $group, $order, $limit, $dataTable = FALSE)
+
+   Base data table:
+   - rv_data_summary_ad_hourly as oxah
+
+   The method:
+   - builds a dynamic SELECT list from chosen metrics and dimensions
+   - creates date/time expressions with timezone conversion
+   - joins advertiser-side tables when needed
+   - joins publisher-side tables when needed
+   - applies filters
+   - applies grouping
+   - applies ordering
+   - applies DataTables paging
+   - returns either DataTables rows or raw records
+
+14. Important joins used by fetch()
+   Depending on selected dimensions/filters, fetch() joins:
+   - rv_banners as oxb
+   - rv_campaigns as oxc
+   - rv_clients as oxcl
+   - rv_zones as oxz
+   - djax_site_zone_assoc as dsza
+   - djax_publisher_sites as oxps
+   - rv_affiliates as oxaff
+   - djax_conf_revenue_type as dcrt
+
+15. Filters applied in fetch()
+   The query can filter by:
+   - advertiser account
+   - campaign
+   - creative
+   - publisher account
+   - site
+   - adblock
+   - country
+   - adsize
+   - revenue type
+   - environment/device
+   - date range
+   - DataTables search text
+   - agency scope
+
+16. Grouping and interval logic
+   Grouping depends on selected dimensions and interval.
+
+   Examples:
+   - If interval = HOUR, fetch_platform_stats() prepends HOUR into dimensions and the query exposes DATE + HOUR
+   - If interval = MONTH, results group by month
+   - If interval = CUMULATIVE, no interval dimension is forced
+
+17. Timezone logic
+   Timezone is handled in two places:
+
+   In API controller:
+   - selected local date range is converted to UTC before querying
+
+   In model:
+   - grouped date/time columns use CONVERT_TZ(...) so displayed DATE, HOUR, MONTH, YEAR values match the selected timezone
+
+18. Special page-specific behavior
+   Platform Reporting has a special condition in do_report->fetch():
+   - some zone-size filtering logic is skipped when page = PLATFORM_REPORT
+
+   This is one of the important platform-report-specific behaviors.
+
+19. DataTables response
+   For table mode, API fetch_post() returns DataTables JSON containing:
+   - sEcho
+   - iTotalRecords
+   - iTotalDisplayRecords
+   - aaData
+   - overview_chart_data
+
+   The current widget uses:
+   - aaData
+   to fill the dynamic table
+
+   A container for chart output exists:
+   - #container-outcome
+
+   But this widget does not contain active code that renders overview_chart_data into a Highcharts chart.
+
+20. Export flow
+   Export button handler:
+   - jQuery('#save_search').on('click', ...)
+
+   It:
+   - validates at least one metric
+   - copies current filter state into hidden fields
+   - submits form to:
+     - /admin/reports/generate_zip
+
+   Backend export method:
+   - generate_zip($type = FALSE)
+   File:
+   - app/application/modules/admin/controllers/reports.php
+
+   For Platform Reporting, generate_zip() calls:
+   - fetch_platform_stats('php')
+
+   In export mode, fetch_platform_stats():
+   - sets stat_type = EXPORT
+   - sends empty DataTables search values
+   - calls the same API endpoint again
+   - returns decoded raw result data
+
+   generate_zip() then:
+   - prepares PHPExcel
+   - builds headers from interval, dimensions, and metrics
+   - fills rows from the returned dataset
+   - outputs the report as Excel download
+
+All functions involved
+----------------------
+1. Admin controller functions
+   - platform_report()
+   - fetch_platform_stats($format = 'json')
+   - generate_zip($type = FALSE)
+
+2. Widget functions
+   - Platform_report_chart::display($data)
+
+3. Frontend JavaScript functions and handlers
+   - remove_all_data(type)
+   - run()
+   - jQuery('#save_search').on('click', ...)
+   - jQuery('.content-slideUp').click(...)
+   - jQuery(document).ready(...)
+   - daterangepicker callback for #reservation
+   - DataTables fnServerParams(...)
+   - DataTables fnServerData(...)
+   - DataTables fnRowCallback(...)
+   - mRender(...) callbacks for dynamic metric columns
+
+4. API controller functions
+   - Report::__construct()
+   - Report::fetch_post()
+   - Report::convert_sorting_data($request_data = FALSE)
+   - Report::convert_chart_data($res, $settings)
+   - Report::fetch_advertiser_get()
+   - Report::fetch_publisher_get()
+   - Report::fetch_campaigns_get()
+   - Report::fetch_creatives_get()
+   - Report::fetch_sites_get()
+   - Report::fetch_adblocks_get()
+
+5. Utilities controller functions used for filter loading
+   - Utilities::countrylist_get()
+   - Utilities::fetch_type_get()
+   - Utilities::sizelist_get()
+
+6. Model functions used in this flow
+   - Do_report::fetch(...)
+   - Do_report::fetch_advertiser(...)
+   - Do_report::fetch_campaign(...)
+   - Do_report::fetch_creatives(...)
+   - Do_report::fetch_publisher(...)
+   - Do_report::fetch_sites(...)
+   - Do_report::fetch_adblocks(...)
+
+7. Helper functions used in this flow
+   - clean_data($data)
+   - get_search_date($search_field, $start_date = FALSE, $end_date = FALSE)
+
+Files involved
+--------------
+- app/application/config/menu_configurations.php
+- app/application/config/autoacl.php
+- app/application/config/report_configurations.php
+- app/application/helpers/utilities_helper.php
+- app/application/modules/admin/controllers/reports.php
+- app/application/modules/admin/views/report/platform_report.php
+- app/application/widgets/platform_report_chart.php
+- app/application/views/widgets/charts/platform_report.php
+- app/application/modules/api.v_1/controllers/report.php
+- app/application/modules/api.v_1/controllers/utilities.php
+- app/application/modules/api.v_1/models/do_report.php
+
+Notes
+-----
+- The earlier shorter description did not include the widget function, most frontend handlers, the API dispatcher fetch_post(), or helper functions such as convert_sorting_data() and clean_data().
+- The current verified flow uses Do_report::fetch(...), not Do_report::fetch_platform(...).
+- The admin controller references api/v1/report/fetch_timezone while loading the page. That endpoint is referenced in active code and logs, but its implementation was not located in the files inspected for this documentation pass.
+
+Simple summary
+--------------
+Platform Reporting on the admin panel is a configurable server-side DataTables report.
+The UI is built in the chart widget, run() sends filter state to fetch_platform_stats(), the admin controller forwards the request to api/v1/report/fetch, fetch_post() builds the shared reporting request, do_report->fetch() generates the SQL and result set, and generate_zip() reuses the same flow for Excel export.

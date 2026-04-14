@@ -36,6 +36,7 @@
         .sidebar-link:hover, .sidebar-link.active { background: #fff1f2; color: #e11d48; }
         .sidebar-link.active { font-weight: 600; border-right: 3px solid #e11d48; }
     </style>
+    @stack('styles')
 </head>
 <body class="h-full bg-gray-50 font-sans text-gray-800 antialiased">
     <div class="flex h-full">
@@ -111,9 +112,9 @@
                     Direct Campaign Approvals Payment
                 </a>
 
-                <a href="{{ route('admin.direct-campaign-request-approvals') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.direct-campaign-request-approvals*') ? 'active' : '' }}">
+                <a href="{{ route('admin.requests') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.requests*') || request()->routeIs('admin.direct-campaign-request-approvals*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Direct Campaign Approval
+                    Requests
                 </a>
 
                 <a href="{{ route('admin.sites') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.sites*') ? 'active' : '' }}">
@@ -281,12 +282,50 @@
                     AdBlock
                 </a>
 
+                <a href="{{ route('admin.reports.platform') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.reports.platform*') ? 'active' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Platform
+                </a>
+
+                <a href="{{ route('admin.reports.requests') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.reports.requests*') ? 'active' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 12h6M9 16h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Request Report
+                </a>
+
+                <a href="{{ route('admin.reports.graphical') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.reports.graphical*') ? 'active' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Graphical Report
+                </a>
+
+                <a href="{{ route('admin.reports.environment') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.reports.environment*') ? 'active' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Environment Performance
+                </a>
+
+                <a href="{{ route('admin.network-kit') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.network-kit*') ? 'active' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Network Kit
+                </a>
+
+                <a href="{{ route('admin.reports.dsp') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.reports.dsp*') ? 'active' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    DSP Report
+                </a>
+
+                <a href="{{ route('admin.reports.ssp') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.reports.ssp*') ? 'active' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M4 6.5A2.5 2.5 0 016.5 4h11A2.5 2.5 0 0120 6.5v11a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 014 17.5v-11z" stroke="currentColor" stroke-width="1.5"/><path d="M4 9h16M9 20V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    SSP Report
+                </a>
+
                 {{-- Analytics --}}
                 <div class="pt-4">
                     <span class="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Analytics</span>
                 </div>
 
-                
+                <a href="{{ route('admin.anti-fraud') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.anti-fraud*') ? 'active' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Anti-fraud Clicks
+                </a>
 
                 <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>

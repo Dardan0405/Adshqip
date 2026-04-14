@@ -1,0 +1,1047 @@
+PAGE REQUEST REPORTS - ADMIN SIDE
+=================================
+
+Purpose
+-------
+This document explains the admin-side "Request Report" page flow, the functions involved, the request lifecycle, and how the UI talks to the API/model layer.
+
+Main files
+----------
+1. Admin controller entry:
+   - app/application/modules/admin/controllers/reports.php
+
+2. Admin page view:
+   - app/application/modules/admin/views/report/request.php
+
+3. Admin request action modals:
+   - app/application/modules/admin/views/report/modal/active.php
+   - app/application/modules/admin/views/report/modal/pause.php
+   - app/application/modules/admin/views/report/modal/delete.php
+
+4. API controller:
+   - app/application/modules/api.v_1/controllers/report.php
+
+5. Report model:
+   - app/application/modules/api.v_1/models/do_report.php
+
+6. Related config/constants:
+   - app/application/config/constants.php
+   - app/application/config/email_configurations.php
+
+
+PAGE LAYOUT BREAKDOWN
+---------------------
+The admin request report page has 3 main UI areas:
+
+1. Header area
+   - page title: `req_report`
+   - help text: request report will be sent to email
+   - admin earnings widget
+
+2. Request configuration box
+   - download button
+   - show/hide toggle for the form body
+   - request form with all filters, dimensions, metrics, and action buttons
+
+3. Saved request table
+   - shows recurring requests already stored for the logged-in admin account
+   - provides Pause / Activate / Delete actions
+
+
+REQUEST CONFIGURATION BOX
+-------------------------
+Form id:
+- `#frm_request`
+
+Form submit target by default:
+- `api/v1/report/request_report/format/json`
+
+Hidden fields used by the page:
+- `api_key`
+- `email`
+- `name`
+- `m_col`
+- `d_col`
+- `d_name`
+- `dimensions`
+- `last_request`
+
+
+BASIC SECTION
+-------------
+The left side of the form starts with the "Basic" section.
+
+1. Date range
+   UI:
+   - daterangepicker button `#reservation`
+   - hidden fields `date_from` and `date_to`
+
+   Behavior:
+   - default range comes from report config
+   - date picker limits selection to max 30 days
+   - used mainly for one-time requests
+   - if frequency is not `One`, the date filter row is hidden by JS
+
+2. Devices / environment
+   Field:
+   - `environment`
+
+   Options:
+   - `all`
+   - `Display`
+   - `Mobile`
+   - `Tablet`
+
+   Meaning:
+   - filters report data by `oxah.dj_delivery_media_type`
+
+3. Frequency
+   Field:
+   - `frequency`
+
+   Options:
+   - `One`
+   - `Daily`
+   - `Weekly`
+   - `Monthly`
+
+   Meaning:
+   - `One` => generate immediately and email now
+   - other values => save as recurring request
+
+4. Type
+   Radio group:
+   - `file_type`
+
+   Options:
+   - `Summarized`
+   - `Detailed`
+
+   Meaning:
+   - stored with the request
+   - shown in the saved request table under details
+   - does not materially change the frontend form structure
+
+5. File format
+   Radio group:
+   - `file_format`
+
+   Options:
+   - `xls`
+   - `csv`
+
+   Meaning:
+   - controls file extension and response content type when export is built
+
+
+DISPLAYED BY SECTION
+--------------------
+This section controls the time grouping level through field:
+- `interval`
+
+Options shown on the page:
+- `CUMULATIVE`
+- `HOUR`
+- `MONTH`
+- `YEAR`
+
+Meaning of each:
+- `CUMULATIVE`
+  - no time-group column is added automatically
+  - report is grouped only by selected dimensions, or default entity grouping in SQL
+
+- `HOUR`
+  - report groups by hour
+  - code also forces `DATE` grouping if needed
+  - Excel export writes separate Date and Hour columns
+
+- `MONTH`
+  - report groups by formatted month value from SQL
+
+- `YEAR`
+  - report groups by formatted year value from SQL
+
+How backend uses it:
+- stored as `display_by`
+- appended into `group_by` when not cumulative
+
+
+FILTER BY SECTION
+-----------------
+The middle section of the form is the filter block.
+
+All filter controls are multi-select boxes.
+
+1. Advertiser
+   Select id:
+   - `#adv`
+
+   Posted field:
+   - `advertiser_id[]`
+
+   Data source:
+   - `api/v1/report/fetch_advertiser`
+
+   Used to filter:
+   - advertiser account ids
+
+2. Campaigns
+   Select id:
+   - `#camp`
+
+   Posted field:
+   - `campaign_id[]`
+
+   Data source:
+   - `api/v1/report/fetch_campaigns`
+
+   Used to filter:
+   - campaign ids
+
+3. Creatives
+   Select id:
+   - `#creat`
+
+   Posted field:
+   - `creative_id[]`
+
+   Data source:
+   - `api/v1/report/fetch_creatives`
+
+   Used to filter:
+   - banner/creative ids
+
+4. Publisher
+   Select id:
+   - `#pub`
+
+   Posted field:
+   - `publisher[]`
+
+   Data source:
+   - `api/v1/report/fetch_publisher`
+
+   Intended to filter:
+   - publisher account ids
+
+5. Site
+   Select id:
+   - `#sit`
+
+   Posted field:
+   - `site[]`
+
+   Data source:
+   - `api/v1/report/fetch_sites`
+
+   Intended to filter:
+   - site ids
+
+6. Adblocks
+   Select id:
+   - `#adb`
+
+   Posted field:
+   - `adblock[]`
+
+   Data source:
+   - `api/v1/report/fetch_adblocks`
+
+   Intended to filter:
+   - zone/adblock ids
+
+7. Country
+   Select id:
+   - `#country`
+
+   Posted field:
+   - `country_id[]`
+
+   Data source:
+   - `api/v1/utilities/countrylist`
+
+   Used to filter:
+   - `dgs.country_code`
+
+8. Ad size
+   Select id:
+   - `#adsize`
+
+   Posted field:
+   - `ad_size[]`
+
+   Data source:
+   - `api/v1/utilities/sizelist`
+
+   Options:
+   - configured sizes
+   - `custom`
+
+   Used to filter:
+   - banner width x height or zone width x height, depending on account type query path
+
+9. Revenue type
+   Select id:
+   - `#revtype`
+
+   Posted field:
+   - `rev_type[]`
+
+   Data source:
+   - `api/v1/utilities/fetch_type`
+
+   Used to filter:
+   - campaign revenue type
+
+
+GROUP BY / DIMENSIONS SECTION
+-----------------------------
+The right section starts with "Group Dimensions".
+
+This section decides which dimension fields are added to the output and to SQL `GROUP BY`.
+
+Checkbox behavior in frontend:
+- checkbox `id` values are collected into hidden `dimensions`
+- checkbox `value` values are collected into hidden `d_col`
+- checkbox `name` values are collected into hidden `d_name`
+
+These three hidden values are later used by:
+- API controller to build `group_by`
+- export logic to build the spreadsheet headers
+
+Available dimensions on the page
+--------------------------------
+1. Advertisers
+   - checkbox id: `ADV_ID`
+   - checkbox value: `CLIENT_NAME`
+   - checkbox name: `advertiser`
+
+2. Campaigns
+   - checkbox id: `CAM_ID`
+   - checkbox value: `CAM_NAME`
+   - checkbox name: `campaign`
+
+3. Creatives
+   - checkbox id: `BAN_ID`
+   - checkbox value: `BAN_NAME`
+   - checkbox name: `creative`
+
+4. Publishers
+   - checkbox id: `AFF_ID`
+   - checkbox value: `AFF_NAME`
+   - checkbox name: `publisher`
+
+5. Site
+   - checkbox id: `SITE_ID`
+   - checkbox value: `SITE_NAME`
+   - checkbox name: `site`
+
+6. Ad blocks
+   - checkbox id: `ZONE_ID`
+   - checkbox value: `ZONE_NAME`
+   - checkbox name: `adblock`
+
+7. Country
+   - checkbox id: `COUNTRY`
+   - checkbox value: `COUNTRY`
+   - checkbox name: `country`
+
+8. Ad size
+   - checkbox id: `ADSIZE`
+   - checkbox value: `ADSIZE`
+   - checkbox name: `adsize`
+
+9. Revenue type
+   - checkbox id: `RTYPE`
+   - checkbox value: `RTYPE`
+   - checkbox name: `type`
+
+10. Date
+   - checkbox id: `DATE`
+   - checkbox value: `DATE`
+   - checkbox name: `date`
+
+
+COLUMNS SECTION
+---------------
+The page label says `Columns`.
+
+This section defines which metric columns should appear in the generated report file.
+
+Frontend behavior:
+- every checked metric is collected into hidden `m_col`
+- posted as `metrics[]`
+- also used by export logic to generate final sheet headers
+
+Available metric columns
+------------------------
+1. `REQUEST`
+   - label: Request
+   - default: checked
+
+2. `IMP`
+   - label: Impression
+   - default: checked
+
+3. `CLK`
+   - label: Clicks
+   - default: checked
+
+4. `CON`
+   - label: Conversion
+   - default: checked
+
+5. `SPEND`
+   - label: Spend
+   - default: checked
+
+6. `PUB_EARN`
+   - label: Revenue
+   - default: checked
+
+7. `ADM_EARN`
+   - label: Profit
+   - default: checked
+
+8. `CTR`
+   - label: CTR
+   - default: checked
+
+9. `ECPM`
+   - label: eCPM
+   - default: checked
+
+10. `ERPM`
+   - label: ERPM / ERPP text in language mapping
+   - default: checked
+
+11. `EPPM`
+   - label: EPPM
+   - default: checked
+
+12. `FILL_RATE`
+   - label: Fill Rate %
+   - default: checked
+
+Validation rule:
+- at least one metric must be selected
+- otherwise modal `#modal_no_data_report` is shown
+
+
+REQUEST REPORT BUTTON
+---------------------
+Button:
+- `#request_rep`
+
+What it should do
+-----------------
+1. Validate that at least one metric is selected
+2. Collect selected metrics into `m_col`
+3. Collect selected dimensions into:
+   - `dimensions`
+   - `d_col`
+   - `d_name`
+4. Validate the form
+5. POST all values to:
+   - `api/v1/report/request_report/format/json`
+
+Expected result for `One`
+-------------------------
+- backend generates report immediately
+- file is saved
+- email with attachment is sent
+- page shows success message
+
+Expected result for `Daily/Weekly/Monthly`
+------------------------------------------
+- backend inserts row in `djax_request_report`
+- page redraws the table
+- success alert is shown
+
+What the page does after success
+--------------------------------
+- redraw saved request table
+- clear response area and show success alert
+- reset device/frequency/type/format/date
+- reset select2 filter boxes
+- reset full form
+
+
+REFRESH BUTTON
+--------------
+Button:
+- `#refresh_search`
+
+What it should do
+-----------------
+- reset environment to `all`
+- reset frequency to one-time default
+- show date filter row again
+- restore default date range
+- reset type to `Summarized`
+- reset file format to `xls`
+- reset the form
+- clear all select2 filter values
+
+Purpose:
+- bring the page back to the original default request state
+
+
+DOWNLOAD BUTTON
+---------------
+Button:
+- `#download`
+
+What it should do
+-----------------
+1. put preloaded PHP variable `download` into hidden `last_request`
+2. change form action to:
+   - `/admin/reports/download_request`
+3. submit the form
+4. controller rebuilds export from the returned last-request payload
+5. browser receives XLS or CSV download
+
+Fallback behavior:
+- if no download data exists, the page shows the "no data export" modal instead of enabling real download
+
+
+TABLE SECTION
+-------------
+Container:
+- `#request_report_table_view`
+
+Table id:
+- `#request_report`
+
+Ajax source:
+- `/admin/reports/fetch_request`
+
+Purpose:
+- list saved recurring requests only
+- show their summary and current status
+- provide row actions
+
+Columns shown in table
+----------------------
+1. Report
+   - Data key: `date`
+   - comes from backend-computed next execution display text for Daily/Weekly/Monthly
+
+2. Columns
+   - Data key: `columns`
+   - comma-separated metrics selected when request was created
+
+3. Device
+   - Data key: `device`
+   - shows selected environment or `All`
+
+4. Displayed By
+   - Data key: `display_by`
+   - shows CUMULATIVE / HOUR / MONTH / YEAR
+
+5. Group By
+   - Data key: `group_by`
+   - shows stored group-by fields
+
+6. Details
+   - Data keys:
+     - `frequency`
+     - `type`
+     - `format`
+   - rendered as:
+     - `frequency / type / Format: format`
+
+7. Status
+   - Data key: `status`
+   - `1` => Active
+   - otherwise => Paused
+
+8. Options
+   - rendered buttons:
+     - Pause if active
+     - Activate if paused
+     - Delete
+
+How the table should behave
+---------------------------
+- load by AJAX on page use/redraw
+- support DataTables search box
+- support pagination
+- support entry count selection
+- refresh after request creation
+- refresh after pause/activate/delete
+
+What the table is not for
+-------------------------
+- it is not the final report result preview
+- it is a management list of saved recurring requests
+- one-time request results are emailed, not rendered in this table as data rows
+
+
+HIGH-LEVEL FLOW
+---------------
+1. Admin opens `admin/reports/request`.
+2. `admin/controllers/reports.php::request()` loads all dropdown/filter data needed by the page.
+3. The page renders the request form and also loads the saved recurring requests table.
+4. The table fetches existing requests through `admin/reports/fetch_request`.
+5. That admin endpoint proxies to `api/v1/report/fetch_request`.
+6. When admin clicks "Request Report":
+   - the browser gathers selected metrics and dimensions
+   - posts the form to `api/v1/report/request_report/format/json`
+7. API handles 2 different paths:
+   - `frequency != One`: save a recurring request into `djax_request_report`
+   - `frequency == One`: generate report data immediately, create XLS/CSV, save it, and email it
+8. The saved-request table lets admin:
+   - pause a request
+   - activate a request
+   - soft-delete a request
+9. The "Download" button uses `api/v1/report/download_report` to rebuild/export the last saved request for the logged-in account.
+
+
+ADMIN CONTROLLER FLOW
+---------------------
+File: `app/application/modules/admin/controllers/reports.php`
+
+1. `request()`
+   Responsibilities:
+   - sets page title/breadcrumb
+   - gets API key from session
+   - loads filter data for the view through REST calls
+   - loads "download" data for the last request
+   - calculates default date range from report config
+   - renders `report/request`
+
+   REST calls used here:
+   - `api/v1/report/fetch_advertiser`
+   - `api/v1/report/fetch_campaigns`
+   - `api/v1/report/fetch_creatives`
+   - `api/v1/utilities/countrylist`
+   - `api/v1/utilities/fetch_type`
+   - `api/v1/utilities/sizelist`
+   - `api/v1/report/fetch_publisher`
+   - `api/v1/report/fetch_sites`
+   - `api/v1/report/fetch_adblocks`
+   - `api/v1/report/download_report`
+
+2. `fetch_request()`
+   Responsibilities:
+   - calls `api/v1/report/fetch_request`
+   - converts API result into DataTables format with `convert_to_datatable_format()`
+   - returns JSON for the request list table
+
+3. `download_request()`
+   Responsibilities:
+   - reads hidden field `last_request`
+   - decodes the last request payload
+   - rebuilds the export file on the admin side
+   - writes XLS/CSV file contents and returns it as a download
+
+   Important:
+   - this does not re-read filters from the page
+   - it uses the cached/returned payload from `download_report`
+
+
+VIEW FLOW
+---------
+File: `app/application/modules/admin/views/report/request.php`
+
+Page sections
+-------------
+1. Notification modals:
+   - no-data export modal
+   - no-metric-selected modal
+
+2. Main request form `#frm_request`
+   Hidden fields:
+   - `api_key`
+   - `email`
+   - `name`
+   - `m_col`
+   - `d_col`
+   - `d_name`
+   - `dimensions`
+   - `last_request`
+
+3. Request options
+   Basic options:
+   - date range
+   - environment/device
+   - frequency: One / Daily / Weekly / Monthly
+   - type: Summarized / Detailed
+   - file format: xls / csv
+   - display by: CUMULATIVE / HOUR / MONTH / YEAR
+
+4. Filters
+   The admin version supports wide filters:
+   - advertiser
+   - campaign
+   - creative
+   - publisher
+   - site
+   - adblock
+   - country
+   - ad size
+   - revenue type
+
+5. Group dimensions
+   Checkboxes map database/group fields:
+   - `ADV_ID` => `CLIENT_NAME`
+   - `CAM_ID` => `CAM_NAME`
+   - `BAN_ID` => `BAN_NAME`
+   - `AFF_ID` => `AFF_NAME`
+   - `SITE_ID` => `SITE_NAME`
+   - `ZONE_ID` => `ZONE_NAME`
+   - `COUNTRY` => `COUNTRY`
+   - `ADSIZE` => `ADSIZE`
+   - `RTYPE` => `RTYPE`
+   - `DATE` => `DATE`
+
+6. Metrics / columns
+   Default checked metrics:
+   - REQUEST
+   - IMP
+   - CLK
+   - CON
+   - SPEND
+   - PUB_EARN
+   - ADM_EARN
+   - CTR
+   - ECPM
+   - ERPM
+   - EPPM
+   - FILL_RATE
+
+
+FRONTEND JAVASCRIPT FLOW
+------------------------
+1. Download button `#download`
+   - copies PHP-provided `download` payload into `#last_request`
+   - changes form action to `/admin/reports/download_request`
+   - submits the form for direct file download
+
+2. Refresh button `#refresh_search`
+   - resets date range
+   - resets frequency/type/format
+   - clears all select2 filters
+   - resets the form
+
+3. DataTable setup
+   Ajax source:
+   - `/admin/reports/fetch_request`
+
+   Table columns shown:
+   - report date/time text
+   - columns
+   - device
+   - display by
+   - group by
+   - details (`frequency / type / format`)
+   - status
+   - options
+
+4. Submit button `#request_rep`
+   Browser-side behavior:
+   - validates at least one metric is checked
+   - collects checked metrics into `m_col`
+   - collects checked dimensions into:
+     - `dimensions`
+     - `d_col`
+     - `d_name`
+   - serializes the form
+   - POSTs to `api/v1/report/request_report/format/json`
+
+   Success behavior:
+   - redraws the saved request table
+   - shows success alert
+   - resets the form to defaults
+
+   Error behavior:
+   - shows error alert returned by API
+
+5. Request row actions
+   UI functions:
+   - `delete_req(id)`
+   - `activate(id)`
+   - `deactivate(id)`
+
+   These only set hidden IDs and show modals.
+   Actual update happens from modal AJAX calls.
+
+
+MODAL ACTION FLOW
+-----------------
+Files:
+- `modal/active.php`
+- `modal/pause.php`
+- `modal/delete.php`
+
+Each modal:
+1. stores `req_id`
+2. stores `req_type`
+3. sends GET request to:
+   - `api/v1/report/request_update/format/json`
+
+`req_type` values:
+- `active`
+- `pause`
+- `delete`
+
+After success:
+- redraw request DataTable
+- show success notification
+
+
+API CONTROLLER FLOW
+-------------------
+File: `app/application/modules/api.v_1/controllers/report.php`
+
+1. `request_report_post()`
+   This is the core entry point for creating a requested report.
+
+   It builds `$search` with:
+   - account metadata
+   - email/name
+   - frequency
+   - file type
+   - format
+   - display_by
+   - device
+   - selected metrics
+   - selected grouping dimensions
+   - selected filters
+
+   Group-by logic:
+   - starts from selected dimensions
+   - if display mode is not `CUMULATIVE`, it appends interval grouping
+   - special handling for `HOUR`:
+     - ensures `DATE` is also included when needed
+
+   Then it branches:
+
+   A. Recurring request path
+   Condition:
+   - `frequency != 'One'`
+
+   Action:
+   - calls `$this->do_report->add_request($search)`
+   - stores request in `djax_request_report`
+   - returns JSON success/error
+
+   B. One-time immediate path
+   Condition:
+   - `frequency == 'One'`
+
+   Action:
+   - adds `date_from` and `date_to`
+   - calls `$this->do_report->fetch_request_report($search)`
+   - builds Excel/CSV using PHPExcel
+   - saves file under configured `csv_report` path
+   - loads agency owner details
+   - emails the file using mail type `REQUEST_REPORT`
+   - returns success/error JSON
+
+2. `fetch_request_get()`
+   - calls `$this->do_report->get_request()`
+   - returns saved recurring requests for the logged-in account/account type
+
+3. `request_update_get()`
+   Inputs:
+   - `req_id`
+   - `req_type`
+
+   Behavior:
+   - `pause`  => `status = 0`
+   - `active` => `status = 1`
+   - `delete` => `is_deleted = 1`
+
+   Then:
+   - calls `$this->do_report->update_request($req_id, $where)`
+   - returns JSON status message
+
+4. `download_report_get()`
+   - builds `where` from logged-in account
+   - calls `$this->do_report->fetch_last_request($where)`
+   - returns the last request definition plus its rebuilt dataset
+
+
+MODEL FLOW
+----------
+File: `app/application/modules/api.v_1/models/do_report.php`
+
+1. `fetch_request_report($search = FALSE)`
+   This is the main report query builder.
+
+   Responsibilities:
+   - builds memcache key from the search payload
+   - composes a large SQL query on `rv_data_summary_ad_hourly`
+   - joins different tables depending on account type
+   - applies filters:
+     - date range
+     - country
+     - device
+     - advertiser/campaign/creative
+     - publisher/site/zone
+     - revenue type
+     - ad size
+   - applies group by logic
+   - executes query
+   - caches and returns result
+
+   Base metrics selected in SQL include:
+   - REQUEST
+   - IMP
+   - CLK
+   - UIMP
+   - UCLK
+   - CON
+   - FILL_RATE
+   - ERPM
+   - EPPM
+   - CTR
+
+   Admin/manager-specific additions:
+   - SPEND
+   - ECPM
+   - advertiser/campaign/banner/site/zone fields
+   - ADM_EARN
+   - ADM_ECPM
+   - PUB_EARN
+   - PUB_ECPM
+   - RTYPE
+   - ADSIZE
+
+2. `add_request($data)`
+   - inserts a new row into `djax_request_report`
+   - invalidates request-related memcache keys
+
+3. `get_request($where = FALSE)`
+   - reads recurring requests from `djax_request_report`
+   - excludes:
+     - `frequency = 'One'`
+     - `is_deleted = 1`
+   - limits to logged-in account by default
+   - computes display date text for Daily/Weekly/Monthly schedule
+   - resolves readable names for advertiser/campaign/creative/publisher/site/zone/rtype
+   - caches and returns the result
+
+4. `update_request($req_id, $where)`
+   - updates request row fields
+   - used for pause/activate/delete
+   - invalidates cache
+
+5. `fetch_last_request($where = FALSE)`
+   - fetches the most recent request row
+   - reconstructs a `$search` payload from stored request data
+   - derives date range based on frequency
+   - calls `fetch_request_report($search)`
+   - returns:
+     - `request`
+     - `search`
+     - `data`
+
+
+DATA STORAGE
+------------
+Table constant:
+- `TAB_REQUEST_REPORT = djax_request_report`
+
+Stored fields used by this feature include:
+- account_id
+- account_type
+- email
+- frequency
+- type
+- format
+- display_by
+- device
+- columns
+- group_by
+- advertiser
+- campaign
+- creative
+- publisher
+- site
+- zone
+- country
+- adsize
+- rtype
+- status
+- is_deleted
+- date_time
+
+
+ONE-TIME VS RECURRING BEHAVIOR
+------------------------------
+1. One-time request (`frequency = One`)
+   - not saved as a recurring row
+   - report is generated immediately
+   - file is emailed right away
+
+2. Recurring request (`Daily`, `Weekly`, `Monthly`)
+   - saved to `djax_request_report`
+   - appears in the table
+   - can be paused/activated/deleted
+   - can be rebuilt through the "Download" flow using the latest saved request
+
+
+IMPORTANT IMPLEMENTATION NOTES
+------------------------------
+1. The admin page stores filter names differently from some older commented code.
+   Active form field names are:
+   - `advertiser_id[]`
+   - `campaign_id[]`
+   - `creative_id[]`
+   - `publisher[]`
+   - `site[]`
+   - `adblock[]`
+   - `country_id[]`
+   - `ad_size[]`
+   - `rev_type[]`
+
+2. `request_report_post()` expects:
+   - `publisher_id`
+   - `site_id`
+   - `adblock_id`
+   but the active admin form uses:
+   - `publisher`
+   - `site`
+   - `adblock`
+
+   This means publisher/site/adblock filters may not be getting mapped into `$search` correctly from the current admin form.
+
+3. In `request()` the default date range is taken from:
+   - `REPORT_ADVERTISER`
+   even though this page is the admin request report page.
+   That may be intentional reuse, but it is worth noting.
+
+4. `fetch_last_request()` currently sets Daily `date_from` to:
+   - `2016-01-01`
+   and `date_to` to yesterday.
+   So the "last request download" behavior for daily frequency is not truly "yesterday only"; it currently rebuilds from a very old fixed start date.
+
+5. I traced the admin-side screen, API endpoints, storage, and download rebuild path.
+   I did not find a separate recurring mail scheduler in the admin-side files traced here. If recurring reports are auto-sent by cron, that logic is likely outside this specific admin-page flow or elsewhere in the codebase.
+
+
+END-TO-END SUMMARY
+------------------
+Admin request report page is a UI for defining report parameters, selecting columns and groupings, and either:
+
+- generating and emailing a one-time report immediately, or
+- saving a recurring request definition into `djax_request_report`
+
+The admin controller mostly loads data and proxies table/download calls. The real business logic is in:
+- `api.v_1/controllers/report.php::request_report_post()`
+- `api.v_1/models/do_report.php::fetch_request_report()`
+- `add_request()`
+- `get_request()`
+- `update_request()`
+- `fetch_last_request()`
+
+In short:
+- view builds the payload
+- API controller normalizes it
+- model builds SQL and stores/reads request definitions
+- admin UI lists and manages saved requests
+- one-time request sends email immediately
+- saved request can later be rebuilt and downloaded

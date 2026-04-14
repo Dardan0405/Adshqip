@@ -199,10 +199,15 @@ Route::middleware('auth')->group(function () {
         Route::patch('/direct-campaign-approvals/{id}/approve', [\App\Http\Controllers\Admin\DirectCampaignApprovalController::class, 'approve'])->name('admin.direct-campaign-approvals.approve');
         Route::patch('/direct-campaign-approvals/{id}/reject', [\App\Http\Controllers\Admin\DirectCampaignApprovalController::class, 'reject'])->name('admin.direct-campaign-approvals.reject');
 
-        // Direct Campaign Request Approvals
-        Route::get('/direct-campaign-request-approvals', [\App\Http\Controllers\Admin\DirectCampaignRequestApprovalController::class, 'index'])->name('admin.direct-campaign-request-approvals');
-        Route::patch('/direct-campaign-request-approvals/{id}/approve', [\App\Http\Controllers\Admin\DirectCampaignRequestApprovalController::class, 'approve'])->name('admin.direct-campaign-request-approvals.approve');
-        Route::patch('/direct-campaign-request-approvals/{id}/reject', [\App\Http\Controllers\Admin\DirectCampaignRequestApprovalController::class, 'reject'])->name('admin.direct-campaign-request-approvals.reject');
+        // Requests
+        Route::get('/requests', [\App\Http\Controllers\Admin\RequestController::class, 'index'])->name('admin.requests');
+        Route::patch('/requests/{id}/approve', [\App\Http\Controllers\Admin\RequestController::class, 'approve'])->name('admin.requests.approve');
+        Route::patch('/requests/{id}/reject', [\App\Http\Controllers\Admin\RequestController::class, 'reject'])->name('admin.requests.reject');
+
+        // Legacy direct campaign request approvals
+        Route::get('/direct-campaign-request-approvals', [\App\Http\Controllers\Admin\RequestController::class, 'index'])->name('admin.direct-campaign-request-approvals');
+        Route::patch('/direct-campaign-request-approvals/{id}/approve', [\App\Http\Controllers\Admin\RequestController::class, 'approve'])->name('admin.direct-campaign-request-approvals.approve');
+        Route::patch('/direct-campaign-request-approvals/{id}/reject', [\App\Http\Controllers\Admin\RequestController::class, 'reject'])->name('admin.direct-campaign-request-approvals.reject');
 
         // Advertisers Management
         Route::get('/advertisers-manage', [\App\Http\Controllers\Admin\AdvertiserController::class, 'index'])->name('admin.advertisers');
@@ -356,6 +361,42 @@ Route::middleware('auth')->group(function () {
         // AdBlock Reports
         Route::get('/reports/adblock', [\App\Http\Controllers\Admin\AdblockReportController::class, 'index'])->name('admin.reports.adblock');
         Route::get('/reports/adblock/export', [\App\Http\Controllers\Admin\AdblockReportController::class, 'export'])->name('admin.reports.adblock.export');
+
+        // Platform Reports
+        Route::get('/reports/platform', [\App\Http\Controllers\Admin\PlatformReportController::class, 'index'])->name('admin.reports.platform');
+        Route::get('/reports/platform/export', [\App\Http\Controllers\Admin\PlatformReportController::class, 'export'])->name('admin.reports.platform.export');
+
+        // Request Reports
+        Route::get('/reports/requests', [\App\Http\Controllers\Admin\RequestReportController::class, 'index'])->name('admin.reports.requests');
+        Route::post('/reports/requests', [\App\Http\Controllers\Admin\RequestReportController::class, 'store'])->name('admin.reports.requests.store');
+        Route::get('/reports/requests/export', [\App\Http\Controllers\Admin\RequestReportController::class, 'export'])->name('admin.reports.requests.export');
+        Route::get('/reports/requests/{requestReport}/download', [\App\Http\Controllers\Admin\RequestReportController::class, 'download'])->name('admin.reports.requests.download');
+        Route::patch('/reports/requests/{requestReport}/status', [\App\Http\Controllers\Admin\RequestReportController::class, 'updateStatus'])->name('admin.reports.requests.status');
+        Route::delete('/reports/requests/{requestReport}', [\App\Http\Controllers\Admin\RequestReportController::class, 'destroy'])->name('admin.reports.requests.destroy');
+
+        // Graphical Reports (Geographic)
+        Route::get('/reports/graphical', [\App\Http\Controllers\Admin\GraphicalReportController::class, 'index'])->name('admin.reports.graphical');
+        Route::get('/reports/graphical/export', [\App\Http\Controllers\Admin\GraphicalReportController::class, 'export'])->name('admin.reports.graphical.export');
+
+        // Environment Performance
+        Route::get('/reports/environment', [\App\Http\Controllers\Admin\EnvironmentPerformanceController::class, 'index'])->name('admin.reports.environment');
+        Route::get('/reports/environment/export', [\App\Http\Controllers\Admin\EnvironmentPerformanceController::class, 'export'])->name('admin.reports.environment.export');
+
+        // Network Kit
+        Route::get('/network-kit', [\App\Http\Controllers\Admin\NetworkKitController::class, 'index'])->name('admin.network-kit');
+        Route::get('/network-kit/export', [\App\Http\Controllers\Admin\NetworkKitController::class, 'export'])->name('admin.network-kit.export');
+
+        // DSP Report
+        Route::get('/reports/dsp', [\App\Http\Controllers\Admin\DspReportController::class, 'index'])->name('admin.reports.dsp');
+        Route::get('/reports/dsp/export', [\App\Http\Controllers\Admin\DspReportController::class, 'export'])->name('admin.reports.dsp.export');
+
+        // SSP Report
+        Route::get('/reports/ssp', [\App\Http\Controllers\Admin\SspReportController::class, 'index'])->name('admin.reports.ssp');
+        Route::get('/reports/ssp/export', [\App\Http\Controllers\Admin\SspReportController::class, 'export'])->name('admin.reports.ssp.export');
+
+        // Anti-fraud Clicks
+        Route::get('/anti-fraud', [\App\Http\Controllers\Admin\AntiFraudController::class, 'index'])->name('admin.anti-fraud');
+        Route::get('/anti-fraud/export', [\App\Http\Controllers\Admin\AntiFraudController::class, 'export'])->name('admin.anti-fraud.export');
 
         // Advertiser Payment History
         Route::get('/advertiser-payment-history', [\App\Http\Controllers\Admin\PaymentHistoryController::class, 'index'])->name('admin.advertiser-payment-history');
