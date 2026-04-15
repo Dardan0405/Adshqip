@@ -63,7 +63,7 @@
                     <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Campaign <span class="text-red-500">*</span></label>
                     <select name="campaign_id" required class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white">
                         @foreach($campaigns as $campaign)
-                            <option value="{{ $campaign['id'] }}" {{ (int) old('campaign_id', $ad['campaign_id']) === $campaign['id'] ? 'selected' : '' }}>{{ $campaign['name'] }}</option>
+                            <option value="{{ $campaign['id'] }}" {{ (int) old('campaign_id', $ad['campaign_id']) === $campaign['id'] ? 'selected' : '' }}>{{ $campaign['name'] }} — {{ $campaign['advertiser_email'] }}</option>
                         @endforeach
                     </select>
                 </div>

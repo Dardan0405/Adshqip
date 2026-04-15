@@ -517,15 +517,61 @@
                 </div>
             </div>
 
+            <div class="border-t border-gray-100"></div>
+
+            {{-- Meta Keywords Targeting --}}
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider">Meta Keywords Targeting</label>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-700">Contextual</span>
+                </div>
+                <p class="text-xs text-gray-500 mb-3">Target websites based on their HTML meta keywords. When our tracking pixel detects matching keywords on a publisher's page, this campaign becomes eligible to serve.</p>
+
+                @php
+                    $selectedKeywords = $campaign['targeting_keywords'] ?? [];
+                @endphp
+
+                @if(!empty($keywords))
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-64 overflow-y-auto p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    @php
+                        $keywordsByCategory = collect($keywords)->groupBy('category');
+                    @endphp
+                    @foreach($keywordsByCategory as $category => $categoryKeywords)
+                        <div class="col-span-full">
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{{ $category ?: 'Uncategorized' }}</span>
+                        </div>
+                        @foreach($categoryKeywords as $kw)
+                            <label class="inline-flex items-center gap-2 cursor-pointer p-1.5 rounded hover:bg-white transition">
+                                <input type="checkbox" name="targeting_keywords[]" value="{{ $kw['keyword'] }}" {{ in_array($kw['keyword'], $selectedKeywords) ? 'checked' : '' }} class="keyword-cb rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                                <span class="text-sm text-gray-700 truncate" title="{{ $kw['description'] ?? $kw['keyword'] }}">{{ $kw['keyword'] }}</span>
+                            </label>
+                        @endforeach
+                    @endforeach
+                </div>
+                <div class="flex items-center gap-3 mt-2">
+                    <button type="button" onclick="document.querySelectorAll('.keyword-cb').forEach(cb => cb.checked = true)" class="text-xs text-brand-600 hover:text-brand-700 font-medium">Select All</button>
+                    <span class="text-gray-300">|</span>
+                    <button type="button" onclick="document.querySelectorAll('.keyword-cb').forEach(cb => cb.checked = false)" class="text-xs text-brand-600 hover:text-brand-700 font-medium">Deselect All</button>
+                    <span class="text-gray-300">|</span>
+                    <span class="text-xs text-gray-400"><span id="selectedKeywordCount">{{ count($selectedKeywords) }}</span> selected</span>
+                </div>
+                @else
+                <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
+                    <p class="text-sm text-gray-500">No keywords available. <a href="{{ route('admin.keywords') }}" class="text-brand-600 hover:underline">Add keywords</a> first.</p>
+                </div>
+                @endif
+                <p class="text-[10px] text-gray-400 mt-2">Leave unchecked to target all websites regardless of their meta keywords.</p>
+            </div>
+
             {{-- Device Targeting --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Targeting Type (Device)</label>
                     <select name="device_type" id="deviceTypeSelect" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white">
                         <option value="all">All Devices</option>
-                        <option value="desktop">Desktop</option>
-                        <option value="mobile">Mobile</option>
-                        <option value="tablet">Tablet</option>
+                        @foreach($deviceTypes as $deviceType)
+                            <option value="{{ $deviceType }}">{{ ucfirst($deviceType) }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div>
@@ -1001,6 +1047,14 @@ function toggleS2sSection() {
     var enabled = document.getElementById('s2sEnabledToggle').checked;
     document.getElementById('s2sSection').style.display = enabled ? 'block' : 'none';
 }
+
+// ─── Keyword Counter ───
+function updateKeywordCount() {
+    const count = document.querySelectorAll('.keyword-cb:checked').length;
+    const countEl = document.getElementById('selectedKeywordCount');
+    if (countEl) countEl.textContent = count;
+}
+document.querySelectorAll('.keyword-cb').forEach(cb => cb.addEventListener('change', updateKeywordCount));
 
 // ─── Ad Formats Data (from PHP) ───
 const adFormats = @json($adFormats);
@@ -1634,22 +1688,19 @@ function showNotification(message, type = 'success') {
 }
 
 // ─── Device list by type ───
-const devicesByType = {
-    all: ['Windows PC','MacBook','iMac','Linux Desktop','iPhone','Samsung Galaxy','Google Pixel','iPad','Android Tablet','Huawei','Xiaomi','OnePlus','Oppo'],
-    desktop: ['Windows PC','MacBook','iMac','Linux Desktop','Chromebook'],
-    mobile: ['iPhone','Samsung Galaxy','Google Pixel','Huawei','Xiaomi','OnePlus','Oppo','Vivo','Realme','Nokia'],
-    tablet: ['iPad','iPad Pro','Samsung Tab','Amazon Fire','Lenovo Tab','Microsoft Surface'],
-};
+const devicesByType = @json($devicesByType);
 
 // ─── Device type change ───
 const savedDevices = @json($campaign['targeting_device'] ?? []);
 document.getElementById('deviceTypeSelect').addEventListener('change', function() {
     const sel = document.getElementById('deviceListSelect');
     sel.innerHTML = '';
-    (devicesByType[this.value] || []).forEach(d => {
+    const allDevices = Object.values(devicesByType).flat();
+    const deviceOptions = this.value === 'all' ? allDevices : (devicesByType[this.value] || []);
+    deviceOptions.forEach(d => {
         const o = document.createElement('option');
-        o.value = d.toLowerCase().replace(/\s+/g, '_');
-        o.textContent = d;
+        o.value = d.value;
+        o.textContent = d.label;
         if (Array.isArray(savedDevices) && savedDevices.includes(o.value)) {
             o.selected = true;
         }

@@ -7,11 +7,21 @@ use App\Models\Ad;
 use App\Models\AdCreative;
 use App\Models\Campaign;
 use App\Models\CampaignGroup;
+use App\Models\Browser;
+use App\Models\BrowserLanguage;
+use App\Models\CarrierIspConnection;
+use App\Models\ConnectionType;
+use App\Models\Device;
+use App\Models\MobileManufacturer;
+use App\Models\OperatingSystem;
 use App\Models\PixelTracker;
 use App\Models\StatDaily;
 use App\Models\User;
 use App\Models\Zone;
+use App\Models\Category;
+use App\Models\Keyword;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class CampaignController extends Controller
 {
@@ -32,6 +42,71 @@ class CampaignController extends Controller
                 ];
             })
             ->toArray();
+    }
+
+    private function getDeviceTargetingOptions(): array
+    {
+        if (! Schema::hasTable('aq_devices') && ! Schema::hasTable('aq_mobile_manufacturers')) {
+            return [
+                'deviceTypes' => [],
+                'devicesByType' => [],
+            ];
+        }
+
+        $devices = collect();
+        if (Schema::hasTable('aq_devices')) {
+            $devices = $devices->merge(
+                Device::query()
+                    ->where('status', 'active')
+                    ->orderBy('device_value')
+                    ->orderBy('device_name')
+                    ->get()
+                    ->map(function (Device $device) {
+                        return [
+                            'type' => $device->device_value,
+                            'name' => $device->device_name,
+                        ];
+                    })
+            );
+        }
+
+        if (Schema::hasTable('aq_mobile_manufacturers')) {
+            $devices = $devices->merge(
+                MobileManufacturer::query()
+                    ->where('status', 'active')
+                    ->orderBy('manufacturer_value')
+                    ->orderBy('manufacturer_name')
+                    ->get()
+                    ->map(function (MobileManufacturer $manufacturer) {
+                        return [
+                            'type' => $manufacturer->manufacturer_value,
+                            'name' => $manufacturer->manufacturer_name,
+                        ];
+                    })
+            );
+        }
+
+        $deviceTypes = $devices->pluck('type')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $devicesByType = $devices->groupBy('type')
+            ->map(function ($items) {
+                return $items->map(function (array $device) {
+                    return [
+                        'label' => $device['name'],
+                        'value' => strtolower((string) preg_replace('/[^A-Za-z0-9]+/', '_', trim($device['name']))),
+                    ];
+                })->unique('value')->values()->toArray();
+            })
+            ->toArray();
+
+        return [
+            'deviceTypes' => $deviceTypes,
+            'devicesByType' => $devicesByType,
+        ];
     }
 
     /**
@@ -60,15 +135,24 @@ class CampaignController extends Controller
      */
     private function getOperatingSystems(): array
     {
-        return [
-            'Windows' => ['Windows 11', 'Windows 10', 'Windows 8.1', 'Windows 8', 'Windows 7'],
-            'macOS' => ['macOS 15 Sequoia', 'macOS 14 Sonoma', 'macOS 13 Ventura', 'macOS 12 Monterey', 'macOS 11 Big Sur'],
-            'Android' => ['Android 15', 'Android 14', 'Android 13', 'Android 12', 'Android 11', 'Android 10', 'Android 9'],
-            'iOS' => ['iOS 18', 'iOS 17', 'iOS 16', 'iOS 15', 'iOS 14'],
-            'iPadOS' => ['iPadOS 18', 'iPadOS 17', 'iPadOS 16', 'iPadOS 15'],
-            'Linux' => ['Ubuntu', 'Fedora', 'Debian', 'Arch', 'CentOS'],
-            'Chrome OS' => ['Chrome OS 130', 'Chrome OS 125', 'Chrome OS 120'],
-        ];
+        if (! Schema::hasTable('aq_operating_systems')) {
+            return [];
+        }
+
+        return OperatingSystem::query()
+            ->where('status', 'active')
+            ->orderBy('os_name')
+            ->orderBy('os_value')
+            ->get()
+            ->groupBy('os_name')
+            ->map(function ($items) {
+                return $items->pluck('os_value')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->toArray();
+            })
+            ->toArray();
     }
 
     /**
@@ -76,17 +160,19 @@ class CampaignController extends Controller
      */
     private function getBrowsers(): array
     {
-        return [
-            'Chrome' => ['Chrome 131', 'Chrome 130', 'Chrome 129', 'Chrome 128', 'Chrome 125', 'Chrome 120', 'Chrome 115'],
-            'Firefox' => ['Firefox 133', 'Firefox 132', 'Firefox 131', 'Firefox 130', 'Firefox 125', 'Firefox 120', 'Firefox 115'],
-            'Safari' => ['Safari 18', 'Safari 17', 'Safari 16', 'Safari 15'],
-            'Edge' => ['Edge 131', 'Edge 130', 'Edge 129', 'Edge 125', 'Edge 120'],
-            'Opera' => ['Opera 114', 'Opera 113', 'Opera 110', 'Opera 105', 'Opera 100'],
-            'Samsung Internet' => ['Samsung Internet 26', 'Samsung Internet 25', 'Samsung Internet 24', 'Samsung Internet 23'],
-            'Brave' => ['Brave 1.73', 'Brave 1.72', 'Brave 1.70', 'Brave 1.65'],
-            'UC Browser' => ['UC Browser 15', 'UC Browser 14', 'UC Browser 13'],
-            'Vivaldi' => ['Vivaldi 7.0', 'Vivaldi 6.9', 'Vivaldi 6.8'],
-        ];
+        if (! Schema::hasTable('aq_browsers')) {
+            return [];
+        }
+
+        return Browser::query()
+            ->where('status', 'active')
+            ->orderBy('browser_name')
+            ->orderBy('browser_code')
+            ->get()
+            ->mapWithKeys(function (Browser $browser) {
+                return [$browser->browser_name => array_values(array_filter([$browser->browser_code]))];
+            })
+            ->toArray();
     }
 
     /**
@@ -94,7 +180,18 @@ class CampaignController extends Controller
      */
     private function getConnectionTypes(): array
     {
-        return ['Wi-Fi', '3G', '4G/LTE', '5G'];
+        if (! Schema::hasTable('aq_connection_types')) {
+            return [];
+        }
+
+        return ConnectionType::query()
+            ->where('status', 'active')
+            ->orderBy('connection_name')
+            ->orderBy('connection_value')
+            ->pluck('connection_name')
+            ->filter()
+            ->values()
+            ->toArray();
     }
 
     /**
@@ -123,40 +220,66 @@ class CampaignController extends Controller
      */
     private function getLanguages(): array
     {
-        return [
-            'sq' => 'Albanian',
-            'bs' => 'Bosnian',
-            'bg' => 'Bulgarian',
-            'hr' => 'Croatian',
-            'el' => 'Greek',
-            'mk' => 'Macedonian',
-            'me' => 'Montenegrin',
-            'ro' => 'Romanian',
-            'sr' => 'Serbian',
-            'sl' => 'Slovenian',
-            'tr' => 'Turkish',
-            'en' => 'English',
-            'de' => 'German',
-            'fr' => 'French',
-            'it' => 'Italian',
-            'es' => 'Spanish',
-            'pt' => 'Portuguese',
-            'ru' => 'Russian',
-            'ar' => 'Arabic',
-            'zh' => 'Chinese',
-            'ja' => 'Japanese',
-            'ko' => 'Korean',
-            'hi' => 'Hindi',
-            'nl' => 'Dutch',
-            'pl' => 'Polish',
-            'sv' => 'Swedish',
-            'da' => 'Danish',
-            'fi' => 'Finnish',
-            'no' => 'Norwegian',
-            'cs' => 'Czech',
-            'hu' => 'Hungarian',
-            'uk' => 'Ukrainian',
-        ];
+        if (! Schema::hasTable('aq_browser_languages')) {
+            return [];
+        }
+
+        return BrowserLanguage::query()
+            ->where('status', 'active')
+            ->orderBy('language_name')
+            ->orderBy('language_value')
+            ->get()
+            ->mapWithKeys(function (BrowserLanguage $language) {
+                return [$language->language_value => $language->language_name];
+            })
+            ->toArray();
+    }
+
+    private function getCarrierIspConnections(): array
+    {
+        if (! Schema::hasTable('aq_carrier_isp_connections')) {
+            return [];
+        }
+
+        return CarrierIspConnection::query()
+            ->where('status', 'active')
+            ->orderBy('country')
+            ->orderBy('carrier_name')
+            ->get()
+            ->groupBy('country')
+            ->map(function ($items) {
+                return $items->pluck('carrier_name')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->toArray();
+            })
+            ->toArray();
+    }
+
+    /**
+     * Get active keywords for meta keyword targeting.
+     */
+    private function getKeywords(): array
+    {
+        if (! Schema::hasTable('aq_keywords')) {
+            return [];
+        }
+
+        return Keyword::query()
+            ->where('status', 'active')
+            ->orderBy('category')
+            ->orderBy('keyword')
+            ->get()
+            ->map(function (Keyword $kw) {
+                return [
+                    'id' => $kw->id,
+                    'keyword' => $kw->keyword,
+                    'category' => $kw->category,
+                    'description' => $kw->description,
+                ];
+            })
+            ->toArray();
     }
 
     /**
@@ -306,6 +429,8 @@ class CampaignController extends Controller
      */
     public function create()
     {
+        $deviceTargeting = $this->getDeviceTargetingOptions();
+
         $campaignGroups = CampaignGroup::where('is_deleted', false)
             ->orderBy('name')
             ->get()
@@ -318,7 +443,8 @@ class CampaignController extends Controller
             })
             ->toArray();
 
-        $pixelTrackers = PixelTracker::where('is_deleted', false)
+        $pixelTrackers = PixelTracker::with('advertiser')
+            ->where('is_deleted', false)
             ->orderBy('name')
             ->get()
             ->map(function ($pixel) {
@@ -327,7 +453,7 @@ class CampaignController extends Controller
                     'name' => $pixel->name,
                     'type' => $pixel->type,
                     'code' => $pixel->pixel_code,
-                    'advertiser' => $pixel->advertiser->email ?? 'Unknown',
+                    'advertiser' => $pixel->advertiser?->email ?? 'Unknown',
                 ];
             })
             ->toArray();
@@ -394,13 +520,12 @@ class CampaignController extends Controller
             })
             ->toArray();
 
-        // Categories (demo data)
-        $categories = [
-            ['id' => 1, 'name' => 'E-commerce'],
-            ['id' => 2, 'name' => 'Lead Generation'],
-            ['id' => 3, 'name' => 'Brand Awareness'],
-            ['id' => 4, 'name' => 'App Install'],
-        ];
+        // Categories from database
+        $categories = Category::where('status', 'active')
+            ->orderBy('name')
+            ->get()
+            ->map(fn($cat) => ['id' => $cat->id, 'name' => $cat->name])
+            ->toArray();
 
         // Ad formats
         $adFormats = [
@@ -450,13 +575,16 @@ class CampaignController extends Controller
             'operatingSystems' => $this->getOperatingSystems(),
             'browsers' => $this->getBrowsers(),
             'connectionTypes' => $this->getConnectionTypes(),
-            'mobileCarriers' => $this->getMobileCarriers(),
+            'mobileCarriers' => $this->getCarrierIspConnections(),
             'languages' => $this->getLanguages(),
             'trafficSources' => $trafficSources,
             'pricingModels' => $pricingModels,
             'advertisers' => $advertisers,
             'categories' => $categories,
             'adFormats' => $adFormats,
+            'deviceTypes' => $deviceTargeting['deviceTypes'],
+            'devicesByType' => $deviceTargeting['devicesByType'],
+            'keywords' => $this->getKeywords(),
         ]);
     }
 
@@ -495,6 +623,8 @@ class CampaignController extends Controller
             'targeting_traffic_type' => 'nullable|in:all,mainstream,non-mainstream',
             'targeting_ip_include' => 'nullable|string',
             'targeting_ip_exclude' => 'nullable|string',
+            'targeting_keywords' => 'nullable|array',
+            'targeting_keywords.*' => 'string',
             's2s_enabled' => 'nullable|boolean',
             's2s_postback_url' => 'nullable|string|max:2000',
             'traffic_sources' => 'nullable|array',
@@ -680,7 +810,7 @@ class CampaignController extends Controller
 
         // Get advertiser name for display
         $advertiser = User::find($pixel->advertiser_id);
-        $advertiserName = $advertiser ? $advertiser->name : 'Demo Advertiser';
+        $advertiserLabel = $advertiser?->email ?? 'Unknown';
 
         return response()->json([
             'success' => true,
@@ -689,7 +819,8 @@ class CampaignController extends Controller
                 'name' => $pixel->name,
                 'type' => $pixel->type,
                 'code' => $pixel->pixel_code,
-                'advertiser' => $advertiserName,
+                'advertiser' => $advertiserLabel,
+                'advertiser_email' => $advertiserLabel,
             ],
         ]);
     }
@@ -750,7 +881,7 @@ class CampaignController extends Controller
      */
     public function show(int $id)
     {
-        $campaign = Campaign::with(['group', 'advertiser', 'zone.site', 'pixelTracker'])
+        $campaign = Campaign::with(['group', 'advertiser', 'zone.site', 'pixelTracker.advertiser'])
             ->withSum('stats', 'impressions')
             ->withSum('stats', 'clicks')
             ->withSum('stats', 'conversions')
@@ -779,6 +910,7 @@ class CampaignController extends Controller
             'start_date' => $campaign->start_date?->format('Y-m-d H:i:s'),
             'end_date' => $campaign->end_date?->format('Y-m-d H:i:s'),
             'advertiser' => $campaign->advertiser->email ?? 'Unknown',
+            'advertiser_email' => $campaign->advertiser->email ?? 'Unknown',
             'advertiser_id' => $campaign->advertiser_id,
             'bid_amount' => (float)$campaign->bid_amount,
             'daily_budget' => (float)$campaign->daily_budget,
@@ -810,12 +942,14 @@ class CampaignController extends Controller
             'targeting_traffic_type' => $campaign->targeting_traffic_type,
             'targeting_ip_include' => $campaign->targeting_ip_include,
             'targeting_ip_exclude' => $campaign->targeting_ip_exclude,
+            'targeting_keywords' => $campaign->targeting_keywords,
             's2s_enabled' => (bool) $campaign->s2s_enabled,
             's2s_postback_url' => $campaign->s2s_postback_url,
             'pixel_tracker' => $campaign->pixelTracker ? [
                 'id' => $campaign->pixelTracker->id,
                 'name' => $campaign->pixelTracker->name,
                 'type' => $campaign->pixelTracker->type,
+                'advertiser_email' => $campaign->pixelTracker->advertiser?->email ?? 'Unknown',
                 'pixel_code' => $campaign->pixelTracker->pixel_code,
                 'pixel_goal' => $campaign->pixelTracker->pixel_goal,
                 'category' => $campaign->pixelTracker->category,
@@ -843,6 +977,8 @@ class CampaignController extends Controller
      */
     public function edit(int $id)
     {
+        $deviceTargeting = $this->getDeviceTargetingOptions();
+
         $campaign = Campaign::with(['group', 'zone.site'])->find($id);
 
         if (!$campaign || $campaign->is_deleted) {
@@ -913,6 +1049,7 @@ class CampaignController extends Controller
             'targeting_traffic_type' => $campaign->targeting_traffic_type,
             'targeting_ip_include' => $campaign->targeting_ip_include,
             'targeting_ip_exclude' => $campaign->targeting_ip_exclude,
+            'targeting_keywords' => $campaign->targeting_keywords,
             's2s_enabled' => (bool) $campaign->s2s_enabled,
             's2s_postback_url' => $campaign->s2s_postback_url,
             'targeting_os' => $campaign->targeting_os,
@@ -958,7 +1095,8 @@ class CampaignController extends Controller
 
         $pricingModels = ['CPM', 'CPC', 'CPA', 'CPV'];
 
-        $pixelTrackers = PixelTracker::where('is_deleted', false)
+        $pixelTrackers = PixelTracker::with('advertiser')
+            ->where('is_deleted', false)
             ->orderBy('name')
             ->get()
             ->map(function ($pixel) {
@@ -967,7 +1105,7 @@ class CampaignController extends Controller
                     'name' => $pixel->name,
                     'type' => $pixel->type,
                     'code' => $pixel->pixel_code,
-                    'advertiser' => $pixel->advertiser->email ?? 'Unknown',
+                    'advertiser' => $pixel->advertiser?->email ?? 'Unknown',
                 ];
             })
             ->toArray();
@@ -984,12 +1122,12 @@ class CampaignController extends Controller
             })
             ->toArray();
 
-        $categories = [
-            ['id' => 1, 'name' => 'E-commerce'],
-            ['id' => 2, 'name' => 'Lead Generation'],
-            ['id' => 3, 'name' => 'Brand Awareness'],
-            ['id' => 4, 'name' => 'App Install'],
-        ];
+        // Categories from database
+        $categories = Category::where('status', 'active')
+            ->orderBy('name')
+            ->get()
+            ->map(fn($cat) => ['id' => $cat->id, 'name' => $cat->name])
+            ->toArray();
 
         // Ad formats
         $adFormats = [
@@ -1038,7 +1176,7 @@ class CampaignController extends Controller
             'operatingSystems' => $this->getOperatingSystems(),
             'browsers' => $this->getBrowsers(),
             'connectionTypes' => $this->getConnectionTypes(),
-            'mobileCarriers' => $this->getMobileCarriers(),
+            'mobileCarriers' => $this->getCarrierIspConnections(),
             'languages' => $this->getLanguages(),
             'trafficSources' => $trafficSources,
             'pricingModels' => $pricingModels,
@@ -1046,6 +1184,9 @@ class CampaignController extends Controller
             'advertisers' => $advertisers,
             'categories' => $categories,
             'adFormats' => $adFormats,
+            'deviceTypes' => $deviceTargeting['deviceTypes'],
+            'devicesByType' => $deviceTargeting['devicesByType'],
+            'keywords' => $this->getKeywords(),
         ]);
     }
 
@@ -1092,6 +1233,8 @@ class CampaignController extends Controller
             'targeting_traffic_type' => 'nullable|in:all,mainstream,non-mainstream',
             'targeting_ip_include' => 'nullable|string',
             'targeting_ip_exclude' => 'nullable|string',
+            'targeting_keywords' => 'nullable|array',
+            'targeting_keywords.*' => 'string',
             's2s_enabled' => 'nullable|boolean',
             's2s_postback_url' => 'nullable|string|max:2000',
             'traffic_sources' => 'nullable|array',
@@ -1207,6 +1350,9 @@ class CampaignController extends Controller
         }
         if (!$request->has('country_bids')) {
             $validated['country_bids'] = null;
+        }
+        if (!$request->has('targeting_keywords')) {
+            $validated['targeting_keywords'] = null;
         }
 
         // Handle empty pixel_tracker_id (empty string from select)

@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\DirectCampaign;
+use App\Models\Keyword;
 use App\Models\PixelTracker;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -303,7 +305,8 @@ class PixelTrackerController extends Controller
     // ─── PUBLIC PIXEL FIRE ENDPOINTS ──────────────────────
 
     /**
-     * JavaScript pixel fire — serves a JS snippet that fires an image pixel.
+     * JavaScript pixel fire — serves a JS snippet that fires an image pixel
+     * and detects meta keywords from the page for campaign targeting.
      * URL: /track/pixel/{code}/pixel.js
      */
     public function fireJs(string $code)
@@ -321,14 +324,197 @@ class PixelTrackerController extends Controller
         }
 
         $gifUrl = url("/track/pixel/{$code}/pixel.gif");
+        $keywordEndpoint = url("/track/pixel/{$code}/keywords");
 
-        $js = "/* AdsHqip Pixel — {$code} */\n"
-            . "(function(){var i=new Image();i.src=\"{$gifUrl}?cb=\"+Math.random();})();";
+        // Enhanced JS that detects meta keywords and sends them to the server
+        $js = <<<JS
+/* AdsHqip Pixel — {$code} */
+(function(){
+    // Fire the tracking pixel
+    var i=new Image();
+    i.src="{$gifUrl}?cb="+Math.random();
+
+    // Detect and send meta keywords for campaign targeting
+    try {
+        var metaKeywords = '';
+        var metaTags = document.getElementsByTagName('meta');
+        for (var j = 0; j < metaTags.length; j++) {
+            var name = (metaTags[j].getAttribute('name') || '').toLowerCase();
+            if (name === 'keywords') {
+                metaKeywords = metaTags[j].getAttribute('content') || '';
+                break;
+            }
+        }
+        if (metaKeywords) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '{$keywordEndpoint}', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({
+                keywords: metaKeywords,
+                url: window.location.href,
+                title: document.title
+            }));
+        }
+    } catch(e) {}
+})();
+JS;
 
         return response($js, 200)
             ->header('Content-Type', 'application/javascript')
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate')
             ->header('Access-Control-Allow-Origin', '*');
+    }
+
+    /**
+     * Receive meta keywords from a page and match against campaigns.
+     * URL: /track/pixel/{code}/keywords (POST)
+     */
+    public function receiveKeywords(string $code, Request $request)
+    {
+        $pixel = PixelTracker::where('pixel_code', $code)
+            ->where('is_deleted', false)
+            ->first();
+
+        if (!$pixel || !$pixel->is_active) {
+            return response()->json(['status' => 'error', 'message' => 'Pixel not found or inactive.'], 404);
+        }
+
+        $keywordsString = $request->input('keywords', '');
+        $pageUrl = $request->input('url', '');
+        $pageTitle = $request->input('title', '');
+
+        if (empty($keywordsString)) {
+            return response()->json(['status' => 'ok', 'matched' => 0]);
+        }
+
+        // Parse keywords (comma-separated, trim whitespace)
+        $pageKeywords = array_filter(
+            array_map('trim', explode(',', strtolower($keywordsString)))
+        );
+
+        if (empty($pageKeywords)) {
+            return response()->json(['status' => 'ok', 'matched' => 0]);
+        }
+
+        // Track keyword matches in our database
+        $matchedKeywordCount = $this->trackKeywordMatches($pageKeywords);
+
+        // Find campaigns that target any of these keywords
+        $matchedCampaigns = $this->findCampaignsByKeywords($pageKeywords, $pixel);
+
+        return response()->json([
+            'status' => 'success',
+            'pixel_code' => $code,
+            'keywords_received' => count($pageKeywords),
+            'keywords_matched' => $matchedKeywordCount,
+            'campaigns_matched' => count($matchedCampaigns),
+        ], 200);
+    }
+
+    /**
+     * Track keyword matches in the aq_keywords table.
+     */
+    private function trackKeywordMatches(array $pageKeywords): int
+    {
+        if (!Schema::hasTable('aq_keywords')) {
+            return 0;
+        }
+
+        $matchedCount = 0;
+
+        // Get all active keywords from database
+        $dbKeywords = Keyword::where('status', 'active')->get();
+
+        foreach ($dbKeywords as $dbKeyword) {
+            $keywordLower = strtolower($dbKeyword->keyword);
+
+            // Check if any page keyword matches (exact or contains)
+            foreach ($pageKeywords as $pageKw) {
+                if ($keywordLower === $pageKw || stripos($pageKw, $keywordLower) !== false || stripos($keywordLower, $pageKw) !== false) {
+                    $dbKeyword->increment('match_count');
+                    $dbKeyword->update(['last_matched_at' => now()]);
+                    $matchedCount++;
+                    break; // Only count once per db keyword
+                }
+            }
+        }
+
+        return $matchedCount;
+    }
+
+    /**
+     * Find campaigns that target any of the given keywords.
+     */
+    private function findCampaignsByKeywords(array $pageKeywords, PixelTracker $pixel): array
+    {
+        // Get active campaigns that have keyword targeting set
+        $campaigns = Campaign::where('is_deleted', false)
+            ->where('status', 'active')
+            ->whereNotNull('targeting_keywords')
+            ->get();
+
+        $matchedCampaigns = [];
+
+        foreach ($campaigns as $campaign) {
+            $targetingKeywords = $campaign->targeting_keywords;
+
+            if (!is_array($targetingKeywords) || empty($targetingKeywords)) {
+                continue;
+            }
+
+            // Check if any campaign keyword matches any page keyword
+            foreach ($targetingKeywords as $targetKw) {
+                $targetKwLower = strtolower($targetKw);
+
+                foreach ($pageKeywords as $pageKw) {
+                    if ($targetKwLower === $pageKw || stripos($pageKw, $targetKwLower) !== false) {
+                        $matchedCampaigns[] = [
+                            'campaign_id' => $campaign->id,
+                            'campaign_name' => $campaign->name,
+                            'matched_keyword' => $targetKw,
+                        ];
+
+                        // Record this as a keyword-based impression/match
+                        $this->trackKeywordMatchOnCampaign($campaign);
+                        break 2; // Found a match, move to next campaign
+                    }
+                }
+            }
+        }
+
+        return $matchedCampaigns;
+    }
+
+    /**
+     * Record a keyword-based match on a campaign's stats.
+     */
+    private function trackKeywordMatchOnCampaign(Campaign $campaign): void
+    {
+        $today = now()->toDateString();
+
+        $row = \App\Models\StatDaily::where('date', $today)
+            ->where('campaign_id', $campaign->id)
+            ->whereNull('ad_id')
+            ->first();
+
+        if (!$row) {
+            \App\Models\StatDaily::create([
+                'date' => $today,
+                'campaign_id' => $campaign->id,
+                'ad_id' => null,
+                'impressions' => 1,
+                'clicks' => 0,
+                'conversions' => 0,
+                'unique_impressions' => 1,
+                'unique_clicks' => 0,
+                'viewable_impressions' => 1,
+                'revenue' => 0,
+                'publisher_earnings' => 0,
+            ]);
+        } else {
+            $row->increment('impressions');
+            $row->increment('viewable_impressions');
+        }
     }
 
     /**

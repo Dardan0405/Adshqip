@@ -192,9 +192,17 @@ class AdCreativeController extends Controller
             'archived' => 'Archived',
         ];
 
-        $campaigns = \App\Models\Campaign::where('is_deleted', false)
+        $campaigns = \App\Models\Campaign::with('advertiser:id,email')
+            ->where('is_deleted', false)
             ->orderBy('name')
-            ->get(['id', 'name'])
+            ->get(['id', 'name', 'advertiser_id'])
+            ->map(function ($campaign) {
+                return [
+                    'id' => $campaign->id,
+                    'name' => $campaign->name,
+                    'advertiser_email' => $campaign->advertiser?->email ?? 'Unknown',
+                ];
+            })
             ->toArray();
 
         return view('admin.adformats.edit', [

@@ -130,6 +130,7 @@
                         <div>
                             <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Advertiser</dt>
                             <dd class="text-sm font-medium text-gray-900 mt-1">{{ $campaign['advertiser'] }}</dd>
+                            <dd class="text-xs text-gray-400 mt-1">{{ $campaign['advertiser_email'] ?? 'Unknown' }}</dd>
                         </div>
                         <div>
                             <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Campaign Type</dt>
@@ -487,6 +488,21 @@
                     </div>
                     @endif
 
+                    @if(!empty($campaign['targeting_keywords']))
+                    <div>
+                        <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                            Meta Keywords Targeting
+                            <span class="px-1.5 py-0.5 rounded text-[8px] font-semibold bg-blue-100 text-blue-700">CONTEXTUAL</span>
+                        </dt>
+                        <dd class="mt-1.5 flex flex-wrap gap-1.5">
+                            @foreach($campaign['targeting_keywords'] as $keyword)
+                                <span class="px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-100 text-xs font-semibold text-indigo-700">{{ $keyword }}</span>
+                            @endforeach
+                        </dd>
+                        <p class="text-[10px] text-gray-400 mt-1">This campaign will only serve on pages with matching HTML meta keywords.</p>
+                    </div>
+                    @endif
+
                     <div>
                         <dt class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Ad Formats</dt>
                         <dd class="mt-1.5">
@@ -602,6 +618,7 @@
                                 <div>
                                     <div class="text-sm font-semibold text-gray-900">{{ $pixel['name'] }}</div>
                                     <div class="text-xs font-mono text-gray-400">{{ $pixel['pixel_code'] }}</div>
+                                    <div class="text-xs text-gray-400 mt-1">{{ $pixel['advertiser_email'] ?? 'Unknown' }}</div>
                                 </div>
                             </div>
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold {{ $pixel['is_active'] ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600' }}">

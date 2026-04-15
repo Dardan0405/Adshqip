@@ -136,6 +136,7 @@ Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfTok
         Route::get('/track/pixel/{code}/pixel.js', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'fireJs'])->name('pixel.fire.js');
         Route::get('/track/pixel/{code}/pixel.gif', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'fireGif'])->name('pixel.fire.gif');
         Route::match(['get', 'post'], '/track/pixel/{code}/postback', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'firePostback'])->name('pixel.fire.postback');
+        Route::post('/track/pixel/{code}/keywords', [\App\Http\Controllers\Admin\PixelTrackerController::class, 'receiveKeywords'])->name('pixel.fire.keywords');
 
         // ─── Zone Ad Serving (obfuscated path, token-based) ───
         Route::get('/d/{token}.js', [\App\Http\Controllers\ZoneServeController::class, 'serve'])->name('zone.serve');
@@ -446,5 +447,89 @@ Route::middleware('auth')->group(function () {
         Route::get('/referral-invoices/export', [\App\Http\Controllers\Admin\ReferralInvoiceController::class, 'export'])->name('admin.referral-invoices.export');
         Route::get('/referral-invoices/{id}/download', [\App\Http\Controllers\Admin\ReferralInvoiceController::class, 'download'])->name('admin.referral-invoices.download');
         Route::patch('/referral-invoices/{id}/status', [\App\Http\Controllers\Admin\ReferralInvoiceController::class, 'updateStatus'])->name('admin.referral-invoices.update-status');
+
+        // Parent Categories (Targeting)
+        Route::get('/parent-categories', [\App\Http\Controllers\Admin\ParentCategoryController::class, 'index'])->name('admin.parent-categories');
+        Route::post('/parent-categories', [\App\Http\Controllers\Admin\ParentCategoryController::class, 'store'])->name('admin.parent-categories.store');
+        Route::put('/parent-categories/{id}', [\App\Http\Controllers\Admin\ParentCategoryController::class, 'update'])->name('admin.parent-categories.update');
+        Route::delete('/parent-categories/{id}', [\App\Http\Controllers\Admin\ParentCategoryController::class, 'destroy'])->name('admin.parent-categories.destroy');
+        Route::patch('/parent-categories/{id}/block', [\App\Http\Controllers\Admin\ParentCategoryController::class, 'block'])->name('admin.parent-categories.block');
+        Route::patch('/parent-categories/{id}/unblock', [\App\Http\Controllers\Admin\ParentCategoryController::class, 'unblock'])->name('admin.parent-categories.unblock');
+
+        // Categories (Targeting)
+        Route::get('/categories', [\App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('admin.categories');
+        Route::post('/categories', [\App\Http\Controllers\Admin\CategoryController::class, 'store'])->name('admin.categories.store');
+        Route::get('/categories/{id}', [\App\Http\Controllers\Admin\CategoryController::class, 'show'])->name('admin.categories.show');
+        Route::put('/categories/{id}', [\App\Http\Controllers\Admin\CategoryController::class, 'update'])->name('admin.categories.update');
+        Route::delete('/categories/{id}', [\App\Http\Controllers\Admin\CategoryController::class, 'destroy'])->name('admin.categories.destroy');
+        Route::patch('/categories/{id}/block', [\App\Http\Controllers\Admin\CategoryController::class, 'block'])->name('admin.categories.block');
+        Route::patch('/categories/{id}/unblock', [\App\Http\Controllers\Admin\CategoryController::class, 'unblock'])->name('admin.categories.unblock');
+
+        Route::get('/operating-systems', [\App\Http\Controllers\Admin\OperatingSystemController::class, 'index'])->name('admin.operating-systems');
+        Route::post('/operating-systems', [\App\Http\Controllers\Admin\OperatingSystemController::class, 'store'])->name('admin.operating-systems.store');
+        Route::put('/operating-systems/{id}', [\App\Http\Controllers\Admin\OperatingSystemController::class, 'update'])->name('admin.operating-systems.update');
+        Route::patch('/operating-systems/{id}/block', [\App\Http\Controllers\Admin\OperatingSystemController::class, 'block'])->name('admin.operating-systems.block');
+        Route::patch('/operating-systems/{id}/unblock', [\App\Http\Controllers\Admin\OperatingSystemController::class, 'unblock'])->name('admin.operating-systems.unblock');
+        Route::delete('/operating-systems/{id}', [\App\Http\Controllers\Admin\OperatingSystemController::class, 'destroy'])->name('admin.operating-systems.destroy');
+
+        Route::get('/browsers', [\App\Http\Controllers\Admin\BrowserController::class, 'index'])->name('admin.browsers');
+        Route::post('/browsers', [\App\Http\Controllers\Admin\BrowserController::class, 'store'])->name('admin.browsers.store');
+        Route::put('/browsers/{id}', [\App\Http\Controllers\Admin\BrowserController::class, 'update'])->name('admin.browsers.update');
+        Route::patch('/browsers/{id}/block', [\App\Http\Controllers\Admin\BrowserController::class, 'block'])->name('admin.browsers.block');
+        Route::patch('/browsers/{id}/unblock', [\App\Http\Controllers\Admin\BrowserController::class, 'unblock'])->name('admin.browsers.unblock');
+        Route::delete('/browsers/{id}', [\App\Http\Controllers\Admin\BrowserController::class, 'destroy'])->name('admin.browsers.destroy');
+
+        Route::get('/browser-languages', [\App\Http\Controllers\Admin\BrowserLanguageController::class, 'index'])->name('admin.browser-languages');
+        Route::post('/browser-languages', [\App\Http\Controllers\Admin\BrowserLanguageController::class, 'store'])->name('admin.browser-languages.store');
+        Route::put('/browser-languages/{id}', [\App\Http\Controllers\Admin\BrowserLanguageController::class, 'update'])->name('admin.browser-languages.update');
+        Route::patch('/browser-languages/{id}/block', [\App\Http\Controllers\Admin\BrowserLanguageController::class, 'block'])->name('admin.browser-languages.block');
+        Route::patch('/browser-languages/{id}/unblock', [\App\Http\Controllers\Admin\BrowserLanguageController::class, 'unblock'])->name('admin.browser-languages.unblock');
+        Route::delete('/browser-languages/{id}', [\App\Http\Controllers\Admin\BrowserLanguageController::class, 'destroy'])->name('admin.browser-languages.destroy');
+
+        Route::get('/devices', [\App\Http\Controllers\Admin\DeviceController::class, 'index'])->name('admin.devices');
+        Route::post('/devices', [\App\Http\Controllers\Admin\DeviceController::class, 'store'])->name('admin.devices.store');
+        Route::put('/devices/{id}', [\App\Http\Controllers\Admin\DeviceController::class, 'update'])->name('admin.devices.update');
+        Route::patch('/devices/{id}/block', [\App\Http\Controllers\Admin\DeviceController::class, 'block'])->name('admin.devices.block');
+        Route::patch('/devices/{id}/unblock', [\App\Http\Controllers\Admin\DeviceController::class, 'unblock'])->name('admin.devices.unblock');
+        Route::delete('/devices/{id}', [\App\Http\Controllers\Admin\DeviceController::class, 'destroy'])->name('admin.devices.destroy');
+
+        Route::get('/mobile-manufacturers', [\App\Http\Controllers\Admin\MobileManufacturerController::class, 'index'])->name('admin.mobile-manufacturers');
+        Route::post('/mobile-manufacturers', [\App\Http\Controllers\Admin\MobileManufacturerController::class, 'store'])->name('admin.mobile-manufacturers.store');
+        Route::put('/mobile-manufacturers/{id}', [\App\Http\Controllers\Admin\MobileManufacturerController::class, 'update'])->name('admin.mobile-manufacturers.update');
+        Route::patch('/mobile-manufacturers/{id}/block', [\App\Http\Controllers\Admin\MobileManufacturerController::class, 'block'])->name('admin.mobile-manufacturers.block');
+        Route::patch('/mobile-manufacturers/{id}/unblock', [\App\Http\Controllers\Admin\MobileManufacturerController::class, 'unblock'])->name('admin.mobile-manufacturers.unblock');
+        Route::delete('/mobile-manufacturers/{id}', [\App\Http\Controllers\Admin\MobileManufacturerController::class, 'destroy'])->name('admin.mobile-manufacturers.destroy');
+
+        Route::get('/mobile-capabilities', [\App\Http\Controllers\Admin\MobileCapabilityController::class, 'index'])->name('admin.mobile-capabilities');
+        Route::post('/mobile-capabilities', [\App\Http\Controllers\Admin\MobileCapabilityController::class, 'store'])->name('admin.mobile-capabilities.store');
+        Route::put('/mobile-capabilities/{id}', [\App\Http\Controllers\Admin\MobileCapabilityController::class, 'update'])->name('admin.mobile-capabilities.update');
+        Route::patch('/mobile-capabilities/{id}/block', [\App\Http\Controllers\Admin\MobileCapabilityController::class, 'block'])->name('admin.mobile-capabilities.block');
+        Route::patch('/mobile-capabilities/{id}/unblock', [\App\Http\Controllers\Admin\MobileCapabilityController::class, 'unblock'])->name('admin.mobile-capabilities.unblock');
+        Route::delete('/mobile-capabilities/{id}', [\App\Http\Controllers\Admin\MobileCapabilityController::class, 'destroy'])->name('admin.mobile-capabilities.destroy');
+
+        Route::get('/connection-types', [\App\Http\Controllers\Admin\ConnectionTypeController::class, 'index'])->name('admin.connection-types');
+        Route::post('/connection-types', [\App\Http\Controllers\Admin\ConnectionTypeController::class, 'store'])->name('admin.connection-types.store');
+        Route::put('/connection-types/{id}', [\App\Http\Controllers\Admin\ConnectionTypeController::class, 'update'])->name('admin.connection-types.update');
+        Route::patch('/connection-types/{id}/block', [\App\Http\Controllers\Admin\ConnectionTypeController::class, 'block'])->name('admin.connection-types.block');
+        Route::patch('/connection-types/{id}/unblock', [\App\Http\Controllers\Admin\ConnectionTypeController::class, 'unblock'])->name('admin.connection-types.unblock');
+        Route::delete('/connection-types/{id}', [\App\Http\Controllers\Admin\ConnectionTypeController::class, 'destroy'])->name('admin.connection-types.destroy');
+
+        Route::get('/carrier-isp-connections', [\App\Http\Controllers\Admin\CarrierIspConnectionController::class, 'index'])->name('admin.carrier-isp-connections');
+        Route::post('/carrier-isp-connections', [\App\Http\Controllers\Admin\CarrierIspConnectionController::class, 'store'])->name('admin.carrier-isp-connections.store');
+        Route::put('/carrier-isp-connections/{id}', [\App\Http\Controllers\Admin\CarrierIspConnectionController::class, 'update'])->name('admin.carrier-isp-connections.update');
+        Route::patch('/carrier-isp-connections/{id}/block', [\App\Http\Controllers\Admin\CarrierIspConnectionController::class, 'block'])->name('admin.carrier-isp-connections.block');
+        Route::patch('/carrier-isp-connections/{id}/unblock', [\App\Http\Controllers\Admin\CarrierIspConnectionController::class, 'unblock'])->name('admin.carrier-isp-connections.unblock');
+        Route::delete('/carrier-isp-connections/{id}', [\App\Http\Controllers\Admin\CarrierIspConnectionController::class, 'destroy'])->name('admin.carrier-isp-connections.destroy');
+
+        Route::get('/keywords', [\App\Http\Controllers\Admin\KeywordController::class, 'index'])->name('admin.keywords');
+        Route::get('/keywords/list-active', [\App\Http\Controllers\Admin\KeywordController::class, 'listActive'])->name('admin.keywords.list-active');
+        Route::get('/keywords/export', [\App\Http\Controllers\Admin\KeywordController::class, 'export'])->name('admin.keywords.export');
+        Route::post('/keywords', [\App\Http\Controllers\Admin\KeywordController::class, 'store'])->name('admin.keywords.store');
+        Route::post('/keywords/bulk-import', [\App\Http\Controllers\Admin\KeywordController::class, 'bulkImport'])->name('admin.keywords.bulk-import');
+        Route::get('/keywords/{id}', [\App\Http\Controllers\Admin\KeywordController::class, 'show'])->name('admin.keywords.show');
+        Route::put('/keywords/{id}', [\App\Http\Controllers\Admin\KeywordController::class, 'update'])->name('admin.keywords.update');
+        Route::patch('/keywords/{id}/block', [\App\Http\Controllers\Admin\KeywordController::class, 'block'])->name('admin.keywords.block');
+        Route::patch('/keywords/{id}/unblock', [\App\Http\Controllers\Admin\KeywordController::class, 'unblock'])->name('admin.keywords.unblock');
+        Route::delete('/keywords/{id}', [\App\Http\Controllers\Admin\KeywordController::class, 'destroy'])->name('admin.keywords.destroy');
     });
 });
