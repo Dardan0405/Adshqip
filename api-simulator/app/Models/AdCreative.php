@@ -15,6 +15,7 @@ class AdCreative extends Model
 
     protected $fillable = [
         'ad_id',
+        'display_screen_id',
         'file_path',
         'video_url',
         'file_type',
@@ -39,6 +40,11 @@ class AdCreative extends Model
     public function ad()
     {
         return $this->belongsTo(Ad::class, 'ad_id');
+    }
+
+    public function displayScreen()
+    {
+        return $this->belongsTo(DisplayScreen::class, 'display_screen_id');
     }
 
     public function getSizeAttribute(): string

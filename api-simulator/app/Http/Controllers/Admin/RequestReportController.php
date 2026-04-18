@@ -8,6 +8,8 @@ use App\Models\RequestReport;
 use App\Models\Site;
 use App\Models\User;
 use App\Models\Zone;
+use App\Models\PlatformSetting;
+use App\Support\PlatformMemcache;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -81,6 +83,8 @@ class RequestReportController extends Controller
             'status' => 'active',
         ]);
 
+        app(PlatformMemcache::class)->bumpVersion('adshqip_request_reports');
+
         return redirect()
             ->route('admin.reports.requests', $request->except('_token'))
             ->with('success', 'Recurring request report saved successfully.');
@@ -152,6 +156,7 @@ class RequestReportController extends Controller
         ]);
 
         $requestReport->update(['status' => $data['status']]);
+        app(PlatformMemcache::class)->bumpVersion('adshqip_request_reports');
 
         return redirect()->back()->with('success', 'Request status updated.');
     }
@@ -159,6 +164,7 @@ class RequestReportController extends Controller
     public function destroy(RequestReport $requestReport)
     {
         $requestReport->update(['is_deleted' => true]);
+        app(PlatformMemcache::class)->bumpVersion('adshqip_request_reports');
 
         return redirect()->back()->with('success', 'Request deleted successfully.');
     }
@@ -193,56 +199,57 @@ class RequestReportController extends Controller
 
     private function baseRows(array $filters): Collection
     {
-        $query = DB::table('aq_direct_campaign_stats as stats')
-            ->leftJoin('aq_direct_campaigns as campaigns', 'stats.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('aq_users as advertisers', 'campaigns.advertiser_id', '=', 'advertisers.id')
-            ->leftJoin('aq_user_profiles as advertiser_profiles', 'advertisers.id', '=', 'advertiser_profiles.user_id')
-            ->leftJoin('aq_zones as zones', 'stats.zone_id', '=', 'zones.id')
-            ->leftJoin('aq_sites as sites', 'zones.site_id', '=', 'sites.id')
-            ->leftJoin('aq_users as publishers', 'sites.publisher_id', '=', 'publishers.id')
-            ->leftJoin('aq_user_profiles as publisher_profiles', 'publishers.id', '=', 'publisher_profiles.user_id')
-            ->where('campaigns.is_deleted', false);
+        $builder = function () use ($filters) {
+            $query = DB::table('aq_direct_campaign_stats as stats')
+                ->leftJoin('aq_direct_campaigns as campaigns', 'stats.campaign_id', '=', 'campaigns.id')
+                ->leftJoin('aq_users as advertisers', 'campaigns.advertiser_id', '=', 'advertisers.id')
+                ->leftJoin('aq_user_profiles as advertiser_profiles', 'advertisers.id', '=', 'advertiser_profiles.user_id')
+                ->leftJoin('aq_zones as zones', 'stats.zone_id', '=', 'zones.id')
+                ->leftJoin('aq_sites as sites', 'zones.site_id', '=', 'sites.id')
+                ->leftJoin('aq_users as publishers', 'sites.publisher_id', '=', 'publishers.id')
+                ->leftJoin('aq_user_profiles as publisher_profiles', 'publishers.id', '=', 'publisher_profiles.user_id')
+                ->where('campaigns.is_deleted', false);
 
-        if (! empty($filters['search'])) {
-            $search = trim((string) $filters['search']);
-            $query->where(function ($inner) use ($search) {
-                $inner
-                    ->orWhere('campaigns.name', 'like', '%' . $search . '%')
-                    ->orWhere('campaigns.brand_name', 'like', '%' . $search . '%')
-                    ->orWhere('advertisers.email', 'like', '%' . $search . '%')
-                    ->orWhere('publishers.email', 'like', '%' . $search . '%')
-                    ->orWhere('sites.name', 'like', '%' . $search . '%')
-                    ->orWhere('zones.name', 'like', '%' . $search . '%');
-            });
-        }
-
-        if ($environment = $filters['environment'] ?? 'all') {
-            if ($environment !== 'all') {
-                $query->where('stats.device_type', $environment);
+            if (! empty($filters['search'])) {
+                $search = trim((string) $filters['search']);
+                $query->where(function ($inner) use ($search) {
+                    $inner
+                        ->orWhere('campaigns.name', 'like', '%' . $search . '%')
+                        ->orWhere('campaigns.brand_name', 'like', '%' . $search . '%')
+                        ->orWhere('advertisers.email', 'like', '%' . $search . '%')
+                        ->orWhere('publishers.email', 'like', '%' . $search . '%')
+                        ->orWhere('sites.name', 'like', '%' . $search . '%')
+                        ->orWhere('zones.name', 'like', '%' . $search . '%');
+                });
             }
-        }
 
-        foreach ([
-            'advertiser_ids' => 'campaigns.advertiser_id',
-            'campaign_ids' => 'campaigns.id',
-            'publisher_ids' => 'sites.publisher_id',
-            'site_ids' => 'sites.id',
-            'adblock_ids' => 'zones.id',
-            'country_codes' => 'stats.country_code',
-            'ad_sizes' => 'zones.size_key',
-            'revenue_types' => 'campaigns.pricing_model',
-        ] as $filterKey => $column) {
-            if (! empty($filters[$filterKey])) {
-                $query->whereIn($column, $filters[$filterKey]);
+            if ($environment = $filters['environment'] ?? 'all') {
+                if ($environment !== 'all') {
+                    $query->where('stats.device_type', $environment);
+                }
             }
-        }
 
-        $query->whereBetween('stats.date', [
-            $filters['date_from'] ?? now()->subDays(30)->toDateString(),
-            $filters['date_to'] ?? now()->toDateString(),
-        ]);
+            foreach ([
+                'advertiser_ids' => 'campaigns.advertiser_id',
+                'campaign_ids' => 'campaigns.id',
+                'publisher_ids' => 'sites.publisher_id',
+                'site_ids' => 'sites.id',
+                'adblock_ids' => 'zones.id',
+                'country_codes' => 'stats.country_code',
+                'ad_sizes' => 'zones.size_key',
+                'revenue_types' => 'campaigns.pricing_model',
+            ] as $filterKey => $column) {
+                if (! empty($filters[$filterKey])) {
+                    $query->whereIn($column, $filters[$filterKey]);
+                }
+            }
 
-        return $query->selectRaw("
+            $query->whereBetween('stats.date', [
+                $filters['date_from'] ?? now()->subDays(30)->toDateString(),
+                $filters['date_to'] ?? now()->toDateString(),
+            ]);
+
+            return $query->selectRaw("
                 stats.date,
                 campaigns.id as campaign_id,
                 campaigns.name as campaign_name,
@@ -270,7 +277,20 @@ class RequestReportController extends Controller
                 stats.fill_rate,
                 stats.adblock_detected
             ")
-            ->get();
+                ->get()
+                ->map(fn ($row) => (array) $row)
+                ->all();
+        };
+
+        $rows = app(PlatformMemcache::class)->remember(
+            'adshqip_request_reports',
+            $filters,
+            300,
+            $builder,
+            PlatformSetting::getAdshqipMemcacheEnabled()
+        );
+
+        return collect($rows)->map(fn ($row) => (object) $row);
     }
 
     private function buildSummary(Collection $rows): array

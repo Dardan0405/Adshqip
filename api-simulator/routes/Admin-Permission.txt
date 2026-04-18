@@ -1,0 +1,84 @@
+Tab Inventory: 
+Ads Campaigns: 
+Read/List,
+Add/Edit,
+Delete
+Advertisers: 
+Read/List,
+Add/Edit,
+Delete,
+Blcok/Unblock
+Campaigns Ads Creatives:
+Web/Mobile:
+Read/Preview,
+Add/Edit,
+Delete
+Mobile:
+Read/Preview,
+Add/Edit,
+Delete
+Campaigns:
+Read/List,
+Add/Edit,
+Delete
+Creatives: 
+Web/Mobile:
+Read/Preview,
+Add/Edit,
+Delete
+Mobile:
+Read/Preview,
+Add/Edit,
+Delete
+Manager Users:
+Read/List,
+Add/Edit,
+Blcok/Unblock
+Publisher:
+Read/List,
+Add/Edit,
+Delete,
+Blcok/Unblock
+Adblocks:
+Read/List,
+Add/Edit,
+Mobile SDK,
+Delete,
+Sites:
+Read/List,
+Add/Edit,
+Delete
+Tab Approvals:
+Advertiser,
+Publisher,
+Creative,
+Advertiser Payment,
+Publisher Payment
+Tab Payments:
+Advertiser Payment History,
+Publisher Payment History,
+Publisher Invoice,
+Your Balance Sheet,
+Advertiser Deposits
+Tab Reports:
+Your Revneue Related Statistics,
+View Geographical Report,
+View Enviroment Report,
+Advertiser Report,
+Publisher Report
+Tab Analystics:
+View Ant-Fraud Clicks
+Tab Targetting:
+Web:
+Category,
+Operating System,
+Browsers,
+Mobile:
+Mobile Operating System,
+Manufactures,
+Capability,
+contextual:
+Keyword
+
+
+

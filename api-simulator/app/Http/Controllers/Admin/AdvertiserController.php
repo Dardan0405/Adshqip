@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Campaign;
 use App\Models\Ad;
-use App\Models\Notification;
 use App\Models\StatDaily;
+use App\Support\MessageDeliveryManager;
+use App\Models\PlatformSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -223,19 +224,26 @@ class AdvertiserController extends Controller
     {
         $advertiser = User::where('role', 'advertiser')->where('is_deleted', false)->findOrFail($id);
 
+        if (! PlatformSetting::getAdvertiserMessagesEnabled()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Advertiser messages are disabled in app configurations.',
+            ], 422);
+        }
+
         $request->validate([
             'title'   => 'required|string|max:255',
             'message' => 'required|string',
             'type'    => 'nullable|in:success,warning,error,info,payment,campaign,system',
         ]);
 
-        Notification::create([
-            'user_id'    => $advertiser->id,
-            'type'       => $request->input('type', 'info'),
-            'title'      => $request->title,
-            'message'    => $request->message,
-            'action_url' => $request->input('action_url'),
-        ]);
+        MessageDeliveryManager::createInAppMessage(
+            $advertiser,
+            $request->title,
+            $request->message,
+            $request->input('type', 'info'),
+            $request->input('action_url'),
+        );
 
         return response()->json(['success' => true, 'message' => 'Notification sent to ' . $advertiser->email]);
     }

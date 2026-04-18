@@ -14,6 +14,7 @@ use App\Models\Zone;
 use App\Models\Site;
 use App\Models\StatDaily;
 use App\Models\User;
+use App\Support\PublisherPaymentManager;
 use Illuminate\Http\Request;
 
 class AdBlocksController extends Controller
@@ -414,6 +415,8 @@ class AdBlocksController extends Controller
             'direct_campaign_id' => 'nullable|exists:aq_direct_campaigns,id',
         ]);
 
+        $publisherPaymentManager = app(PublisherPaymentManager::class);
+
         $zone = Zone::create([
             'name' => $request->name,
             'site_id' => $request->site_id,
@@ -422,7 +425,7 @@ class AdBlocksController extends Controller
             'size_id' => null,
             'size_key' => $request->size_id,
             'placement' => $request->placement,
-            'floor_price' => $request->floor_price ?? 0,
+            'floor_price' => $publisherPaymentManager->applyMinimumFloorPrice((float) ($request->floor_price ?? 0)),
             'status' => $request->status ?? 'active',
             'target_age_min' => $request->target_age_min,
             'target_age_max' => $request->target_age_max,
@@ -454,6 +457,7 @@ class AdBlocksController extends Controller
     public function update(Request $request, $id)
     {
         $zone = Zone::where('is_deleted', false)->findOrFail($id);
+        $publisherPaymentManager = app(PublisherPaymentManager::class);
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -488,7 +492,7 @@ class AdBlocksController extends Controller
             'size_id' => $sizeId,
             'size_key' => $request->size_id,
             'placement' => $request->placement,
-            'floor_price' => $request->floor_price ?? $zone->floor_price,
+            'floor_price' => $publisherPaymentManager->applyMinimumFloorPrice((float) ($request->floor_price ?? $zone->floor_price)),
             'status' => $request->status ?? $zone->status,
             'target_age_min' => $request->target_age_min,
             'target_age_max' => $request->target_age_max,

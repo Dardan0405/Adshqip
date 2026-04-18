@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Ad;
 use App\Models\Campaign;
+use App\Models\PlatformSetting;
+use App\Models\StatDaily;
 use App\Models\Zone;
+use App\Support\AdDeliveryOptions;
+use App\Support\PlatformMemcache;
 use Illuminate\Http\Request;
 
 class ZoneServeController extends Controller
@@ -15,9 +19,50 @@ class ZoneServeController extends Controller
      */
     public function serve(Request $request, string $token)
     {
+        $deliveryOptions = app(AdDeliveryOptions::class);
+
         $zoneId = $this->decodeToken($token);
         if (!$zoneId) {
             return $this->emptyJs();
+        }
+
+        if (PlatformSetting::getReviveMemcacheEnabled()) {
+            $js = app(PlatformMemcache::class)->remember(
+                'revive_zone_serve',
+                [
+                    'zone_id' => $zoneId,
+                    'query' => $request->query(),
+                    'user_agent' => (string) $request->userAgent(),
+                ],
+                60,
+                function () use ($deliveryOptions, $request, $zoneId) {
+                    $zone = Zone::with(['site', 'directCampaignLinks.campaign'])
+                        ->where('is_deleted', false)
+                        ->where('status', 'active')
+                        ->find($zoneId);
+                    if (!$zone) {
+                        return $this->emptyJs()->getContent();
+                    }
+
+                    if (! $this->passesZoneTargeting($zone, $request)) {
+                        return $this->emptyJs()->getContent();
+                    }
+
+                    if (! $deliveryOptions->mobileAdsEnabled() && $deliveryOptions->isMobileOrTabletRequest($request)) {
+                        return $this->emptyJs()->getContent();
+                    }
+
+                    $adHtml = $this->buildAdHtml($zone);
+
+                    return $this->buildLoaderJs($zone, $adHtml);
+                },
+                true
+            );
+
+            return response($js, 200)
+                ->header('Content-Type', 'application/javascript; charset=utf-8')
+                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Access-Control-Allow-Origin', '*');
         }
 
         $zone = Zone::with(['site', 'directCampaignLinks.campaign'])
@@ -30,6 +75,10 @@ class ZoneServeController extends Controller
 
         // ── Server-side targeting enforcement ──
         if (! $this->passesZoneTargeting($zone, $request)) {
+            return $this->emptyJs();
+        }
+
+        if (! $deliveryOptions->mobileAdsEnabled() && $deliveryOptions->isMobileOrTabletRequest($request)) {
             return $this->emptyJs();
         }
 
@@ -232,13 +281,13 @@ class ZoneServeController extends Controller
 
     private function buildRegularCampaignHtml(Campaign $campaign, Zone $zone, string $width, string $height): ?string
     {
-        $ad = Ad::where('campaign_id', $campaign->id)
-            ->where('is_deleted', false)
-            ->whereNotIn('status', ['paused', 'archived'])
-            ->latest('id')
-            ->first();
+        $ad = $this->selectCampaignAd($campaign);
 
         if (! $ad) {
+            return null;
+        }
+
+        if (! PlatformSetting::getVideoAdsEnabled() && $ad->ad_type === 'video') {
             return null;
         }
 
@@ -272,6 +321,74 @@ class ZoneServeController extends Controller
         }
 
         return '<iframe src="' . e($src) . '" title="AdShqip Campaign Ad" loading="lazy" scrolling="no" allow="autoplay; fullscreen" style="' . e(implode(';', $frameStyles)) . '"></iframe>';
+    }
+
+    private function selectCampaignAd(Campaign $campaign): ?Ad
+    {
+        $ads = Ad::where('campaign_id', $campaign->id)
+            ->where('is_deleted', false)
+            ->where('status', 'active')
+            ->get();
+
+        if ($ads->isEmpty()) {
+            return null;
+        }
+
+        $minimumImpressions = PlatformSetting::getCreativeMinimumImpressionsPerDay();
+        $todayImpressions = StatDaily::query()
+            ->whereDate('date', today())
+            ->whereIn('ad_id', $ads->pluck('id'))
+            ->selectRaw('ad_id, SUM(impressions) as total_impressions')
+            ->groupBy('ad_id')
+            ->pluck('total_impressions', 'ad_id');
+
+        if ($minimumImpressions > 0) {
+            $underServed = $ads
+                ->filter(fn (Ad $ad) => (int) ($todayImpressions[$ad->id] ?? 0) < $minimumImpressions)
+                ->sort(function (Ad $left, Ad $right) use ($todayImpressions) {
+                    $leftImpressions = (int) ($todayImpressions[$left->id] ?? 0);
+                    $rightImpressions = (int) ($todayImpressions[$right->id] ?? 0);
+
+                    if ($leftImpressions !== $rightImpressions) {
+                        return $leftImpressions <=> $rightImpressions;
+                    }
+
+                    if (($left->weight ?? 0) !== ($right->weight ?? 0)) {
+                        return ($right->weight ?? 0) <=> ($left->weight ?? 0);
+                    }
+
+                    return $right->id <=> $left->id;
+                })
+                ->values();
+
+            if ($underServed->isNotEmpty()) {
+                return $underServed->first();
+            }
+        }
+
+        return $this->pickWeightedAd($ads);
+    }
+
+    private function pickWeightedAd($ads): ?Ad
+    {
+        $pool = $ads->values();
+        $totalWeight = $pool->sum(fn (Ad $ad) => max(1, (int) ($ad->weight ?? 1)));
+
+        if ($totalWeight <= 0) {
+            return $pool->sortByDesc('id')->first();
+        }
+
+        $draw = random_int(1, $totalWeight);
+        $running = 0;
+
+        foreach ($pool as $ad) {
+            $running += max(1, (int) ($ad->weight ?? 1));
+            if ($draw <= $running) {
+                return $ad;
+            }
+        }
+
+        return $pool->sortByDesc('id')->first();
     }
 
     private function buildDirectCampaignFrame(Zone $zone, int $campaignId, string $width, string $height): string
@@ -313,23 +430,30 @@ class ZoneServeController extends Controller
     {
         $zoneId = $zone->id;
         $escapedHtml = addslashes(str_replace(["\n", "\r"], '', $adHtml));
+        $autoloadEnabled = app(AdDeliveryOptions::class)->bannerAutoloadEnabled();
 
         $autoReloadJs = '';
-        if ($zone->auto_reload && $zone->reload_time && $zone->reload_time > 0) {
+        if ($autoloadEnabled && $zone->auto_reload && $zone->reload_time && $zone->reload_time > 0) {
             $autoReloadJs = "setInterval(function(){var c=document.getElementById('adshqip-zone-{$zoneId}');if(c){c.innerHTML=h;}},{$zone->reload_time}*1000);";
         }
+
+        $autoloadJs = $autoloadEnabled ? "loadZone();\n    " : '';
 
         return <<<JS
 (function(){
     var h='{$escapedHtml}';
-    var c=document.getElementById('adshqip-zone-{$zoneId}');
-    if(!c){
-        c=document.querySelector('[data-zone-id="{$zoneId}"]');
+    function loadZone(){
+        var c=document.getElementById('adshqip-zone-{$zoneId}');
+        if(!c){
+            c=document.querySelector('[data-zone-id="{$zoneId}"]');
+        }
+        if(c){
+            c.innerHTML=h;
+            c.setAttribute('data-loaded','1');
+        }
     }
-    if(c){
-        c.innerHTML=h;
-        c.setAttribute('data-loaded','1');
-    }
+    window.adshqipLoadZone{$zoneId}=loadZone;
+    {$autoloadJs}
     {$autoReloadJs}
 })();
 JS;

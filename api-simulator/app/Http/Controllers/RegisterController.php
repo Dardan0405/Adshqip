@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PlatformSetting;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Support\MessageDeliveryManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -19,7 +22,7 @@ class RegisterController extends Controller
     {
         if (auth()->check()) {
             return redirect(match (auth()->user()->role) {
-                'admin', 'manager' => '/admin',
+                'admin', 'manager', 'operational' => '/admin',
                 'publisher' => '/publisher',
                 'advertiser' => '/advertisers',
                 default => '/',
@@ -47,11 +50,16 @@ class RegisterController extends Controller
         ]);
 
         $user = DB::transaction(function () use ($request) {
+            $approvalType = $this->approvalTypeForRole($request->role);
+            $requiresEmailVerification = $approvalType === PlatformSetting::ADVERTISER_APPROVAL_EMAIL_VERIFICATION;
+            $requiresAdminApproval = $approvalType === PlatformSetting::ADVERTISER_APPROVAL_ADMIN;
+
             $user = User::create([
                 'email'         => $request->email,
                 'password_hash' => Hash::make($request->password),
                 'role'          => $request->role,
-                'status'        => 'active',
+                'status'        => $requiresAdminApproval ? 'pending_verification' : ($requiresEmailVerification ? 'inactive' : 'active'),
+                'email_verified_at' => $requiresEmailVerification ? null : now(),
                 'referral_code' => strtoupper(Str::random(8)),
             ]);
 
@@ -67,6 +75,98 @@ class RegisterController extends Controller
             return $user;
         });
 
+        $approvalType = $this->approvalTypeForRole($user->role);
+        $verificationUrl = $approvalType === PlatformSetting::ADVERTISER_APPROVAL_EMAIL_VERIFICATION
+            ? $this->verificationUrlFor($user)
+            : null;
+        $successMessage = $approvalType === PlatformSetting::ADVERTISER_APPROVAL_ADMIN
+            ? $this->adminApprovalMessageFor($user->role)
+            : ($approvalType === PlatformSetting::ADVERTISER_APPROVAL_EMAIL_VERIFICATION
+                ? $this->emailVerificationMessageFor($user->role)
+                : 'Account created successfully! Please sign in.');
+        $deliveryTitle = $approvalType === PlatformSetting::ADVERTISER_APPROVAL_ADMIN
+            ? ucfirst($user->role) . ' account pending admin approval'
+            : ($approvalType === PlatformSetting::ADVERTISER_APPROVAL_EMAIL_VERIFICATION
+                ? ucfirst($user->role) . ' account email verification'
+                : ucfirst($user->role) . ' account created');
+
+        MessageDeliveryManager::deliverRegistrationMessage(
+            $user,
+            $deliveryTitle,
+            $successMessage,
+            $verificationUrl,
+        );
+
+        if ($approvalType === PlatformSetting::ADVERTISER_APPROVAL_ADMIN) {
+            return redirect()->route('signin')->with('success', $this->adminApprovalMessageFor($user->role));
+        }
+
+        if ($approvalType === PlatformSetting::ADVERTISER_APPROVAL_EMAIL_VERIFICATION) {
+            return redirect()->route('signin')->with('success', $this->emailVerificationMessageFor($user->role))
+                ->with('verification_url', $verificationUrl);
+        }
+
         return redirect()->route('signin')->with('success', 'Account created successfully! Please sign in.');
+    }
+
+    public function verifyEmail(Request $request, int $id, string $hash)
+    {
+        $user = User::whereIn('role', ['advertiser', 'publisher'])
+            ->where('is_deleted', false)
+            ->findOrFail($id);
+
+        if (! hash_equals(sha1($user->email), $hash)) {
+            abort(403);
+        }
+
+        if (! $request->hasValidSignature()) {
+            abort(403);
+        }
+
+        $user->update([
+            'email_verified_at' => now(),
+            'status' => 'active',
+        ]);
+
+        return redirect()->route('signin')->with('success', 'Email verified successfully. You can now sign in.');
+    }
+
+    private function verificationUrlFor(User $user): string
+    {
+        return URL::temporarySignedRoute(
+            'account.email.verify',
+            now()->addHours(24),
+            [
+                'id' => $user->id,
+                'hash' => sha1($user->email),
+            ]
+        );
+    }
+
+    private function approvalTypeForRole(string $role): ?string
+    {
+        return match ($role) {
+            'advertiser' => PlatformSetting::getAdvertiserApprovalType(),
+            'publisher' => PlatformSetting::getPublisherApprovalType(),
+            default => null,
+        };
+    }
+
+    private function adminApprovalMessageFor(string $role): string
+    {
+        return match ($role) {
+            'advertiser' => 'Advertiser account created successfully. Your account is waiting for admin approval.',
+            'publisher' => 'Publisher account created successfully. Your account is waiting for admin approval.',
+            default => 'Account created successfully! Please sign in.',
+        };
+    }
+
+    private function emailVerificationMessageFor(string $role): string
+    {
+        return match ($role) {
+            'advertiser' => 'Advertiser account created successfully. Please verify your email before signing in.',
+            'publisher' => 'Publisher account created successfully. Please verify your email before signing in.',
+            default => 'Account created successfully! Please sign in.',
+        };
     }
 }

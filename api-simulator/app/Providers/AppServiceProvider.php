@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Support\AdminCurrency;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +13,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(AdminCurrency::class, function () {
+            return new AdminCurrency();
+        });
     }
 
     /**
@@ -19,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        View::composer('*', function ($view) {
+            $view->with('adminCurrency', app(AdminCurrency::class));
+        });
     }
 }

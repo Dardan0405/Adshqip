@@ -16,7 +16,7 @@ class CheckRole
             // Redirect the user to their own dashboard instead
             if ($user) {
                 $redirect = match ($user->role) {
-                    'admin', 'manager' => '/admin',
+                    'admin', 'manager', 'operational' => '/admin',
                     'advertiser'       => '/advertisers',
                     'publisher'        => '/publisher',
                     default            => '/',

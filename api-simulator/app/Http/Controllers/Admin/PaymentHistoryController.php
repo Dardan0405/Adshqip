@@ -262,11 +262,13 @@ class PaymentHistoryController extends Controller
         ];
 
         // Stream CSV
-        $callback = function () use ($collection) {
+        $currencyCode = app(\App\Support\AdminCurrency::class)->code();
+
+        $callback = function () use ($collection, $currencyCode) {
             $file = fopen('php://output', 'w');
 
             // Add CSV headers
-            fputcsv($file, ['Deposit Month', 'Advertiser Name', 'Advertiser Email', 'Deposit Amount (€)', 'Spend Amount (€)']);
+            fputcsv($file, ['Deposit Month', 'Advertiser Name', 'Advertiser Email', "Deposit Amount ({$currencyCode})", "Spend Amount ({$currencyCode})"]);
 
             // Add data rows
             foreach ($collection as $payment) {

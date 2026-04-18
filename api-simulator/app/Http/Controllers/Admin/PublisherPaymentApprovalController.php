@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Support\PublisherPaymentManager;
 use Illuminate\Http\Request;
 
 class PublisherPaymentApprovalController extends Controller
 {
     public function index(Request $request)
     {
+        app(PublisherPaymentManager::class)->syncAutoInvoices();
+
         $request->validate([
             'search' => ['nullable', 'string', 'max:255'],
             'publisher_id' => ['nullable', 'integer'],
@@ -92,6 +95,8 @@ class PublisherPaymentApprovalController extends Controller
             'paid_at' => now(),
         ]);
 
+        app(PublisherPaymentManager::class)->syncPendingPayouts();
+
         return response()->json([
             'success' => true,
             'message' => 'Publisher payment approved and marked as paid.',
@@ -100,6 +105,8 @@ class PublisherPaymentApprovalController extends Controller
 
     public function export(Request $request)
     {
+        app(PublisherPaymentManager::class)->syncAutoInvoices();
+
         $invoices = $this->buildBaseQuery($request)
             ->with('user.userProfile')
             ->orderByDesc('aq_invoices.created_at')

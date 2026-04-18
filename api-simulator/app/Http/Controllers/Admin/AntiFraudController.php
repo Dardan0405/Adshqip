@@ -106,13 +106,12 @@ class AntiFraudController extends Controller
         $endDate = $filters['end_date'] ?? now()->toDateString();
 
         try {
-            // Get fraud click count from aq_fraud_events
-            $fraudClicksQuery = DB::table('aq_fraud_events')
+            $clickEventsQuery = DB::table('aq_fraud_events')
                 ->where('event_type', 'click')
                 ->whereBetween('created_at', ["{$startDate} 00:00:00", "{$endDate} 23:59:59"]);
 
             if (!empty($filters['publisher_id'])) {
-                $fraudClicksQuery->whereIn('zone_id', function ($q) use ($filters) {
+                $clickEventsQuery->whereIn('zone_id', function ($q) use ($filters) {
                     $q->select('z.id')
                         ->from('aq_zones as z')
                         ->join('aq_sites as s', 'z.site_id', '=', 's.id')
@@ -120,7 +119,8 @@ class AntiFraudController extends Controller
                 });
             }
 
-            $fraudClicks = $fraudClicksQuery->count();
+            $fraudClicks = (clone $clickEventsQuery)->where('blocked', true)->count();
+            $validClicks = (clone $clickEventsQuery)->where('blocked', false)->count();
 
             // Get publishers flagged count
             $publishersFlagged = DB::table('aq_publisher_fraud_records')
@@ -135,9 +135,7 @@ class AntiFraudController extends Controller
                 ->whereBetween('created_at', ["{$startDate} 00:00:00", "{$endDate} 23:59:59"])
                 ->sum('flagged_clicks');
 
-            // Estimate total clicks (fraud + valid) - using stats if available
-            $totalClicks = $fraudClicks > 0 ? (int) ($fraudClicks / 0.1) : 0; // Assume ~10% fraud rate
-            $validClicks = $totalClicks - $fraudClicks;
+            $totalClicks = $fraudClicks + $validClicks;
             $fraudRate = $totalClicks > 0 ? round(($fraudClicks / $totalClicks) * 100, 2) : 0;
 
             return [
@@ -177,6 +175,7 @@ class AntiFraudController extends Controller
                 ->leftJoin('aq_sites as s', 'z.site_id', '=', 's.id')
                 ->leftJoin('aq_users as u', 's.publisher_id', '=', 'u.id')
                 ->where('fe.event_type', 'click')
+                ->where('fe.blocked', true)
                 ->whereBetween('fe.created_at', ["{$startDate} 00:00:00", "{$endDate} 23:59:59"])
                 ->select([
                     DB::raw('DATE(fe.created_at) as date'),
@@ -205,11 +204,6 @@ class AntiFraudController extends Controller
                 ->orderByDesc('date')
                 ->limit(100)
                 ->get();
-
-            // If no real data, return simulated
-            if ($result->isEmpty()) {
-                return $this->getSimulatedFraudData($filters, false);
-            }
 
             return $result;
         } catch (\Exception $e) {
@@ -258,10 +252,6 @@ class AntiFraudController extends Controller
                 ->limit(100)
                 ->get();
 
-            if ($result->isEmpty()) {
-                return $this->getSimulatedFraudData($filters, true);
-            }
-
             return $result;
         } catch (\Exception $e) {
             return $this->getSimulatedFraudData($filters, true);
@@ -295,10 +285,6 @@ class AntiFraudController extends Controller
             }
 
             $result = $query->orderByDesc('penalty_points')->limit(50)->get();
-
-            if ($result->isEmpty()) {
-                return $this->getSimulatedPenaltyData($filters);
-            }
 
             return $result;
         } catch (\Exception $e) {

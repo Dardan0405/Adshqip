@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>HostInfo — Domain & IP Intelligence Platform</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'class',theme:{extend:{colors:{brand:{50:'#eff4ff',100:'#dbe8ff',200:'#bfd4ff',500:'#0052FF',600:'#003fd6',700:'#002fa0'}}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<style>
+*,*::before,*::after{font-family:'Inter',sans-serif}
+html{scroll-behavior:smooth}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+.pulse-dot{animation:pulse-dot 2s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.float-a{animation:float 7s ease-in-out infinite}
+.float-b{animation:float 9s ease-in-out infinite reverse}
+.card-lift{transition:transform .25s,box-shadow .25s}
+.card-lift:hover{transform:translateY(-4px);box-shadow:0 16px 40px -8px rgba(0,82,255,.15)}
+.dark .card-lift:hover{box-shadow:0 16px 40px -8px rgba(0,82,255,.28)}
+.tab-btn.active{background:#0052FF;color:#fff}
+.tab-btn:not(.active){background:transparent;color:#64748b}
+.dark .tab-btn:not(.active){color:#94a3b8}
+.pricing-pop{border-color:#0052FF!important;position:relative}
+.pricing-pop::before{content:'Most Popular';position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:#0052FF;color:#fff;font-size:11px;font-weight:700;padding:3px 14px;border-radius:999px;white-space:nowrap}
+.dot-grid{background-image:radial-gradient(circle,#e2e8f0 1px,transparent 1px);background-size:24px 24px}
+.dark .dot-grid{background-image:radial-gradient(circle,#1e293b 1px,transparent 1px)}
+/* Mega menu */
+.mega-wrap{position:relative}
+.mega-drop{position:absolute;top:100%;left:50%;transform:translateX(-50%) translateY(8px);opacity:0;visibility:hidden;transition:all .2s ease;z-index:100;pointer-events:none}
+.mega-wrap:hover .mega-drop{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.mega-panel{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 25px 60px -12px rgba(0,0,0,.15);overflow:hidden}
+.dark .mega-panel{background:#111827;border-color:#1e293b;box-shadow:0 25px 60px -12px rgba(0,0,0,.5)}
+.mega-item{display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border-radius:10px;transition:background .15s}
+.mega-item:hover{background:#f1f5f9}
+.dark .mega-item:hover{background:#1e293b}
+.mega-item .mi-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+.mega-item .mi-title{font-size:13px;font-weight:600;color:#1e293b;line-height:1.3}
+.dark .mega-item .mi-title{color:#e2e8f0}
+.mega-item .mi-desc{font-size:11px;color:#94a3b8;line-height:1.4;margin-top:1px}
+/* Trusted hover */
+.trust-card{transition:all .3s;cursor:default;border:1px solid #e5e7eb;border-radius:12px;padding:14px 28px;font-weight:700;font-size:14px;color:#94a3b8;background:#fff;letter-spacing:-0.01em}
+.dark .trust-card{background:#111827;border-color:#1e293b;color:#64748b}
+.trust-card:hover{transform:translateY(-3px)}
+.trust-card:nth-child(1):hover{box-shadow:0 8px 30px rgba(0,82,255,.2);color:#0052FF;border-color:#0052FF}
+.trust-card:nth-child(2):hover{box-shadow:0 8px 30px rgba(234,88,12,.2);color:#ea580c;border-color:#ea580c}
+.trust-card:nth-child(3):hover{box-shadow:0 8px 30px rgba(5,150,105,.2);color:#059669;border-color:#059669}
+.trust-card:nth-child(4):hover{box-shadow:0 8px 30px rgba(124,58,237,.2);color:#7c3aed;border-color:#7c3aed}
+.trust-card:nth-child(5):hover{box-shadow:0 8px 30px rgba(8,145,178,.2);color:#0891b2;border-color:#0891b2}
+.trust-card:nth-child(6):hover{box-shadow:0 8px 30px rgba(219,39,119,.2);color:#db2777;border-color:#db2777}
+.trust-card:nth-child(7):hover{box-shadow:0 8px 30px rgba(220,38,38,.2);color:#dc2626;border-color:#dc2626}
+.trust-card:nth-child(8):hover{box-shadow:0 8px 30px rgba(13,148,136,.2);color:#0d9488;border-color:#0d9488}
+/* Code tabs */
+.code-tab.active{background:#0052FF;color:#fff}
+.code-tab:not(.active){background:transparent;color:#64748b}
+/* Preview tabs (hero card) */
+.preview-tab.active{background:#0052FF;color:#fff}
+.preview-tab:not(.active){background:transparent;color:#64748b}
+/* Feature icon colors */
+.fi-blue{background:#eff4ff;color:#0052FF}.dark .fi-blue{background:rgba(0,82,255,.15)}
+.fi-violet{background:#f3f0ff;color:#7c3aed}.dark .fi-violet{background:rgba(124,58,237,.15)}
+.fi-green{background:#ecfdf5;color:#059669}.dark .fi-green{background:rgba(5,150,105,.15)}
+.fi-cyan{background:#ecfeff;color:#0891b2}.dark .fi-cyan{background:rgba(8,145,178,.15)}
+.fi-orange{background:#fff7ed;color:#ea580c}.dark .fi-orange{background:rgba(234,88,12,.15)}
+.fi-pink{background:#fdf2f8;color:#db2777}.dark .fi-pink{background:rgba(219,39,119,.15)}
+.fi-red{background:#fef2f2;color:#dc2626}.dark .fi-red{background:rgba(220,38,38,.15)}
+.fi-amber{background:#fffbeb;color:#d97706}.dark .fi-amber{background:rgba(217,119,6,.15)}
+.fi-teal{background:#f0fdfa;color:#0d9488}.dark .fi-teal{background:rgba(13,148,136,.15)}
+.fi-indigo{background:#eef2ff;color:#4338ca}.dark .fi-indigo{background:rgba(67,56,202,.15)}
+.fi-rose{background:#fff1f2;color:#e11d48}.dark .fi-rose{background:rgba(225,29,72,.15)}
+.fi-sky{background:#f0f9ff;color:#0284c7}.dark .fi-sky{background:rgba(2,132,199,.15)}
+/* Search card */
+.search-card{background:linear-gradient(145deg,#ffffff 0%,#fafbff 100%)}
+.dark .search-card{background:linear-gradient(145deg,#111827 0%,#0f172a 100%)}
+/* Animated gradient text */
+.gradient-text{background:linear-gradient(90deg,#0052FF,#7c3aed,#0891b2,#0052FF);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:gradient-shift 6s ease infinite}
+@keyframes gradient-shift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+/* Glow pulse */
+.glow-pulse{animation:glow-pulse 3s ease-in-out infinite}
+@keyframes glow-pulse{0%,100%{filter:drop-shadow(0 0 20px rgba(0,82,255,.3))}50%{filter:drop-shadow(0 0 40px rgba(0,82,255,.6))}}
+/* Typing cursor */
+.typing-cursor::after{content:'|';animation:blink 1s step-end infinite;color:#0052FF}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+/* Floating shapes */
+@keyframes float-rotate{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-20px) rotate(10deg)}}
+.float-shape{animation:float-rotate 8s ease-in-out infinite}
+/* Shine effect */
+.shine-effect{position:relative;overflow:hidden}
+.shine-effect::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);animation:shine 3s infinite}
+@keyframes shine{0%{left:-100%}100%{left:100%}}
+/* Stats counter */
+.stat-number{display:inline-block}
+/* Hero grid pattern */
+.hero-grid{background-image:linear-gradient(rgba(0,82,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,82,255,.03) 1px,transparent 1px);background-size:60px 60px}
+.dark .hero-grid{background-image:linear-gradient(rgba(0,82,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,82,255,.06) 1px,transparent 1px)}
+/* Orbit animation */
+@keyframes orbit{0%{transform:rotate(0deg) translateX(150px) rotate(0deg)}100%{transform:rotate(360deg) translateX(150px) rotate(-360deg)}}
+.orbit-1{animation:orbit 20s linear infinite}
+.orbit-2{animation:orbit 25s linear infinite reverse}
+.orbit-3{animation:orbit 30s linear infinite}
+</style>
+<script>(function(){const t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')})()</script>
+</head>
+<body class="bg-white dark:bg-[#0a0f1e] text-slate-900 dark:text-white transition-colors duration-200">
+
+<!-- ─── NAV ─────────────────────────────────── -->
+<nav class="sticky top-0 z-50 bg-white/95 dark:bg-[#0a0f1e]/95 backdrop-blur-lg border-b border-slate-200/80 dark:border-slate-800">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <a href="index.html" class="flex items-center gap-4 flex-shrink-0">
+        <svg width="41" height="41" viewBox="0 0 36 36" fill="none"><path d="M29 26.5H7a6.5 6.5 0 01-1.1-12.9 8.5 8.5 0 0116.2-2.6A6 6 0 0129 15h.5a5.5 5.5 0 01.5 11.47V26.5z" fill="#0052FF"/><text x="10" y="24" font-family="Inter,sans-serif" font-weight="900" font-size="13" fill="white">Hi</text></svg>
+        <span class="text-xl font-bold tracking-tight">HostInfo</span>
+      </a>
+
+      <!-- Nav search -->
+      <div class="hidden md:flex items-center ml-4 mr-2 flex-1 max-w-sm">
+        <div class="relative w-full">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input id="nav-search" type="text" placeholder="Search domains or IPs..." onkeydown="if(event.key==='Enter'){var v=this.value.trim();if(v){var isIP=/^\d{1,3}(\.\d{1,3}){3}$/.test(v);window.location=(isIP?'ip.html':'domain.html')+'?q='+encodeURIComponent(v);}}" class="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"/>
+        </div>
+      </div>
+
+      <!-- Desktop nav -->
+      <div class="hidden lg:flex items-center gap-1">
+        <!-- Products mega -->
+        <div class="mega-wrap">
+          <button class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-brand-500 transition px-3 py-2 rounded-lg flex items-center gap-1">Products <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+          <div class="mega-drop" style="padding-top:8px">
+            <div class="mega-panel" style="width:680px">
+              <div class="grid grid-cols-2">
+                <!-- IP Data column -->
+                <div class="p-5 border-r border-slate-100 dark:border-slate-800">
+                  <p class="text-[10px] font-bold uppercase tracking-[.15em] text-slate-400 mb-3 px-3.5">IP Intelligence</p>
+                  <a href="ip-geolocation.html" class="mega-item"><div class="mi-icon fi-blue">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  </div><div><p class="mi-title">IP Geolocation</p><p class="mi-desc">City-level location data for any IP</p></div></a>
+                  <a href="asn.html" class="mega-item"><div class="mi-icon fi-violet">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                  </div><div><p class="mi-title">ASN Lookup</p><p class="mi-desc">Autonomous system & BGP routing data</p></div></a>
+                  <a href="privacy-detection.html" class="mega-item"><div class="mi-icon fi-red">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                  </div><div><p class="mi-title">Privacy Detection</p><p class="mi-desc">Detect VPNs, proxies, Tor & relays</p></div></a>
+                  <a href="residential-proxy.html" class="mega-item"><div class="mi-icon fi-orange">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4"/></svg>
+                  </div><div><p class="mi-title">Residential Proxy</p><p class="mi-desc">Behavior-based proxy detection</p></div></a>
+                  <a href="mobile-carrier.html" class="mega-item"><div class="mi-icon fi-green">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                  </div><div><p class="mi-title">Mobile Carrier</p><p class="mi-desc">Carrier name, MCC/MNC, connection type</p></div></a>
+                </div>
+                <!-- Domain & More column -->
+                <div class="p-5">
+                  <p class="text-[10px] font-bold uppercase tracking-[.15em] text-slate-400 mb-3 px-3.5">Domain & Network</p>
+                  <a href="hosted-domains.html" class="mega-item"><div class="mi-icon fi-cyan">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/></svg>
+                  </div><div><p class="mi-title">Hosted Domains</p><p class="mi-desc">All domains on any IP or server</p></div></a>
+                  <a href="ip-company.html" class="mega-item"><div class="mi-icon fi-indigo">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                  </div><div><p class="mi-title">IP to Company</p><p class="mi-desc">Identify organization behind any IP</p></div></a>
+                  <a href="abuse-contact.html" class="mega-item"><div class="mi-icon fi-rose">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  </div><div><p class="mi-title">Abuse Contact</p><p class="mi-desc">Abuse reporting contacts for any IP</p></div></a>
+                  <a href="ip-whois.html" class="mega-item"><div class="mi-icon fi-teal">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  </div><div><p class="mi-title">IP WHOIS</p><p class="mi-desc">Full WHOIS records & allocation data</p></div></a>
+                  <a href="ip-ranges.html" class="mega-item"><div class="mi-icon fi-amber">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3zm0 5h16"/></svg>
+                  </div><div><p class="mi-title">IP Ranges</p><p class="mi-desc">CIDR blocks & prefix data by ASN</p></div></a>
+                </div>
+              </div>
+              <!-- Bottom row -->
+              <div class="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 px-6 py-3 flex items-center justify-between">
+                <a href="products.html" class="text-xs font-semibold text-brand-500 hover:text-brand-600 transition">View all products &rarr;</a>
+                <span class="text-[10px] text-slate-400">15+ data endpoints available</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tools mega -->
+        <div class="mega-wrap">
+          <button class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-brand-500 transition px-3 py-2 rounded-lg flex items-center gap-1">Tools <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+          <div class="mega-drop" style="padding-top:8px">
+            <div class="mega-panel" style="width:340px">
+              <div class="p-4">
+                <a href="domain.html" class="mega-item"><div class="mi-icon fi-blue"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg></div><div><p class="mi-title">Domain Lookup</p><p class="mi-desc">DNS, WHOIS, SSL, hosting in one query</p></div></a>
+                <a href="ip.html" class="mega-item"><div class="mi-icon fi-violet"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg></div><div><p class="mi-title">IP Lookup</p><p class="mi-desc">Full intelligence report on any IP</p></div></a>
+                <a href="rankings.html" class="mega-item"><div class="mi-icon fi-amber"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div><div><p class="mi-title">Internet Rankings</p><p class="mi-desc">Top hosters, domains, TLDs & more</p></div></a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <a href="pricing.html" class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-brand-500 transition px-3 py-2 rounded-lg">Pricing</a>
+
+        <!-- Developers mega -->
+        <div class="mega-wrap">
+          <button class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-brand-500 transition px-3 py-2 rounded-lg flex items-center gap-1">Developers <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+          <div class="mega-drop" style="padding-top:8px">
+            <div class="mega-panel" style="width:340px">
+              <div class="p-4">
+                <a href="api.html" class="mega-item"><div class="mi-icon fi-blue"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg></div><div><p class="mi-title">API Documentation</p><p class="mi-desc">RESTful JSON API with 15+ endpoints</p></div></a>
+                <a href="api.html#sdks" class="mega-item"><div class="mi-icon fi-green"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div><div><p class="mi-title">SDKs & Libraries</p><p class="mi-desc">Python, Node.js, PHP, Go, Ruby, Java</p></div></a>
+                <a href="status.html" class="mega-item"><div class="mi-icon fi-teal"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><p class="mi-title">System Status</p><p class="mi-desc">Real-time uptime & latency monitoring</p></div></a>
+              </div>
+              <div class="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 px-6 py-3">
+                <a href="register.html" class="text-xs font-semibold text-brand-500 hover:text-brand-600 transition">Get free API key &rarr;</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 ml-auto">
+        <button onclick="toggleTheme()" aria-label="Toggle theme" class="relative w-[52px] h-7 rounded-full bg-slate-200 dark:bg-brand-500 transition-colors duration-300 flex-shrink-0">
+          <span class="absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center transition-transform duration-300 dark:translate-x-[26px]">
+            <svg class="w-3.5 h-3.5 text-amber-500 dark:hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/></svg>
+            <svg class="w-3.5 h-3.5 text-brand-500 hidden dark:block" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+          </span>
+        </button>
+        <a href="login.html" class="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-brand-500 transition hidden sm:inline">Sign In</a>
+        <a href="register.html" class="text-sm font-semibold bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-xl transition shadow-sm hover:shadow-lg hover:shadow-brand-500/25">Get Started</a>
+        <button onclick="toggleMenu()" class="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden lg:hidden border-t border-slate-100 dark:border-slate-800 py-3 space-y-1 text-sm">
+      <p class="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Products</p>
+      <a href="ip-geolocation.html" class="block px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">IP Geolocation</a>
+      <a href="asn.html" class="block px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">ASN Lookup</a>
+      <a href="privacy-detection.html" class="block px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">Privacy Detection</a>
+      <a href="products.html" class="block px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-brand-500 font-medium">View all products &rarr;</a>
+      <p class="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Tools</p>
+      <a href="domain.html" class="block px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">Domain Lookup</a>
+      <a href="ip.html" class="block px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">IP Lookup</a>
+      <a href="rankings.html" class="block px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">Rankings</a>
+      <p class="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">More</p>
+      <a href="pricing.html" class="block px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">Pricing</a>
+      <a href="api.html" class="block px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">API Docs</a>
+      <a href="status.html" class="block px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">Status</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ─── HERO ─────────────────────────────────── -->
+<section class="relative overflow-hidden bg-white dark:bg-[#0a0f1e] hero-grid">
+  <!-- Animated background elements -->
+  <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
+    <div class="float-a absolute -top-40 -left-40 w-[600px] h-[600px] bg-brand-500/[.08] dark:bg-brand-500/[.12] rounded-full blur-3xl"></div>
+    <div class="float-b absolute -bottom-40 -right-40 w-[600px] h-[600px] bg-indigo-400/[.06] dark:bg-indigo-500/[.10] rounded-full blur-3xl"></div>
+    <div class="float-a absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-violet-400/[.05] dark:bg-violet-500/[.08] rounded-full blur-3xl"></div>
+    <div class="float-b absolute top-1/2 left-1/3 w-[300px] h-[300px] bg-cyan-400/[.04] dark:bg-cyan-500/[.06] rounded-full blur-3xl"></div>
+    <!-- Floating shapes -->
+    <div class="float-shape absolute top-20 right-20 w-16 h-16 border-2 border-brand-500/20 rounded-xl" style="animation-delay:-2s"></div>
+    <div class="float-shape absolute bottom-32 left-16 w-12 h-12 border-2 border-violet-500/20 rounded-full" style="animation-delay:-4s"></div>
+    <div class="float-shape absolute top-1/2 right-1/3 w-8 h-8 bg-brand-500/10 rounded-lg" style="animation-delay:-6s"></div>
+    <!-- Orbiting dots -->
+    <div class="hidden lg:block absolute top-1/2 left-1/4 w-4 h-4">
+      <div class="orbit-1 absolute w-2 h-2 bg-brand-500/40 rounded-full"></div>
+      <div class="orbit-2 absolute w-1.5 h-1.5 bg-violet-500/40 rounded-full" style="animation-delay:-5s"></div>
+      <div class="orbit-3 absolute w-1 h-1 bg-cyan-500/40 rounded-full" style="animation-delay:-10s"></div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center py-20 lg:py-28">
+      <!-- LEFT -->
+      <div>
+        <div class="inline-flex items-center gap-2 bg-brand-50 dark:bg-brand-500/10 border border-brand-100 dark:border-brand-500/20 rounded-full px-4 py-1.5 text-xs font-semibold text-brand-500 dark:text-brand-200 mb-6 shine-effect">
+          <span class="w-1.5 h-1.5 bg-green-500 rounded-full pulse-dot"></span>
+          Live data &mdash; updated in real time
+        </div>
+        <h1 class="text-4xl sm:text-5xl lg:text-[3.6rem] font-black tracking-tight leading-[1.08] mb-5">
+          Understand Any<br><span class="gradient-text">Domain or IP</span>
+        </h1>
+        <p class="text-base sm:text-lg text-slate-500 dark:text-slate-400 mb-8 leading-relaxed max-w-lg">
+          Instantly look up DNS records, WHOIS, SSL certificates, hosting providers, geolocation, ASN data, and threat intelligence &mdash; all in one platform.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-wrap gap-3 mb-8">
+          <a href="register.html" class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-6 py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-brand-500/25 hover:shadow-xl hover:shadow-brand-500/30 hover:-translate-y-0.5">
+            <span>Start Free</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </a>
+          <a href="api.html" class="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-6 py-3 rounded-xl font-bold text-sm transition hover:-translate-y-0.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+            <span>View API Docs</span>
+          </a>
+        </div>
+
+        <ul class="space-y-3 mb-8">
+          <li class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300"><span class="w-5 h-5 bg-brand-50 dark:bg-brand-500/20 rounded-full flex items-center justify-center flex-shrink-0"><svg class="w-3 h-3 text-brand-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>DNS, WHOIS, SSL & hosting provider in a single lookup</li>
+          <li class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300"><span class="w-5 h-5 bg-brand-50 dark:bg-brand-500/20 rounded-full flex items-center justify-center flex-shrink-0"><svg class="w-3 h-3 text-brand-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>50M+ domains indexed, 100M+ IP records tracked</li>
+          <li class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300"><span class="w-5 h-5 bg-brand-50 dark:bg-brand-500/20 rounded-full flex items-center justify-center flex-shrink-0"><svg class="w-3 h-3 text-brand-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>Real-time threat intelligence from 10+ sources</li>
+          <li class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300"><span class="w-5 h-5 bg-brand-50 dark:bg-brand-500/20 rounded-full flex items-center justify-center flex-shrink-0"><svg class="w-3 h-3 text-brand-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>REST API with sub-200ms response time</li>
+        </ul>
+
+        <div class="grid grid-cols-4 gap-4 pt-6 border-t border-slate-200/60 dark:border-slate-800">
+          <div class="text-center sm:text-left"><p class="text-xl sm:text-2xl font-black gradient-text stat-number" data-target="50">50M+</p><p class="text-[11px] text-slate-400 mt-0.5">Domains</p></div>
+          <div class="text-center sm:text-left"><p class="text-xl sm:text-2xl font-black gradient-text stat-number" data-target="100">100M+</p><p class="text-[11px] text-slate-400 mt-0.5">IP Records</p></div>
+          <div class="text-center sm:text-left"><p class="text-xl sm:text-2xl font-black gradient-text stat-number">99.9%</p><p class="text-[11px] text-slate-400 mt-0.5">Uptime</p></div>
+          <div class="text-center sm:text-left"><p class="text-xl sm:text-2xl font-black gradient-text stat-number" data-target="5">5M+</p><p class="text-[11px] text-slate-400 mt-0.5">Queries/day</p></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: lookup + live preview card -->
+      <div class="relative">
+        <!-- Glow effect behind card -->
+        <div class="absolute -inset-4 bg-gradient-to-r from-brand-500/20 via-violet-500/20 to-cyan-500/20 rounded-3xl blur-2xl opacity-60 dark:opacity-40 glow-pulse"></div>
+        <div class="search-card relative border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl shadow-slate-300/50 dark:shadow-black/50 overflow-hidden">
+          <!-- Search area -->
+          <div class="p-4 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex gap-2 mb-2">
+              <div class="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 flex-shrink-0">
+                <button onclick="switchTab('domain')" id="tab-domain" class="tab-btn active py-1.5 px-2.5 rounded-md text-[11px] font-bold transition-all">Domain</button>
+                <button onclick="switchTab('ip')" id="tab-ip" class="tab-btn py-1.5 px-2.5 rounded-md text-[11px] font-bold transition-all">IP</button>
+              </div>
+              <div id="search-domain" class="flex gap-1.5 flex-1">
+                <input id="domain-input" type="text" value="google.com" onkeydown="if(event.key==='Enter')searchDomain()" class="flex-1 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition" placeholder="e.g. google.com"/>
+                <button onclick="searchDomain()" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition hover:shadow-lg hover:shadow-brand-500/30 flex-shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></button>
+              </div>
+              <div id="search-ip" class="flex gap-1.5 flex-1" style="display:none">
+                <input id="ip-input" type="text" placeholder="e.g. 8.8.8.8" onkeydown="if(event.key==='Enter')searchIP()" class="flex-1 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition"/>
+                <button onclick="lookupMyIP()" class="text-[10px] font-semibold text-brand-500 bg-brand-50 dark:bg-brand-500/10 px-2.5 py-2 rounded-lg border border-brand-100 dark:border-brand-500/20 flex-shrink-0 transition hover:bg-brand-100">My IP</button>
+                <button onclick="searchIP()" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition hover:shadow-lg hover:shadow-brand-500/30 flex-shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></button>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-1">
+              <button onclick="quickSearch('domain','google.com')" class="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:text-brand-500 border border-slate-200 dark:border-slate-700 text-slate-400 transition font-medium">google.com</button>
+              <button onclick="quickSearch('ip','8.8.8.8')" class="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:text-brand-500 border border-slate-200 dark:border-slate-700 text-slate-400 transition font-medium">8.8.8.8</button>
+              <button onclick="quickSearch('domain','github.com')" class="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:text-brand-500 border border-slate-200 dark:border-slate-700 text-slate-400 transition font-medium">github.com</button>
+              <button onclick="quickSearch('domain','stripe.com')" class="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:text-brand-500 border border-slate-200 dark:border-slate-700 text-slate-400 transition font-medium">stripe.com</button>
+              <button onclick="quickSearch('ip','1.1.1.1')" class="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:text-brand-500 border border-slate-200 dark:border-slate-700 text-slate-400 transition font-medium">1.1.1.1</button>
+            </div>
+          </div>
+          <!-- Preview output with tabs -->
+          <div class="bg-[#0f172a] rounded-b-2xl">
+            <div class="flex items-center gap-1 px-4 py-2 border-b border-white/5">
+              <div class="w-2.5 h-2.5 rounded-full bg-red-500/60"></div><div class="w-2.5 h-2.5 rounded-full bg-yellow-500/60"></div><div class="w-2.5 h-2.5 rounded-full bg-green-500/60"></div>
+              <div class="flex gap-0.5 ml-2">
+                <button onclick="switchPreview('json',this)" class="preview-tab active text-[10px] px-2.5 py-1 rounded font-semibold transition">Response</button>
+                <button onclick="switchPreview('curl',this)" class="preview-tab text-[10px] px-2.5 py-1 rounded font-semibold transition">cURL</button>
+                <button onclick="switchPreview('php',this)" class="preview-tab text-[10px] px-2.5 py-1 rounded font-semibold transition">PHP</button>
+                <button onclick="switchPreview('py',this)" class="preview-tab text-[10px] px-2.5 py-1 rounded font-semibold transition">Python</button>
+                <button onclick="switchPreview('node',this)" class="preview-tab text-[10px] px-2.5 py-1 rounded font-semibold transition">Node.js</button>
+              </div>
+              <span class="ml-auto text-[9px] text-slate-500 font-mono">142ms</span>
+            </div>
+            <div class="p-4 font-mono text-[11px] leading-[1.6] overflow-x-auto" style="max-height:260px">
+<pre id="preview-json" class="preview-block text-slate-300"><span class="text-slate-500">// GET /v2/domain/google.com</span>
+<span class="text-blue-400">{</span>
+  <span class="text-purple-300">"domain"</span>: <span class="text-yellow-200">"google.com"</span>,
+  <span class="text-purple-300">"ip"</span>: <span class="text-yellow-200">"142.250.185.78"</span>,
+  <span class="text-purple-300">"hosting"</span>: <span class="text-blue-400">{</span>
+    <span class="text-purple-300">"provider"</span>: <span class="text-yellow-200">"Google LLC"</span>,
+    <span class="text-purple-300">"asn"</span>: <span class="text-yellow-200">"AS15169"</span>,
+    <span class="text-purple-300">"country"</span>: <span class="text-yellow-200">"US"</span>
+  <span class="text-blue-400">}</span>,
+  <span class="text-purple-300">"dns"</span>: <span class="text-blue-400">{</span>
+    <span class="text-purple-300">"a"</span>: [<span class="text-yellow-200">"142.250.185.78"</span>],
+    <span class="text-purple-300">"mx"</span>: [<span class="text-yellow-200">"smtp.google.com"</span>],
+    <span class="text-purple-300">"ns"</span>: [<span class="text-yellow-200">"ns1.google.com"</span>, <span class="text-yellow-200">"ns2.google.com"</span>]
+  <span class="text-blue-400">}</span>,
+  <span class="text-purple-300">"ssl"</span>: <span class="text-blue-400">{</span>
+    <span class="text-purple-300">"issuer"</span>: <span class="text-yellow-200">"Google Trust Services"</span>,
+    <span class="text-purple-300">"valid"</span>: <span class="text-orange-300">true</span>,
+    <span class="text-purple-300">"expires"</span>: <span class="text-yellow-200">"2026-08-15"</span>
+  <span class="text-blue-400">}</span>,
+  <span class="text-purple-300">"whois"</span>: <span class="text-blue-400">{</span>
+    <span class="text-purple-300">"registrar"</span>: <span class="text-yellow-200">"MarkMonitor Inc."</span>,
+    <span class="text-purple-300">"created"</span>: <span class="text-yellow-200">"1997-09-15"</span>,
+    <span class="text-purple-300">"expires"</span>: <span class="text-yellow-200">"2028-09-14"</span>
+  <span class="text-blue-400">}</span>
+<span class="text-blue-400">}</span></pre>
+<pre id="preview-curl" class="preview-block text-slate-300" style="display:none"><span class="text-green-400">curl</span> -s -H <span class="text-yellow-300">"Authorization: Bearer YOUR_TOKEN"</span> \
+  <span class="text-cyan-300">https://api.hostinfo.com/v2/domain/google.com</span>
+
+<span class="text-slate-500"># Response (142ms):</span>
+<span class="text-blue-400">{</span>
+  <span class="text-purple-300">"domain"</span>: <span class="text-yellow-200">"google.com"</span>,
+  <span class="text-purple-300">"ip"</span>: <span class="text-yellow-200">"142.250.185.78"</span>,
+  <span class="text-purple-300">"hosting"</span>: <span class="text-blue-400">{</span>
+    <span class="text-purple-300">"provider"</span>: <span class="text-yellow-200">"Google LLC"</span>,
+    <span class="text-purple-300">"asn"</span>: <span class="text-yellow-200">"AS15169"</span>
+  <span class="text-blue-400">}</span>,
+  <span class="text-purple-300">"ssl"</span>: <span class="text-blue-400">{</span> <span class="text-purple-300">"valid"</span>: <span class="text-orange-300">true</span> <span class="text-blue-400">}</span>,
+  <span class="text-purple-300">"whois"</span>: <span class="text-blue-400">{</span>
+    <span class="text-purple-300">"registrar"</span>: <span class="text-yellow-200">"MarkMonitor Inc."</span>,
+    <span class="text-purple-300">"created"</span>: <span class="text-yellow-200">"1997-09-15"</span>
+  <span class="text-blue-400">}</span>
+<span class="text-blue-400">}</span></pre>
+<pre id="preview-php" class="preview-block text-slate-300" style="display:none"><span class="text-blue-400">&lt;?php</span>
+<span class="text-blue-400">$ch</span> = <span class="text-green-400">curl_init</span>();
+<span class="text-green-400">curl_setopt_array</span>(<span class="text-blue-400">$ch</span>, [
+    CURLOPT_URL =&gt; <span class="text-yellow-200">'https://api.hostinfo.com/v2/domain/google.com'</span>,
+    CURLOPT_HTTPHEADER =&gt; [
+        <span class="text-yellow-200">'Authorization: Bearer YOUR_TOKEN'</span>
+    ],
+    CURLOPT_RETURNTRANSFER =&gt; <span class="text-orange-300">true</span>
+]);
+
+<span class="text-blue-400">$response</span> = <span class="text-green-400">curl_exec</span>(<span class="text-blue-400">$ch</span>);
+<span class="text-blue-400">$data</span> = <span class="text-green-400">json_decode</span>(<span class="text-blue-400">$response</span>);
+
+<span class="text-blue-400">echo</span> <span class="text-blue-400">$data</span>-&gt;domain;   <span class="text-slate-500">// "google.com"</span>
+<span class="text-blue-400">echo</span> <span class="text-blue-400">$data</span>-&gt;ip;       <span class="text-slate-500">// "142.250.185.78"</span>
+<span class="text-blue-400">echo</span> <span class="text-blue-400">$data</span>-&gt;hosting-&gt;provider; <span class="text-slate-500">// "Google LLC"</span>
+<span class="text-blue-400">echo</span> <span class="text-blue-400">$data</span>-&gt;whois-&gt;registrar;  <span class="text-slate-500">// "MarkMonitor Inc."</span></pre>
+<pre id="preview-py" class="preview-block text-slate-300" style="display:none"><span class="text-blue-400">import</span> requests
+
+r = requests.<span class="text-green-400">get</span>(
+    <span class="text-yellow-200">'https://api.hostinfo.com/v2/domain/google.com'</span>,
+    headers={<span class="text-purple-300">'Authorization'</span>: <span class="text-yellow-200">'Bearer YOUR_TOKEN'</span>}
+)
+data = r.<span class="text-green-400">json</span>()
+
+<span class="text-blue-400">print</span>(data[<span class="text-yellow-200">'domain'</span>])             <span class="text-slate-500"># google.com</span>
+<span class="text-blue-400">print</span>(data[<span class="text-yellow-200">'ip'</span>])                 <span class="text-slate-500"># 142.250.185.78</span>
+<span class="text-blue-400">print</span>(data[<span class="text-yellow-200">'hosting'</span>][<span class="text-yellow-200">'provider'</span>]) <span class="text-slate-500"># Google LLC</span>
+<span class="text-blue-400">print</span>(data[<span class="text-yellow-200">'ssl'</span>][<span class="text-yellow-200">'valid'</span>])        <span class="text-slate-500"># True</span>
+<span class="text-blue-400">print</span>(data[<span class="text-yellow-200">'whois'</span>][<span class="text-yellow-200">'created'</span>])   <span class="text-slate-500"># 1997-09-15</span></pre>
+<pre id="preview-node" class="preview-block text-slate-300" style="display:none"><span class="text-blue-400">const</span> res = <span class="text-blue-400">await</span> <span class="text-green-400">fetch</span>(
+  <span class="text-yellow-200">'https://api.hostinfo.com/v2/domain/google.com'</span>,
+  <span class="text-blue-400">{</span>
+    headers: <span class="text-blue-400">{</span>
+      <span class="text-purple-300">'Authorization'</span>: <span class="text-yellow-200">'Bearer YOUR_TOKEN'</span>
+    <span class="text-blue-400">}</span>
+  <span class="text-blue-400">}</span>
+);
+<span class="text-blue-400">const</span> data = <span class="text-blue-400">await</span> res.<span class="text-green-400">json</span>();
+
+console.<span class="text-green-400">log</span>(data.domain);           <span class="text-slate-500">// google.com</span>
+console.<span class="text-green-400">log</span>(data.ip);               <span class="text-slate-500">// 142.250.185.78</span>
+console.<span class="text-green-400">log</span>(data.hosting.provider);  <span class="text-slate-500">// Google LLC</span>
+console.<span class="text-green-400">log</span>(data.ssl.valid);         <span class="text-slate-500">// true</span></pre>
+            </div>
+          </div>
+          <div class="bg-[#0a0f1e] px-4 py-2 flex items-center gap-3 text-[10px] text-slate-500 border-t border-white/5">
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>Operational</span>
+            <span>&middot;</span><span>&lt;200ms</span><span>&middot;</span><span class="text-slate-400">google.com</span><span>&middot;</span>
+            <a href="register.html" class="text-brand-500 font-semibold hover:underline ml-auto">Free API key &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── TRUSTED BY ────────────────────────────── -->
+<section class="py-12 border-y border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0d1424]">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <p class="text-center text-[11px] font-bold uppercase tracking-[.15em] text-slate-400 mb-7">Trusted by security teams and developers at</p>
+    <div class="flex flex-wrap justify-center gap-3">
+      <div class="trust-card">Cloudflare</div>
+      <div class="trust-card">Amazon Web Services</div>
+      <div class="trust-card">DigitalOcean</div>
+      <div class="trust-card">Stripe</div>
+      <div class="trust-card">GitHub</div>
+      <div class="trust-card">Vercel</div>
+      <div class="trust-card">Shopify</div>
+      <div class="trust-card">Twilio</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FEATURES (12 cards) ───────────────────── -->
+<section id="features" class="py-20 bg-white dark:bg-[#0a0f1e]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-14">
+      <p class="text-xs font-bold uppercase tracking-[.15em] text-brand-500 mb-2">Platform Capabilities</p>
+      <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-3">Everything You Need for IP & Domain Intelligence</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">From basic WHOIS lookups to advanced threat detection, HostInfo provides a complete toolkit for understanding internet infrastructure.</p>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div class="card-lift bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
+        <div class="w-10 h-10 fi-blue rounded-xl flex items-center justify-center mb-3"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+        <h3 class="font-bold text-sm mb-1">IP Geolocation</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">City-level accuracy for 4.2B+ IPv4 addresses. Country, region, postal code, coordinates, timezone, and accuracy radius.</p>
+      </div>
+      <div class="card-lift bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
+        <div class="w-10 h-10 fi-violet rounded-xl flex items-center justify-center mb-3"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>
+        <h3 class="font-bold text-sm mb-1">ASN & BGP Data</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">100K+ autonomous systems tracked. ASN name, type, route, peers, prefixes, and organizational details.</p>
+      </div>
+      <div class="card-lift bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
+        <div class="w-10 h-10 fi-red rounded-xl flex items-center justify-center mb-3"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
+        <h3 class="font-bold text-sm mb-1">Privacy Detection</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Detect VPNs, proxies, Tor exit nodes, and relay services. 300+ providers identified with &lt;0.1% false positive rate.</p>
+      </div>
+      <div class="card-lift bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
+        <div class="w-10 h-10 fi-green rounded-xl flex items-center justify-center mb-3"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+        <h3 class="font-bold text-sm mb-1">WHOIS Records</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Parsed WHOIS for domains and IPs. Registrar, registration dates, nameservers, and ownership data with historical tracking.</p>
+      </div>
+      <div class="card-lift bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
+        <div class="w-10 h-10 fi-cyan rounded-xl flex items-center justify-center mb-3"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/></svg></div>
+        <h3 class="font-bold text-sm mb-1">DNS Records</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Full DNS resolution: A, AAAA, MX, CNAME, TXT, NS, SOA, SRV, and CAA records with TTL and propagation status.</p>
+      </div>
+      <div class="card-lift bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
+        <div class="w-10 h-10 fi-orange rounded-xl flex items-center justify-center mb-3"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></div>
+        <h3 class="font-bold text-sm mb-1">SSL Certificates</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Certificate details, issuer chain, validity period, SAN entries, protocol support, and security grade assessment.</p>
+      </div>
+      <div class="card-lift bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
+        <div class="w-10 h-10 fi-pink rounded-xl flex items-center justify-center mb-3"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4"/></svg></div>
+        <h3 class="font-bold text-sm mb-1">Residential Proxy</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Behavior-based residential proxy detection with confidence scoring, ISP mismatch signals, and rotation tracking.</p>
+      </div>
+      <div class="card-lift bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
+        <div class="w-10 h-10 fi-indigo rounded-xl flex items-center justify-center mb-3"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div>
+        <h3 class="font-bold text-sm mb-1">IP to Company</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Identify the organization behind any IP. Company name, domain, industry, size, and type classification for B2B intelligence.</p>
+      </div>
+      <div class="card-lift bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
+        <div class="w-10 h-10 fi-teal rounded-xl flex items-center justify-center mb-3"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div>
+        <h3 class="font-bold text-sm mb-1">Mobile Carrier</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Identify carrier name, MCC/MNC codes, and connection type. 1,000+ carriers tracked with 98% accuracy on mobile IPs.</p>
+      </div>
+      <div class="card-lift bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
+        <div class="w-10 h-10 fi-amber rounded-xl flex items-center justify-center mb-3"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div>
+        <h3 class="font-bold text-sm mb-1">Internet Rankings</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Top hosters, domains, TLDs, registrars, and backlinks. Updated daily from our index of 500M+ domains.</p>
+      </div>
+      <div class="card-lift bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
+        <div class="w-10 h-10 fi-rose rounded-xl flex items-center justify-center mb-3"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+        <h3 class="font-bold text-sm mb-1">Abuse Contact</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Get abuse reporting contacts, network registrar data, and operator info from all 5 Regional Internet Registries.</p>
+      </div>
+      <div class="card-lift bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
+        <div class="w-10 h-10 fi-sky rounded-xl flex items-center justify-center mb-3"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg></div>
+        <h3 class="font-bold text-sm mb-1">Hosted Domains</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Reverse IP lookup to find all domains on any server. 500M+ domains indexed with historical hosting data.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PRODUCTS (tiers) ──────────────────────── -->
+<section class="py-20 bg-slate-50 dark:bg-[#0d1424]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12">
+      <p class="text-xs font-bold uppercase tracking-[.15em] text-brand-500 mb-2">Data Products</p>
+      <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-3">The Right IP Data, Delivered</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">From free basics to full-stack intelligence. Choose the tier that fits your needs.</p>
+    </div>
+    <div class="grid md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex flex-col">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Lite</p>
+        <p class="text-2xl font-black text-slate-900 dark:text-white mb-0.5">Free</p>
+        <p class="text-[11px] text-slate-400 mb-4">Forever &middot; No credit card</p>
+        <p class="text-3xl font-black text-brand-200 dark:text-slate-700 mb-0.5">7</p><p class="text-[10px] text-slate-400 mb-4">data attributes</p>
+        <ul class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400 mb-5 flex-1">
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>50K requests/month</li>
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>Country-level geolocation</li>
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>Basic ASN data</li>
+          <li class="flex gap-1.5"><span class="text-slate-300 dark:text-slate-600 flex-shrink-0">&ndash;</span>City-level accuracy</li>
+        </ul>
+        <a href="register.html" class="block text-center border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 py-2 rounded-xl text-xs font-bold transition">Start Free</a>
+      </div>
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex flex-col">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Core</p>
+        <p class="text-2xl font-black text-slate-900 dark:text-white mb-0.5">$49<span class="text-sm font-medium text-slate-400">/mo</span></p>
+        <p class="text-[11px] text-slate-400 mb-4">For growing apps</p>
+        <p class="text-3xl font-black text-indigo-300 dark:text-indigo-500/50 mb-0.5">16</p><p class="text-[10px] text-slate-400 mb-4">data attributes</p>
+        <ul class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400 mb-5 flex-1">
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>500K requests/month</li>
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>City-level geolocation</li>
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>VPN/proxy detection</li>
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>Carrier data</li>
+        </ul>
+        <a href="register.html" class="block text-center bg-brand-50 dark:bg-brand-500/10 hover:bg-brand-100 text-brand-500 py-2 rounded-xl text-xs font-bold transition">Start Trial</a>
+      </div>
+      <div class="card-lift bg-white dark:bg-[#111827] border-2 rounded-2xl p-5 flex flex-col pricing-pop shadow-xl shadow-brand-500/10">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Plus</p>
+        <p class="text-2xl font-black text-brand-500 mb-0.5">$149<span class="text-sm font-medium text-slate-400">/mo</span></p>
+        <p class="text-[11px] text-slate-400 mb-4">For scaling businesses</p>
+        <p class="text-3xl font-black text-brand-500/30 mb-0.5">32</p><p class="text-[10px] text-slate-400 mb-4">data attributes</p>
+        <ul class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400 mb-5 flex-1">
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>2M requests/month</li>
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>Named anonymizers</li>
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>Geo radius accuracy</li>
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>Webhooks & priority support</li>
+        </ul>
+        <a href="register.html" class="block text-center bg-brand-500 hover:bg-brand-600 text-white py-2 rounded-xl text-xs font-bold transition hover:shadow-lg hover:shadow-brand-500/30">Start Trial</a>
+      </div>
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex flex-col">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Max</p>
+        <p class="text-2xl font-black text-slate-900 dark:text-white mb-0.5">$299<span class="text-sm font-medium text-slate-400">/mo</span></p>
+        <p class="text-[11px] text-slate-400 mb-4">Full visibility</p>
+        <p class="text-3xl font-black text-violet-300 dark:text-violet-500/40 mb-0.5">35</p><p class="text-[10px] text-slate-400 mb-4">data attributes</p>
+        <ul class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400 mb-5 flex-1">
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>10M requests/month</li>
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>Residential proxy signals</li>
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>Advanced risk scoring</li>
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>24/7 support + SLA</li>
+        </ul>
+        <a href="pricing.html" class="block text-center bg-brand-50 dark:bg-brand-500/10 hover:bg-brand-100 text-brand-500 py-2 rounded-xl text-xs font-bold transition">Learn more</a>
+      </div>
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex flex-col">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Enterprise</p>
+        <p class="text-2xl font-black text-slate-900 dark:text-white mb-0.5">Custom</p>
+        <p class="text-[11px] text-slate-400 mb-4">Tailored for scale</p>
+        <p class="text-3xl font-black text-teal-300 dark:text-teal-500/40 mb-0.5">40+</p><p class="text-[10px] text-slate-400 mb-4">data attributes</p>
+        <ul class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400 mb-5 flex-1">
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>Unlimited requests</li>
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>Private routing</li>
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>Custom data blends</li>
+          <li class="flex gap-1.5"><span class="text-green-500 flex-shrink-0">&#10003;</span>Dedicated infrastructure</li>
+        </ul>
+        <a href="pricing.html" class="block text-center border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 py-2 rounded-xl text-xs font-bold transition">Contact Sales</a>
+      </div>
+    </div>
+    <div class="text-center mt-6">
+      <a href="pricing.html" class="text-sm font-semibold text-brand-500 hover:text-brand-600 transition">Compare all plans in detail &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── RANKINGS ──────────────────────────────── -->
+<section class="py-20 bg-white dark:bg-[#0a0f1e]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-end justify-between mb-10">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-[.15em] text-brand-500 mb-1">Live Data</p>
+        <h2 class="text-3xl md:text-4xl font-black tracking-tight">Internet Rankings</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Updated daily from our index of 500M+ domains</p>
+      </div>
+      <a href="rankings.html" class="text-sm font-semibold text-brand-500 hover:text-brand-600 transition hidden sm:inline-block">View all rankings &rarr;</a>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <!-- Top Hosters -->
+      <div class="bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+        <div class="px-5 pt-5 pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <h3 class="font-bold text-sm flex items-center gap-2"><svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/></svg>Top Hosters</h3>
+          <span class="text-[10px] text-slate-400 font-medium">by domains hosted</span>
+        </div>
+        <div class="divide-y divide-slate-100 dark:divide-slate-800">
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">1</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">amazon.com</span><span class="text-slate-400 tabular-nums">146,350,023</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">2</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">cloudflare.com</span><span class="text-slate-400 tabular-nums">69,228,721</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">3</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">ascenty.com</span><span class="text-slate-400 tabular-nums">36,257,398</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">4</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">google.com</span><span class="text-slate-400 tabular-nums">25,053,130</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">5</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">sedo.de</span><span class="text-slate-400 tabular-nums">18,669,649</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">6</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">ionos.com</span><span class="text-slate-400 tabular-nums">13,475,433</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">7</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">hostinger.com</span><span class="text-slate-400 tabular-nums">12,995,197</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">8</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">linode.com</span><span class="text-slate-400 tabular-nums">11,098,820</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">9</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">squarespace.com</span><span class="text-slate-400 tabular-nums">10,794,435</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">10</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">wix.com</span><span class="text-slate-400 tabular-nums">9,847,331</span></div>
+        </div>
+        <a href="rankings.html" class="block text-center text-xs text-brand-500 font-semibold py-3 border-t border-slate-100 dark:border-slate-800 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition">View all hosters &rarr;</a>
+      </div>
+      <!-- Top Backlinks -->
+      <div class="bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+        <div class="px-5 pt-5 pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <h3 class="font-bold text-sm flex items-center gap-2"><svg class="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>Top Backlinks</h3>
+          <span class="text-[10px] text-slate-400 font-medium">by backlink count</span>
+        </div>
+        <div class="divide-y divide-slate-100 dark:divide-slate-800">
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">1</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">facebook.com</span><span class="text-slate-400 tabular-nums">36,806,904</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">2</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">instagram.com</span><span class="text-slate-400 tabular-nums">30,954,463</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">3</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">twitter.com</span><span class="text-slate-400 tabular-nums">14,192,464</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">4</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">google.com</span><span class="text-slate-400 tabular-nums">12,631,163</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">5</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">linkedin.com</span><span class="text-slate-400 tabular-nums">12,132,933</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">6</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">youtube.com</span><span class="text-slate-400 tabular-nums">12,119,779</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">7</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">sedo.com</span><span class="text-slate-400 tabular-nums">9,846,597</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">8</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">godaddy.com</span><span class="text-slate-400 tabular-nums">6,222,077</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">9</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">wordpress.org</span><span class="text-slate-400 tabular-nums">5,307,798</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">10</span><span class="flex-1 font-medium text-slate-700 dark:text-slate-300">hostinger.com</span><span class="text-slate-400 tabular-nums">5,071,355</span></div>
+        </div>
+        <a href="rankings.html" class="block text-center text-xs text-brand-500 font-semibold py-3 border-t border-slate-100 dark:border-slate-800 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition">View all backlinks &rarr;</a>
+      </div>
+      <!-- Top TLDs -->
+      <div class="bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+        <div class="px-5 pt-5 pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <h3 class="font-bold text-sm flex items-center gap-2"><svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>Top TLDs</h3>
+          <span class="text-[10px] text-slate-400 font-medium">by domain count</span>
+        </div>
+        <div class="divide-y divide-slate-100 dark:divide-slate-800">
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">1</span><span class="flex-1 font-mono font-medium text-slate-700 dark:text-slate-300">.com</span><span class="text-slate-400 tabular-nums">231,767,900</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">2</span><span class="flex-1 font-mono font-medium text-slate-700 dark:text-slate-300">.tk</span><span class="text-slate-400 tabular-nums">35,301,020</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">3</span><span class="flex-1 font-mono font-medium text-slate-700 dark:text-slate-300">.cn</span><span class="text-slate-400 tabular-nums">26,370,952</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">4</span><span class="flex-1 font-mono font-medium text-slate-700 dark:text-slate-300">.de</span><span class="text-slate-400 tabular-nums">25,110,581</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">5</span><span class="flex-1 font-mono font-medium text-slate-700 dark:text-slate-300">.net</span><span class="text-slate-400 tabular-nums">17,303,170</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">6</span><span class="flex-1 font-mono font-medium text-slate-700 dark:text-slate-300">.org</span><span class="text-slate-400 tabular-nums">15,507,324</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">7</span><span class="flex-1 font-mono font-medium text-slate-700 dark:text-slate-300">.ru</span><span class="text-slate-400 tabular-nums">14,779,170</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">8</span><span class="flex-1 font-mono font-medium text-slate-700 dark:text-slate-300">.xyz</span><span class="text-slate-400 tabular-nums">12,960,206</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">9</span><span class="flex-1 font-mono font-medium text-slate-700 dark:text-slate-300">.cf</span><span class="text-slate-400 tabular-nums">11,054,482</span></div>
+          <div class="flex items-center px-5 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition text-xs"><span class="w-6 text-slate-400 font-bold">10</span><span class="flex-1 font-mono font-medium text-slate-700 dark:text-slate-300">.co.uk</span><span class="text-slate-400 tabular-nums">11,004,148</span></div>
+        </div>
+        <a href="rankings.html" class="block text-center text-xs text-brand-500 font-semibold py-3 border-t border-slate-100 dark:border-slate-800 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition">View all TLDs &rarr;</a>
+      </div>
+    </div>
+    <div class="text-center mt-6 sm:hidden">
+      <a href="rankings.html" class="text-sm font-semibold text-brand-500 hover:text-brand-600 transition">View all rankings &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── USE CASES ─────────────────────────────── -->
+<section class="py-20 bg-slate-50 dark:bg-[#0d1424]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-14">
+      <p class="text-xs font-bold uppercase tracking-[.15em] text-brand-500 mb-2">Who Uses HostInfo</p>
+      <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-3">Built for Every Team</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">From security operations to digital marketing, HostInfo delivers the intelligence every team needs.</p>
+    </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div class="w-11 h-11 fi-red rounded-xl flex items-center justify-center mb-4"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></div>
+        <h3 class="font-bold mb-2">Security Teams</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">Investigate suspicious IPs, map attack surfaces, and identify threats with real-time intelligence feeds.</p>
+        <ul class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <li class="flex gap-2"><span class="text-red-500">&#8226;</span>Threat actor IP investigation</li>
+          <li class="flex gap-2"><span class="text-red-500">&#8226;</span>Proxy & VPN detection for SOC</li>
+          <li class="flex gap-2"><span class="text-red-500">&#8226;</span>Abuse reporting & contact lookup</li>
+        </ul>
+      </div>
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div class="w-11 h-11 fi-violet rounded-xl flex items-center justify-center mb-4"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
+        <h3 class="font-bold mb-2">Fraud Prevention</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">Stop fraudulent signups, detect account takeovers, and score risk in real time at the network edge.</p>
+        <ul class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <li class="flex gap-2"><span class="text-violet-500">&#8226;</span>VPN/TOR/proxy detection at signup</li>
+          <li class="flex gap-2"><span class="text-violet-500">&#8226;</span>Residential proxy identification</li>
+          <li class="flex gap-2"><span class="text-violet-500">&#8226;</span>Device & IP risk scoring</li>
+        </ul>
+      </div>
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div class="w-11 h-11 fi-blue rounded-xl flex items-center justify-center mb-4"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg></div>
+        <h3 class="font-bold mb-2">Developers & DevOps</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">RESTful API with consistent JSON, SDKs for 6 languages, and sub-200ms latency for production workloads.</p>
+        <ul class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <li class="flex gap-2"><span class="text-brand-500">&#8226;</span>Simple token-based auth</li>
+          <li class="flex gap-2"><span class="text-brand-500">&#8226;</span>Bulk lookup endpoints</li>
+          <li class="flex gap-2"><span class="text-brand-500">&#8226;</span>Webhook integrations</li>
+        </ul>
+      </div>
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div class="w-11 h-11 fi-green rounded-xl flex items-center justify-center mb-4"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg></div>
+        <h3 class="font-bold mb-2">Domain Investors</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">Deep WHOIS data, registrar history, expiry alerts, and domain valuation signals for portfolio management.</p>
+        <ul class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <li class="flex gap-2"><span class="text-green-500">&#8226;</span>WHOIS history & change tracking</li>
+          <li class="flex gap-2"><span class="text-green-500">&#8226;</span>Expiry date monitoring</li>
+          <li class="flex gap-2"><span class="text-green-500">&#8226;</span>Backlink & traffic signals</li>
+        </ul>
+      </div>
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div class="w-11 h-11 fi-pink rounded-xl flex items-center justify-center mb-4"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div>
+        <h3 class="font-bold mb-2">Digital Marketers</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">Competitor domain profiling, backlink analysis, technology stack detection, and SEO intelligence.</p>
+        <ul class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <li class="flex gap-2"><span class="text-pink-500">&#8226;</span>Competitor hosting analysis</li>
+          <li class="flex gap-2"><span class="text-pink-500">&#8226;</span>Backlink profiling</li>
+          <li class="flex gap-2"><span class="text-pink-500">&#8226;</span>Technology fingerprinting</li>
+        </ul>
+      </div>
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div class="w-11 h-11 fi-cyan rounded-xl flex items-center justify-center mb-4"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>
+        <h3 class="font-bold mb-2">Network Engineers</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">ASN data, IP prefix lists, BGP routing analysis, and CIDR block ownership for network infrastructure.</p>
+        <ul class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <li class="flex gap-2"><span class="text-cyan-500">&#8226;</span>BGP peer & prefix data</li>
+          <li class="flex gap-2"><span class="text-cyan-500">&#8226;</span>IP range ownership</li>
+          <li class="flex gap-2"><span class="text-cyan-500">&#8226;</span>Route origin validation</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── API SECTION ───────────────────────────── -->
+<section class="py-20 bg-white dark:bg-[#0a0f1e]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid lg:grid-cols-2 gap-14 items-center">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-[.15em] text-brand-500 mb-3">Developer API</p>
+        <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-4">Powerful API, Simple Integration</h2>
+        <p class="text-slate-500 dark:text-slate-400 mb-6 text-sm leading-relaxed">Clean JSON responses, sub-200ms latency, single API key authentication. No OAuth complexity. Scale from prototype to production with the same key.</p>
+        <ul class="space-y-3 mb-7">
+          <li class="flex items-center gap-3 text-sm"><span class="w-5 h-5 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center text-green-600 text-xs flex-shrink-0">&#10003;</span>15+ RESTful endpoints with consistent JSON schema</li>
+          <li class="flex items-center gap-3 text-sm"><span class="w-5 h-5 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center text-green-600 text-xs flex-shrink-0">&#10003;</span>Bulk and batch endpoints for mass lookups</li>
+          <li class="flex items-center gap-3 text-sm"><span class="w-5 h-5 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center text-green-600 text-xs flex-shrink-0">&#10003;</span>Webhook support for asynchronous workflows</li>
+          <li class="flex items-center gap-3 text-sm"><span class="w-5 h-5 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center text-green-600 text-xs flex-shrink-0">&#10003;</span>SDKs: Python, Node.js, PHP, Go, Ruby, Java</li>
+          <li class="flex items-center gap-3 text-sm"><span class="w-5 h-5 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center text-green-600 text-xs flex-shrink-0">&#10003;</span>99.9% uptime SLA with global edge network</li>
+        </ul>
+        <div class="flex gap-3">
+          <a href="register.html" class="inline-block bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-xl font-semibold transition text-sm hover:shadow-lg hover:shadow-brand-500/30">Get API Key &rarr;</a>
+          <a href="api.html" class="inline-block border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 px-5 py-2.5 rounded-xl font-semibold transition text-sm">View Docs</a>
+        </div>
+      </div>
+      <div class="bg-[#0f172a] rounded-2xl overflow-hidden shadow-2xl">
+        <div class="flex items-center gap-1.5 px-5 py-3 border-b border-white/5">
+          <div class="w-3 h-3 rounded-full bg-red-500/70"></div><div class="w-3 h-3 rounded-full bg-yellow-500/70"></div><div class="w-3 h-3 rounded-full bg-green-500/70"></div>
+          <div class="flex gap-1 ml-3">
+            <button onclick="switchCode('curl',this)" class="code-tab active text-xs px-3 py-1 rounded-lg font-medium transition">cURL</button>
+            <button onclick="switchCode('js',this)" class="code-tab text-xs px-3 py-1 rounded-lg font-medium transition">JavaScript</button>
+            <button onclick="switchCode('py',this)" class="code-tab text-xs px-3 py-1 rounded-lg font-medium transition">Python</button>
+            <button onclick="switchCode('php',this)" class="code-tab text-xs px-3 py-1 rounded-lg font-medium transition">PHP</button>
+            <button onclick="switchCode('go',this)" class="code-tab text-xs px-3 py-1 rounded-lg font-medium transition">Go</button>
+          </div>
+        </div>
+        <div class="p-5 font-mono text-xs leading-relaxed overflow-x-auto">
+          <pre id="code-curl" class="code-block text-slate-300"><span class="text-slate-500"># Full IP intelligence lookup</span>
+<span class="text-green-400">curl</span> -H <span class="text-yellow-300">"Authorization: Bearer YOUR_TOKEN"</span> \
+  <span class="text-cyan-300">https://api.hostinfo.com/v2/ip/8.8.8.8</span>
+
+<span class="text-blue-400">{</span>
+  <span class="text-purple-300">"ip"</span>: <span class="text-yellow-200">"8.8.8.8"</span>,
+  <span class="text-purple-300">"city"</span>: <span class="text-yellow-200">"Mountain View"</span>,
+  <span class="text-purple-300">"region"</span>: <span class="text-yellow-200">"California"</span>,
+  <span class="text-purple-300">"country"</span>: <span class="text-yellow-200">"US"</span>,
+  <span class="text-purple-300">"org"</span>: <span class="text-yellow-200">"Google LLC"</span>,
+  <span class="text-purple-300">"asn"</span>: <span class="text-yellow-200">"AS15169"</span>,
+  <span class="text-purple-300">"privacy"</span>: <span class="text-blue-400">{</span> <span class="text-purple-300">"vpn"</span>: <span class="text-orange-300">false</span>, <span class="text-purple-300">"proxy"</span>: <span class="text-orange-300">false</span> <span class="text-blue-400">}</span>,
+  <span class="text-purple-300">"abuse"</span>: <span class="text-blue-400">{</span> <span class="text-purple-300">"email"</span>: <span class="text-yellow-200">"network-abuse@google.com"</span> <span class="text-blue-400">}</span>
+<span class="text-blue-400">}</span></pre>
+          <pre id="code-js" class="code-block text-slate-300" style="display:none"><span class="text-blue-400">const</span> res = <span class="text-blue-400">await</span> <span class="text-green-400">fetch</span>(
+  <span class="text-yellow-200">'https://api.hostinfo.com/v2/ip/8.8.8.8'</span>,
+  <span class="text-blue-400">{</span>
+    headers: <span class="text-blue-400">{</span>
+      <span class="text-purple-300">'Authorization'</span>: <span class="text-yellow-200">'Bearer YOUR_TOKEN'</span>
+    <span class="text-blue-400">}</span>
+  <span class="text-blue-400">}</span>
+);
+<span class="text-blue-400">const</span> data = <span class="text-blue-400">await</span> res.<span class="text-green-400">json</span>();
+console.<span class="text-green-400">log</span>(data.city);    <span class="text-slate-500">// "Mountain View"</span>
+console.<span class="text-green-400">log</span>(data.org);     <span class="text-slate-500">// "Google LLC"</span>
+console.<span class="text-green-400">log</span>(data.privacy); <span class="text-slate-500">// { vpn: false, proxy: false }</span></pre>
+          <pre id="code-py" class="code-block text-slate-300" style="display:none"><span class="text-blue-400">import</span> requests
+
+r = requests.<span class="text-green-400">get</span>(
+    <span class="text-yellow-200">'https://api.hostinfo.com/v2/ip/8.8.8.8'</span>,
+    headers={<span class="text-purple-300">'Authorization'</span>: <span class="text-yellow-200">'Bearer YOUR_TOKEN'</span>}
+)
+data = r.<span class="text-green-400">json</span>()
+<span class="text-blue-400">print</span>(data[<span class="text-yellow-200">'city'</span>])     <span class="text-slate-500"># Mountain View</span>
+<span class="text-blue-400">print</span>(data[<span class="text-yellow-200">'org'</span>])      <span class="text-slate-500"># Google LLC</span>
+<span class="text-blue-400">print</span>(data[<span class="text-yellow-200">'privacy'</span>])  <span class="text-slate-500"># {"vpn": false, "proxy": false}</span></pre>
+          <pre id="code-php" class="code-block text-slate-300" style="display:none"><span class="text-blue-400">$ch</span> = <span class="text-green-400">curl_init</span>(<span class="text-yellow-200">'https://api.hostinfo.com/v2/ip/8.8.8.8'</span>);
+<span class="text-green-400">curl_setopt</span>(<span class="text-blue-400">$ch</span>, CURLOPT_HTTPHEADER, [
+    <span class="text-yellow-200">'Authorization: Bearer YOUR_TOKEN'</span>
+]);
+<span class="text-green-400">curl_setopt</span>(<span class="text-blue-400">$ch</span>, CURLOPT_RETURNTRANSFER, <span class="text-orange-300">true</span>);
+<span class="text-blue-400">$data</span> = <span class="text-green-400">json_decode</span>(<span class="text-green-400">curl_exec</span>(<span class="text-blue-400">$ch</span>));
+<span class="text-blue-400">echo</span> <span class="text-blue-400">$data</span>->city;  <span class="text-slate-500">// Mountain View</span>
+<span class="text-blue-400">echo</span> <span class="text-blue-400">$data</span>->org;   <span class="text-slate-500">// Google LLC</span></pre>
+          <pre id="code-go" class="code-block text-slate-300" style="display:none"><span class="text-blue-400">package</span> main
+<span class="text-blue-400">import</span> (
+    <span class="text-yellow-200">"fmt"</span>
+    <span class="text-yellow-200">"net/http"</span>
+    <span class="text-yellow-200">"io"</span>
+)
+<span class="text-blue-400">func</span> <span class="text-green-400">main</span>() {
+    req, _ := http.<span class="text-green-400">NewRequest</span>(<span class="text-yellow-200">"GET"</span>,
+        <span class="text-yellow-200">"https://api.hostinfo.com/v2/ip/8.8.8.8"</span>, <span class="text-orange-300">nil</span>)
+    req.Header.<span class="text-green-400">Set</span>(<span class="text-yellow-200">"Authorization"</span>, <span class="text-yellow-200">"Bearer YOUR_TOKEN"</span>)
+    resp, _ := http.DefaultClient.<span class="text-green-400">Do</span>(req)
+    body, _ := io.<span class="text-green-400">ReadAll</span>(resp.Body)
+    fmt.<span class="text-green-400">Println</span>(<span class="text-green-400">string</span>(body))
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── TESTIMONIALS ──────────────────────────── -->
+<section class="py-20 bg-slate-50 dark:bg-[#0d1424]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-14">
+      <p class="text-xs font-bold uppercase tracking-[.15em] text-brand-500 mb-2">What People Say</p>
+      <h2 class="text-3xl md:text-4xl font-black tracking-tight">Trusted by 10,000+ Developers & Teams</h2>
+    </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div class="flex gap-0.5 mb-3"><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">"HostInfo replaced three separate data vendors for us. The unified API saved us thousands per month and the data accuracy is measurably better."</p>
+        <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">AM</div><div><p class="text-sm font-bold">Alex Mueller</p><p class="text-xs text-slate-400">CTO, FinSecure GmbH</p></div></div>
+      </div>
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div class="flex gap-0.5 mb-3"><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">"Sub-200ms API responses every single time, even under peak load. Integrating threat intelligence into our SIEM pipeline took hours, not weeks."</p>
+        <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-full bg-violet-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">SK</div><div><p class="text-sm font-bold">Sarah Kim</p><p class="text-xs text-slate-400">Security Engineer, CrowdLayer</p></div></div>
+      </div>
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div class="flex gap-0.5 mb-3"><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">"Best free tier in the industry. We ran our entire MVP on the free plan before upgrading. Zero friction to get started and no surprises when we scaled."</p>
+        <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">DL</div><div><p class="text-sm font-bold">David Lawson</p><p class="text-xs text-slate-400">VP Engineering, RapidScale</p></div></div>
+      </div>
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div class="flex gap-0.5 mb-3"><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">"The WHOIS data freshness is unmatched. I can track expiring domains and get registrar change alerts faster than any other provider I've tried."</p>
+        <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-full bg-amber-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">MP</div><div><p class="text-sm font-bold">Maria Petrova</p><p class="text-xs text-slate-400">Domain Investor, DomainVault</p></div></div>
+      </div>
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div class="flex gap-0.5 mb-3"><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">"Privacy detection accuracy is incredible &mdash; 99.4% precision on proxy detection. Our fraud losses dropped 60% in the first quarter after integration."</p>
+        <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">JR</div><div><p class="text-sm font-bold">James Reeves</p><p class="text-xs text-slate-400">Fraud Analyst, PayGuard</p></div></div>
+      </div>
+      <div class="card-lift bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <div class="flex gap-0.5 mb-3"><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">"The ranked domain data is gold for competitive research. We use HostInfo rankings daily to track hoster market share and identify new opportunities."</p>
+        <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-full bg-pink-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">YT</div><div><p class="text-sm font-bold">Yuki Tanaka</p><p class="text-xs text-slate-400">Digital Marketing Lead, NexusAds</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── COMPARISON TABLE ──────────────────────── -->
+<section class="py-20 bg-white dark:bg-[#0a0f1e]">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12">
+      <p class="text-xs font-bold uppercase tracking-[.15em] text-brand-500 mb-2">Why HostInfo</p>
+      <h2 class="text-3xl md:text-4xl font-black tracking-tight mb-3">How We Compare</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto">The most comprehensive IP &amp; domain intelligence platform, at a fraction of the cost.</p>
+    </div>
+    <div class="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 dark:bg-slate-800/50">
+            <tr>
+              <th class="text-left px-5 py-3.5 font-bold text-slate-700 dark:text-slate-300 min-w-[180px]">Feature</th>
+              <th class="px-5 py-3.5 font-bold text-brand-500 min-w-[100px]">HostInfo</th>
+              <th class="px-5 py-3.5 font-medium text-slate-400 min-w-[100px]">IPinfo</th>
+              <th class="px-5 py-3.5 font-medium text-slate-400 min-w-[100px]">SecurityTrails</th>
+              <th class="px-5 py-3.5 font-medium text-slate-400 min-w-[100px]">host.io</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+            <tr><td class="px-5 py-3 text-slate-600 dark:text-slate-300 font-medium">IP Geolocation</td><td class="px-5 py-3 text-center text-green-500 font-bold">&#10003;</td><td class="px-5 py-3 text-center text-green-500">&#10003;</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td></tr>
+            <tr class="bg-slate-50/50 dark:bg-slate-800/20"><td class="px-5 py-3 text-slate-600 dark:text-slate-300 font-medium">Privacy / VPN Detection</td><td class="px-5 py-3 text-center text-green-500 font-bold">&#10003;</td><td class="px-5 py-3 text-center text-green-500">&#10003;</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td></tr>
+            <tr><td class="px-5 py-3 text-slate-600 dark:text-slate-300 font-medium">Domain WHOIS</td><td class="px-5 py-3 text-center text-green-500 font-bold">&#10003;</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td><td class="px-5 py-3 text-center text-green-500">&#10003;</td><td class="px-5 py-3 text-center text-green-500">&#10003;</td></tr>
+            <tr class="bg-slate-50/50 dark:bg-slate-800/20"><td class="px-5 py-3 text-slate-600 dark:text-slate-300 font-medium">ASN / BGP Data</td><td class="px-5 py-3 text-center text-green-500 font-bold">&#10003;</td><td class="px-5 py-3 text-center text-green-500">&#10003;</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td></tr>
+            <tr><td class="px-5 py-3 text-slate-600 dark:text-slate-300 font-medium">DNS Records</td><td class="px-5 py-3 text-center text-green-500 font-bold">&#10003;</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td><td class="px-5 py-3 text-center text-green-500">&#10003;</td><td class="px-5 py-3 text-center text-green-500">&#10003;</td></tr>
+            <tr class="bg-slate-50/50 dark:bg-slate-800/20"><td class="px-5 py-3 text-slate-600 dark:text-slate-300 font-medium">SSL Certificate Analysis</td><td class="px-5 py-3 text-center text-green-500 font-bold">&#10003;</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td><td class="px-5 py-3 text-center text-green-500">&#10003;</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td></tr>
+            <tr><td class="px-5 py-3 text-slate-600 dark:text-slate-300 font-medium">Threat Intelligence</td><td class="px-5 py-3 text-center text-green-500 font-bold">&#10003;</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td><td class="px-5 py-3 text-center text-green-500">&#10003;</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td></tr>
+            <tr class="bg-slate-50/50 dark:bg-slate-800/20"><td class="px-5 py-3 text-slate-600 dark:text-slate-300 font-medium">Hosted Domains (Reverse IP)</td><td class="px-5 py-3 text-center text-green-500 font-bold">&#10003;</td><td class="px-5 py-3 text-center text-green-500">&#10003;</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td><td class="px-5 py-3 text-center text-green-500">&#10003;</td></tr>
+            <tr><td class="px-5 py-3 text-slate-600 dark:text-slate-300 font-medium">Internet Rankings</td><td class="px-5 py-3 text-center text-green-500 font-bold">&#10003;</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td><td class="px-5 py-3 text-center text-green-500">&#10003;</td></tr>
+            <tr class="bg-slate-50/50 dark:bg-slate-800/20"><td class="px-5 py-3 text-slate-600 dark:text-slate-300 font-medium">Free Tier</td><td class="px-5 py-3 text-center text-green-500 font-bold">50K/mo</td><td class="px-5 py-3 text-center text-green-500">50K/mo</td><td class="px-5 py-3 text-center text-slate-300 dark:text-slate-600">&ndash;</td><td class="px-5 py-3 text-center text-green-500">1K/mo</td></tr>
+            <tr><td class="px-5 py-3 text-slate-600 dark:text-slate-300 font-medium">API Response Time</td><td class="px-5 py-3 text-center text-green-500 font-semibold">&lt;200ms</td><td class="px-5 py-3 text-center text-slate-400">~250ms</td><td class="px-5 py-3 text-center text-slate-400">~400ms</td><td class="px-5 py-3 text-center text-slate-400">~600ms</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA BANNER ────────────────────────────── -->
+<section class="py-20 relative overflow-hidden" style="background:linear-gradient(135deg,#0052FF 0%,#003fd6 60%,#002fa0 100%)">
+  <div class="absolute inset-0 pointer-events-none"><div class="absolute -top-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div><div class="absolute -bottom-20 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div></div>
+  <div class="max-w-3xl mx-auto px-4 text-center relative z-10">
+    <h2 class="text-3xl md:text-4xl font-black text-white mb-3">Start Building in Minutes</h2>
+    <p class="text-blue-100 mb-4 text-sm">Free tier with 50,000 requests/month. No credit card required.</p>
+    <p class="text-blue-200 mb-8 text-xs">Join 10,000+ developers and security teams using HostInfo for domain &amp; IP intelligence.</p>
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="register.html" class="bg-white text-brand-500 hover:bg-blue-50 px-7 py-3.5 rounded-xl font-bold transition text-sm shadow-lg">Create Free Account</a>
+      <a href="api.html" class="border-2 border-white/40 hover:border-white text-white px-7 py-3.5 rounded-xl font-bold transition text-sm">View API Docs</a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ────────────────────────────────── -->
+<footer class="bg-slate-950 text-slate-400">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
+      <!-- Brand -->
+      <div class="col-span-2">
+        <a href="index.html" class="flex items-center gap-2.5 mb-4">
+          <svg width="30" height="30" viewBox="0 0 36 36" fill="none"><path d="M29 26.5H7a6.5 6.5 0 01-1.1-12.9 8.5 8.5 0 0116.2-2.6A6 6 0 0129 15h.5a5.5 5.5 0 01.5 11.47V26.5z" fill="#0052FF"/><text x="10" y="24" font-family="Inter,sans-serif" font-weight="900" font-size="13" fill="white">Hi</text></svg>
+          <span class="text-base font-bold text-white">HostInfo</span>
+        </a>
+        <p class="text-xs leading-relaxed mb-5 max-w-xs">The most comprehensive domain &amp; IP intelligence platform for security, devops, and marketing professionals worldwide.</p>
+        <div class="flex gap-3 mb-5">
+          <a href="#" class="hover:text-white transition" aria-label="Twitter"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+          <a href="#" class="hover:text-white transition" aria-label="GitHub"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a>
+          <a href="#" class="hover:text-white transition" aria-label="LinkedIn"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+          <a href="#" class="hover:text-white transition" aria-label="Discord"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286z"/></svg></a>
+        </div>
+        <div class="flex gap-2">
+          <span class="text-[10px] px-2 py-1 bg-slate-900 border border-slate-800 rounded font-medium">SOC 2</span>
+          <span class="text-[10px] px-2 py-1 bg-slate-900 border border-slate-800 rounded font-medium">GDPR</span>
+          <span class="text-[10px] px-2 py-1 bg-slate-900 border border-slate-800 rounded font-medium">99.9% SLA</span>
+        </div>
+      </div>
+      <!-- IP Data -->
+      <div>
+        <h4 class="text-white font-semibold text-xs uppercase tracking-wider mb-4">IP Data</h4>
+        <ul class="space-y-2.5 text-xs">
+          <li><a href="ip-geolocation.html" class="hover:text-white transition">IP Geolocation</a></li>
+          <li><a href="asn.html" class="hover:text-white transition">ASN Lookup</a></li>
+          <li><a href="privacy-detection.html" class="hover:text-white transition">Privacy Detection</a></li>
+          <li><a href="residential-proxy.html" class="hover:text-white transition">Residential Proxy</a></li>
+          <li><a href="mobile-carrier.html" class="hover:text-white transition">Mobile Carrier</a></li>
+          <li><a href="ip-company.html" class="hover:text-white transition">IP to Company</a></li>
+          <li><a href="abuse-contact.html" class="hover:text-white transition">Abuse Contact</a></li>
+          <li><a href="ip-whois.html" class="hover:text-white transition">IP WHOIS</a></li>
+          <li><a href="ip-ranges.html" class="hover:text-white transition">IP Ranges</a></li>
+          <li><a href="hosted-domains.html" class="hover:text-white transition">Hosted Domains</a></li>
+        </ul>
+      </div>
+      <!-- Tools -->
+      <div>
+        <h4 class="text-white font-semibold text-xs uppercase tracking-wider mb-4">Tools</h4>
+        <ul class="space-y-2.5 text-xs">
+          <li><a href="domain.html" class="hover:text-white transition">Domain Lookup</a></li>
+          <li><a href="ip.html" class="hover:text-white transition">IP Lookup</a></li>
+          <li><a href="rankings.html" class="hover:text-white transition">Internet Rankings</a></li>
+          <li><a href="products.html" class="hover:text-white transition">All Products</a></li>
+          <li><a href="api.html" class="hover:text-white transition">API Explorer</a></li>
+        </ul>
+      </div>
+      <!-- Developers -->
+      <div>
+        <h4 class="text-white font-semibold text-xs uppercase tracking-wider mb-4">Developers</h4>
+        <ul class="space-y-2.5 text-xs">
+          <li><a href="api.html" class="hover:text-white transition">API Documentation</a></li>
+          <li><a href="api.html#sdks" class="hover:text-white transition">SDKs &amp; Libraries</a></li>
+          <li><a href="status.html" class="hover:text-white transition">System Status</a></li>
+          <li><a href="pricing.html" class="hover:text-white transition">Pricing</a></li>
+          <li><a href="register.html" class="hover:text-white transition">Get API Key</a></li>
+        </ul>
+      </div>
+      <!-- Company -->
+      <div>
+        <h4 class="text-white font-semibold text-xs uppercase tracking-wider mb-4">Company</h4>
+        <ul class="space-y-2.5 text-xs">
+          <li><a href="about.html" class="hover:text-white transition">About Us</a></li>
+          <li><a href="blog.html" class="hover:text-white transition">Blog</a></li>
+          <li><a href="contact.html" class="hover:text-white transition">Contact</a></li>
+          <li><a href="login.html" class="hover:text-white transition">Sign In</a></li>
+          <li><a href="register.html" class="hover:text-white transition">Register</a></li>
+          <li class="pt-2 border-t border-slate-800"><a href="#" class="hover:text-white transition">Privacy Policy</a></li>
+          <li><a href="#" class="hover:text-white transition">Terms of Service</a></li>
+          <li><a href="#" class="hover:text-white transition">Cookie Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-slate-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs">
+      <p>&copy; 2026 HostInfo. All rights reserved.</p>
+      <p class="text-slate-500">Built for the open internet &mdash; Domain &amp; IP intelligence platform.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+function switchTab(t){
+  document.getElementById('tab-domain').classList.toggle('active',t==='domain');
+  document.getElementById('tab-ip').classList.toggle('active',t==='ip');
+  document.getElementById('search-domain').style.display=t==='domain'?'flex':'none';
+  document.getElementById('search-ip').style.display=t==='ip'?'flex':'none';
+}
+function searchDomain(){const v=document.getElementById('domain-input').value.trim();if(v)window.location='domain.html?q='+encodeURIComponent(v);}
+function searchIP(){const v=document.getElementById('ip-input').value.trim();if(v)window.location='ip.html?q='+encodeURIComponent(v);}
+function lookupMyIP(){axios.get('https://api.ipify.org?format=json').then(r=>{document.getElementById('ip-input').value=r.data.ip;switchTab('ip');});}
+function quickSearch(t,v){if(t==='domain'){document.getElementById('domain-input').value=v;switchTab('domain');}else{document.getElementById('ip-input').value=v;switchTab('ip');}}
+function toggleTheme(){document.documentElement.classList.toggle('dark');localStorage.setItem('theme',document.documentElement.classList.contains('dark')?'dark':'light');}
+function toggleMenu(){document.getElementById('mobile-menu').classList.toggle('hidden');}
+function switchCode(lang,btn){
+  document.querySelectorAll('.code-block').forEach(b=>b.style.display='none');
+  document.querySelectorAll('.code-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('code-'+lang).style.display='block';
+  btn.classList.add('active');
+}
+function switchPreview(lang,btn){
+  document.querySelectorAll('.preview-block').forEach(b=>b.style.display='none');
+  document.querySelectorAll('.preview-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('preview-'+lang).style.display='block';
+  btn.classList.add('active');
+}
+// Animated counter on scroll
+function animateCounters(){
+  const counters=document.querySelectorAll('.stat-number[data-target]');
+  counters.forEach(counter=>{
+    const target=parseInt(counter.dataset.target);
+    const suffix=counter.textContent.replace(/[\d.]+/,'');
+    let current=0;
+    const increment=target/40;
+    const timer=setInterval(()=>{
+      current+=increment;
+      if(current>=target){current=target;clearInterval(timer);}
+      counter.textContent=Math.floor(current)+suffix;
+    },50);
+  });
+}
+// Trigger on scroll into view
+const heroObserver=new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){animateCounters();heroObserver.disconnect();}
+  });
+},{threshold:0.3});
+document.querySelectorAll('.stat-number').length&&heroObserver.observe(document.querySelector('.stat-number'));
+// Parallax effect on mouse move (subtle)
+document.addEventListener('mousemove',(e)=>{
+  const shapes=document.querySelectorAll('.float-shape');
+  const x=(e.clientX/window.innerWidth-0.5)*20;
+  const y=(e.clientY/window.innerHeight-0.5)*20;
+  shapes.forEach((shape,i)=>{
+    const factor=(i+1)*0.3;
+    shape.style.transform=`translate(${x*factor}px,${y*factor}px)`;
+  });
+});
+</script>
+</body>
+</html>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PublisherEarning;
+use App\Support\PublisherPaymentManager;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -12,6 +13,8 @@ class PublisherEarningsController extends Controller
 {
     public function index(Request $request)
     {
+        app(PublisherPaymentManager::class)->syncAutoInvoices();
+
         $request->validate([
             'start_month' => ['nullable', 'date_format:Y-m'],
             'end_month' => ['nullable', 'date_format:Y-m'],

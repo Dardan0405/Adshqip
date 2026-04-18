@@ -209,11 +209,13 @@ class PublisherPaymentHistoryController extends Controller
         ];
 
         // Stream CSV
-        $callback = function () use ($collection) {
+        $currencyCode = app(\App\Support\AdminCurrency::class)->code();
+
+        $callback = function () use ($collection, $currencyCode) {
             $file = fopen('php://output', 'w');
 
             // Add CSV headers
-            fputcsv($file, ['Invoice Period', 'Publisher Name', 'Publisher Email', 'Earnings (€)']);
+            fputcsv($file, ['Invoice Period', 'Publisher Name', 'Publisher Email', "Earnings ({$currencyCode})"]);
 
             // Add data rows
             foreach ($collection as $payment) {

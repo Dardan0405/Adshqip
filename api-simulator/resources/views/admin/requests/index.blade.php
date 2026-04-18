@@ -17,7 +17,7 @@
                 ['label' => 'Approved', 'value' => number_format($approvedCount), 'color' => 'text-emerald-700', 'bg' => 'bg-emerald-50', 'border' => 'border-emerald-200'],
                 ['label' => 'Pending', 'value' => number_format($pendingCount), 'color' => 'text-amber-700', 'bg' => 'bg-amber-50', 'border' => 'border-amber-200'],
                 ['label' => 'Rejected', 'value' => number_format($rejectedCount), 'color' => 'text-red-700', 'bg' => 'bg-red-50', 'border' => 'border-red-200'],
-                ['label' => 'Budget', 'value' => 'EUR ' . number_format($totalBudget, 2), 'color' => 'text-blue-700', 'bg' => 'bg-blue-50', 'border' => 'border-blue-200'],
+                ['label' => 'Budget', 'value' => $adminCurrency->format($totalBudget), 'color' => 'text-blue-700', 'bg' => 'bg-blue-50', 'border' => 'border-blue-200'],
             ];
         @endphp
 
@@ -106,7 +106,7 @@
                                     {{ $statusBadge['label'] }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-right font-semibold text-blue-700">EUR {{ number_format((float) $requestItem->approval_budget, 2) }}</td>
+                            <td class="px-4 py-3 text-right font-semibold text-blue-700">{{ $adminCurrency->format((float) $requestItem->approval_budget) }}</td>
                             <td class="px-4 py-3 text-center">
                                 @if($requestItem->status === 'pending_review')
                                     <div class="inline-flex items-center gap-1.5 flex-wrap justify-center">

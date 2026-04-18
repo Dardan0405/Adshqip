@@ -18,12 +18,35 @@ class UserProfile extends Model
         'user_id',
         'first_name',
         'last_name',
+        'gender',
+        'date_of_birth',
+        'mobile_number',
+        'alternative_email',
         'company_name',
+        'company_address_line1',
+        'company_address_line2',
+        'company_city',
+        'company_state_region',
+        'company_country_code',
         'phone',
+        'address_line1',
+        'address_line2',
+        'city',
+        'state_region',
         'country_code',
+        'postal_code',
+        'vat_number',
         'website_url',
+        'avatar_url',
         'currency',
+        'payment_method',
+        'payment_details',
         'balance',
+    ];
+
+    protected $casts = [
+        'date_of_birth' => 'date',
+        'payment_details' => 'array',
     ];
 
     public function user()

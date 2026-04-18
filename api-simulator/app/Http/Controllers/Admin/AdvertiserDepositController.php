@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdvertiserDeposit;
+use App\Models\PlatformSetting;
 use App\Models\User;
+use App\Support\AdvertiserPaymentManager;
 use Illuminate\Http\Request;
 
 class AdvertiserDepositController extends Controller
@@ -42,13 +44,7 @@ class AdvertiserDepositController extends Controller
             ->orderBy('email')
             ->get();
 
-        $paymentTypes = [
-            'stripe' => 'Stripe',
-            'paypal' => 'PayPal',
-            'coinbase' => 'Coinbase',
-            'wire_transfer' => 'Wire Transfer',
-            'manual' => 'Manual',
-        ];
+        $paymentTypes = PlatformSetting::getAdvertiserPaymentTypes();
 
         $statuses = [
             'completed' => 'Completed',
@@ -142,7 +138,16 @@ class AdvertiserDepositController extends Controller
         }
 
         if ($paymentType = $request->get('payment_type')) {
-            $query->where('aq_transactions.payment_gateway', $paymentType);
+            $normalized = app(AdvertiserPaymentManager::class)->normalizePaymentType($paymentType);
+            $legacyMap = [
+                PlatformSetting::ADVERTISER_PAYMENT_STRIPE => ['stripe', 'credit_card'],
+                PlatformSetting::ADVERTISER_PAYMENT_AUTHORIZE => ['authorize'],
+                PlatformSetting::ADVERTISER_PAYMENT_BITCOIN => ['bitcoin', 'crypto', 'coinbase'],
+                PlatformSetting::ADVERTISER_PAYMENT_WIRE_TRANSFER => ['wire_transfer', 'manual'],
+                PlatformSetting::ADVERTISER_PAYMENT_PAYPAL => ['paypal'],
+            ];
+
+            $query->whereIn('aq_transactions.payment_gateway', $legacyMap[$normalized] ?? [$normalized]);
         }
 
         if ($status = $request->get('status')) {

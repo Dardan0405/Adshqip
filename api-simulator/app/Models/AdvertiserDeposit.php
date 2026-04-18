@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\AdvertiserPaymentManager;
 use Illuminate\Database\Eloquent\Model;
 
 class AdvertiserDeposit extends Model
@@ -77,9 +78,9 @@ class AdvertiserDeposit extends Model
 
     public function getPaymentTypeLabelAttribute(): string
     {
-        $value = $this->payment_gateway ?: optional($this->paymentMethod)->type ?: 'manual';
+        $value = $this->payment_gateway ?: optional($this->paymentMethod)->type ?: PlatformSetting::getAdvertiserPaymentType();
 
-        return str_replace('_', ' ', ucfirst($value));
+        return app(AdvertiserPaymentManager::class)->paymentTypeLabel($value);
     }
 
     public function getStatusBadgeAttribute(): array

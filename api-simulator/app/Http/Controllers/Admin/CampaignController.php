@@ -12,9 +12,11 @@ use App\Models\BrowserLanguage;
 use App\Models\CarrierIspConnection;
 use App\Models\ConnectionType;
 use App\Models\Device;
+use App\Models\DisplayScreen;
 use App\Models\MobileManufacturer;
 use App\Models\OperatingSystem;
 use App\Models\PixelTracker;
+use App\Models\PlatformSetting;
 use App\Models\StatDaily;
 use App\Models\User;
 use App\Models\Zone;
@@ -22,9 +24,73 @@ use App\Models\Category;
 use App\Models\Keyword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
 
 class CampaignController extends Controller
 {
+    private function getActiveDisplayScreens(): array
+    {
+        return DisplayScreen::query()
+            ->where('status', 'active')
+            ->orderBy('screen_name')
+            ->get()
+            ->map(function (DisplayScreen $screen) {
+                return [
+                    'id' => $screen->id,
+                    'screen_name' => $screen->screen_name,
+                    'value' => $screen->value,
+                    'width' => $screen->width,
+                    'height' => $screen->height,
+                    'dimension' => $screen->width . 'x' . $screen->height,
+                    'label' => $screen->screen_name . ' (' . $screen->width . 'x' . $screen->height . ')',
+                ];
+            })
+            ->toArray();
+    }
+
+    private function campaignSettings(): array
+    {
+        return [
+            'minimum_budget' => PlatformSetting::getCampaignMinimumBudget(),
+            'minimum_bid_rate' => PlatformSetting::getCampaignMinimumBidRate(),
+            'creative_type' => PlatformSetting::getCampaignCreativeType(),
+        ];
+    }
+
+    private function campaignCreativeDefaultGroup(): string
+    {
+        return match (PlatformSetting::getCampaignCreativeType()) {
+            PlatformSetting::CAMPAIGN_CREATIVE_TYPE_VIDEO,
+            PlatformSetting::CAMPAIGN_CREATIVE_TYPE_VAST => 'display_video',
+            PlatformSetting::CAMPAIGN_CREATIVE_TYPE_TEXT,
+            PlatformSetting::CAMPAIGN_CREATIVE_TYPE_RICH_MEDIA,
+            PlatformSetting::CAMPAIGN_CREATIVE_TYPE_NATIVE => 'special_web',
+            default => 'display_web',
+        };
+    }
+
+    private function validateCampaignPayload(Request $request, array $rules): array
+    {
+        $minimumBudget = PlatformSetting::getCampaignMinimumBudget();
+        $minimumBidRate = PlatformSetting::getCampaignMinimumBidRate();
+
+        $validator = Validator::make($request->all(), $rules);
+
+        $validator->after(function ($validator) use ($request, $minimumBudget, $minimumBidRate) {
+            $totalBudget = $request->input('total_budget');
+            if ($totalBudget !== null && $totalBudget !== '' && is_numeric($totalBudget) && (float) $totalBudget < $minimumBudget) {
+                $validator->errors()->add('total_budget', 'The total budget must be at least ' . number_format($minimumBudget, 2) . '.');
+            }
+
+            $bidAmount = $request->input('bid_amount');
+            if ($bidAmount !== null && $bidAmount !== '' && is_numeric($bidAmount) && (float) $bidAmount < $minimumBidRate) {
+                $validator->errors()->add('bid_amount', 'The bid amount must be at least ' . number_format($minimumBidRate, 4) . '.');
+            }
+        });
+
+        return $validator->validate();
+    }
+
     private function getAvailableZones(): array
     {
         return Zone::with('site')
@@ -585,6 +651,9 @@ class CampaignController extends Controller
             'deviceTypes' => $deviceTargeting['deviceTypes'],
             'devicesByType' => $deviceTargeting['devicesByType'],
             'keywords' => $this->getKeywords(),
+            'campaignSettings' => $this->campaignSettings(),
+            'defaultAdTypeGroup' => $this->campaignCreativeDefaultGroup(),
+            'displayScreens' => $this->getActiveDisplayScreens(),
         ]);
     }
 
@@ -593,7 +662,7 @@ class CampaignController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validated = $this->validateCampaignPayload($request, [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'campaign_type' => 'required|in:cpm,cpc,cpa,cpv,cpv_ctw',
@@ -638,6 +707,8 @@ class CampaignController extends Controller
             'ad_formats.*.content_type' => 'nullable|string',
             'ad_formats.*.filename' => 'nullable|string',
             'ad_formats.*.dimension' => 'nullable|string',
+            'ad_formats.*.display_screen_id' => 'nullable|exists:aq_display_screens,id',
+            'ad_formats.*.display_screen_name' => 'nullable|string',
             'ad_formats.*.file_path' => 'nullable|string',
             'ad_formats.*.file_size' => 'nullable|integer',
             'ad_formats.*.video_url' => 'nullable|string',
@@ -1187,6 +1258,9 @@ class CampaignController extends Controller
             'deviceTypes' => $deviceTargeting['deviceTypes'],
             'devicesByType' => $deviceTargeting['devicesByType'],
             'keywords' => $this->getKeywords(),
+            'campaignSettings' => $this->campaignSettings(),
+            'defaultAdTypeGroup' => $this->campaignCreativeDefaultGroup(),
+            'displayScreens' => $this->getActiveDisplayScreens(),
         ]);
     }
 
@@ -1203,7 +1277,7 @@ class CampaignController extends Controller
                 ->with('error', 'Campaign not found');
         }
 
-        $validated = $request->validate([
+        $validated = $this->validateCampaignPayload($request, [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'campaign_type' => 'required|in:cpm,cpc,cpa,cpv,cpv_ctw',
@@ -1248,6 +1322,8 @@ class CampaignController extends Controller
             'ad_formats.*.content_type' => 'nullable|string',
             'ad_formats.*.filename' => 'nullable|string',
             'ad_formats.*.dimension' => 'nullable|string',
+            'ad_formats.*.display_screen_id' => 'nullable|exists:aq_display_screens,id',
+            'ad_formats.*.display_screen_name' => 'nullable|string',
             'ad_formats.*.file_path' => 'nullable|string',
             'ad_formats.*.file_size' => 'nullable|integer',
             'ad_formats.*.video_url' => 'nullable|string',
@@ -1507,20 +1583,29 @@ class CampaignController extends Controller
         $uploadedThumbs = $request->file('ad_thumbs', []);
         $updatedAdFormats = [];
 
+        $initialCreativeStatus = PlatformSetting::getCreativeInitialStatus();
+
         foreach ($originalAdFormats as $index => $af) {
             $format = $af['format'] ?? '';
             $contentType = $af['content_type'] ?? 'image';
             $adType = $this->mapAdType($af['ad_type'] ?? '', $contentType, $format);
+            $displayScreenId = !empty($af['display_screen_id']) ? (int) $af['display_screen_id'] : null;
+            $displayScreen = null;
+            if ($displayScreenId) {
+                $displayScreen = DisplayScreen::query()
+                    ->where('status', 'active')
+                    ->find($displayScreenId);
+            }
 
             // Build Ad record data
             $adData = [
                 'campaign_id' => $campaign->id,
                 'name' => $af['ad_name'] ?? 'Untitled Creative',
                 'ad_type' => $adType,
-                'status' => 'pending_review',
+                'status' => $initialCreativeStatus,
                 'destination_url' => $af['ad_url'] ?? '',
                 'display_url' => parse_url($af['ad_url'] ?? '', PHP_URL_HOST) ?: null,
-                'admin_approved' => false,
+                'admin_approved' => $initialCreativeStatus === 'active',
                 'is_deleted' => false,
             ];
 
@@ -1569,7 +1654,11 @@ class CampaignController extends Controller
             $width = null;
             $height = null;
             $dimension = $af['dimension'] ?? '';
-            if (str_contains($dimension, 'x')) {
+            if ($displayScreen) {
+                $width = $displayScreen->width;
+                $height = $displayScreen->height;
+                $dimension = $width . 'x' . $height;
+            } elseif (str_contains($dimension, 'x')) {
                 [$width, $height] = array_map('intval', explode('x', $dimension));
             }
 
@@ -1637,6 +1726,7 @@ class CampaignController extends Controller
 
             AdCreative::create([
                 'ad_id' => $ad->id,
+                'display_screen_id' => $displayScreen?->id,
                 'file_path' => $filePath,
                 'video_url' => $videoUrl,
                 'file_type' => $fileType,
@@ -1657,6 +1747,13 @@ class CampaignController extends Controller
             }
             if ($thumbnailPath) {
                 $af['thumbnail_path'] = $thumbnailPath;
+            }
+            $af['dimension'] = $dimension;
+            $af['display_screen_id'] = $displayScreen?->id;
+            $af['display_screen_name'] = $displayScreen?->screen_name;
+            if ($displayScreen) {
+                $af['format'] = 'display_web';
+                $af['format_label'] = $displayScreen->screen_name;
             }
             $updatedAdFormats[] = $af;
         }

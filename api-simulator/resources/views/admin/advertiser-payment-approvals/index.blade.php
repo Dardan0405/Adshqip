@@ -20,10 +20,10 @@
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         @php
             $statCards = [
-                ['label' => 'Total Amount', 'value' => 'EUR ' . number_format($totalAmount, 2), 'color' => 'text-emerald-700', 'bg' => 'bg-emerald-50', 'border' => 'border-emerald-200', 'icon' => '<path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5"/>'],
+                ['label' => 'Total Amount', 'value' => $adminCurrency->format($totalAmount), 'color' => 'text-emerald-700', 'bg' => 'bg-emerald-50', 'border' => 'border-emerald-200', 'icon' => '<path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5"/>'],
                 ['label' => 'Approved', 'value' => number_format($completedCount), 'color' => 'text-blue-700', 'bg' => 'bg-blue-50', 'border' => 'border-blue-200', 'icon' => '<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'],
                 ['label' => 'Pending Review', 'value' => number_format($pendingCount), 'color' => 'text-amber-700', 'bg' => 'bg-amber-50', 'border' => 'border-amber-200', 'icon' => '<path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'],
-                ['label' => 'This Month', 'value' => 'EUR ' . number_format($thisMonthAmount, 2), 'color' => 'text-purple-700', 'bg' => 'bg-purple-50', 'border' => 'border-purple-200', 'icon' => '<path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'],
+                ['label' => 'This Month', 'value' => $adminCurrency->format($thisMonthAmount), 'color' => 'text-purple-700', 'bg' => 'bg-purple-50', 'border' => 'border-purple-200', 'icon' => '<path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'],
             ];
         @endphp
         @foreach($statCards as $card)
@@ -122,7 +122,7 @@
                                 </div>
                             </td>
                             <td class="px-4 py-3 text-gray-600">{{ $payout->user->email ?? 'N/A' }}</td>
-                            <td class="px-4 py-3 text-right font-semibold text-emerald-700"> €{{ number_format((float) $payout->amount, 2) }}</td>
+                            <td class="px-4 py-3 text-right font-semibold text-emerald-700">{{ $adminCurrency->format((float) $payout->amount) }}</td>
                             <td class="px-4 py-3 text-gray-700">{{ $payout->payment_method_label }}</td>
                             <td class="px-4 py-3 text-center">
                                 <div class="inline-flex items-center gap-1.5 flex-wrap justify-center">
@@ -222,7 +222,7 @@
                         </div>
                         <div>
                             <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Amount</div>
-                            <div class="text-sm font-semibold text-emerald-700">EUR ${data.amount}</div>
+                            <div class="text-sm font-semibold text-emerald-700">${window.adminCurrencyFormat(data.amount)}</div>
                         </div>
                         <div>
                             <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Payment Type</div>

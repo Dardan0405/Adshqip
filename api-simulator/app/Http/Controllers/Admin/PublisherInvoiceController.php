@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Support\PublisherPaymentManager;
 use Illuminate\Http\Request;
 
 class PublisherInvoiceController extends Controller
 {
     public function index(Request $request)
     {
+        app(PublisherPaymentManager::class)->syncAutoInvoices();
+
         $request->validate([
             'search' => ['nullable', 'string', 'max:255'],
             'publisher_id' => ['nullable', 'integer'],
@@ -119,6 +122,8 @@ class PublisherInvoiceController extends Controller
 
     public function export(Request $request)
     {
+        app(PublisherPaymentManager::class)->syncAutoInvoices();
+
         $invoices = $this->buildBaseQuery($request)
             ->with('user.userProfile')
             ->orderByDesc('aq_invoices.created_at')
@@ -158,8 +163,7 @@ class PublisherInvoiceController extends Controller
             ->join('aq_users', 'aq_invoices.user_id', '=', 'aq_users.id')
             ->where('aq_users.is_deleted', false)
             ->where('aq_users.role', 'publisher')
-            ->where('aq_invoices.type', 'publisher_payout')
-            ->where('aq_invoices.status', 'paid');
+            ->where('aq_invoices.type', 'publisher_payout');
 
         if ($search = trim((string) $request->get('search'))) {
             $query->where(function ($inner) use ($search) {

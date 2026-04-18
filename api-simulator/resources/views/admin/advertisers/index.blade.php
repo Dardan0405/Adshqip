@@ -35,7 +35,7 @@
                 ['label' => 'Blocked', 'value' => number_format($blockedAdvertisers), 'color' => 'text-red-700', 'bg' => 'bg-red-50', 'border' => 'border-red-200', 'icon' => '<path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'],
                 ['label' => 'Total Campaigns', 'value' => number_format($totalCampaigns), 'color' => 'text-blue-700', 'bg' => 'bg-blue-50', 'border' => 'border-blue-200', 'icon' => '<path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'],
                 ['label' => 'Total Creatives', 'value' => number_format($totalCreatives), 'color' => 'text-purple-700', 'bg' => 'bg-purple-50', 'border' => 'border-purple-200', 'icon' => '<path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'],
-                ['label' => 'Total Spend', 'value' => '€' . number_format($totalSpend, 2), 'color' => 'text-amber-700', 'bg' => 'bg-amber-50', 'border' => 'border-amber-200', 'icon' => '<path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5"/>'],
+                ['label' => 'Total Spend', 'value' => $adminCurrency->format($totalSpend), 'color' => 'text-amber-700', 'bg' => 'bg-amber-50', 'border' => 'border-amber-200', 'icon' => '<path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5"/>'],
             ];
         @endphp
         @foreach($statCards as $card)
@@ -141,7 +141,7 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right font-semibold text-gray-900">{{ number_format($camps) }}</td>
-                            <td class="px-4 py-3 text-right font-semibold text-gray-900">&euro;{{ number_format($spend, 2) }}</td>
+                            <td class="px-4 py-3 text-right font-semibold text-gray-900">{{ $adminCurrency->format($spend) }}</td>
                             <td class="px-4 py-3 text-xs text-gray-500">{{ $adv->created_at?->format('M d, Y') }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-center gap-1">
@@ -446,13 +446,13 @@
                                 <div class="text-[10px] uppercase tracking-wider text-purple-500 font-semibold">Creatives</div>
                             </div>
                             <div class="rounded-lg bg-amber-50 border border-amber-200 p-3 text-center">
-                                <div class="text-xl font-bold text-amber-700">&euro;${Number(data.total_spend).toFixed(2)}</div>
+                                <div class="text-xl font-bold text-amber-700">${window.adminCurrencyFormat(data.total_spend)}</div>
                                 <div class="text-[10px] uppercase tracking-wider text-amber-500 font-semibold">Total Spend</div>
                             </div>
                         </div>
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between py-1.5 border-b border-gray-50"><span class="text-gray-400">Status</span><span class="font-medium capitalize">${data.status}</span></div>
-                            <div class="flex justify-between py-1.5 border-b border-gray-50"><span class="text-gray-400">Balance</span><span class="font-medium">&euro;${Number(data.balance).toFixed(2)}</span></div>
+                            <div class="flex justify-between py-1.5 border-b border-gray-50"><span class="text-gray-400">Balance</span><span class="font-medium">${window.adminCurrencyFormat(data.balance)}</span></div>
                             <div class="flex justify-between py-1.5 border-b border-gray-50"><span class="text-gray-400">Phone</span><span class="font-medium">${data.phone || '—'}</span></div>
                             <div class="flex justify-between py-1.5 border-b border-gray-50"><span class="text-gray-400">Country</span><span class="font-medium">${data.country_code || '—'}</span></div>
                             <div class="flex justify-between py-1.5 border-b border-gray-50"><span class="text-gray-400">Website</span><span class="font-medium">${data.website_url ? '<a href="'+data.website_url+'" target="_blank" class="text-brand-600 hover:underline">'+data.website_url+'</a>' : '—'}</span></div>

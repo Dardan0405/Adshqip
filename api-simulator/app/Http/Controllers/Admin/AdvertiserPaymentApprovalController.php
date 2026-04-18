@@ -82,7 +82,7 @@ class AdvertiserPaymentApprovalController extends Controller
             'name' => $name,
             'email' => $payout->user->email,
             'role' => $payout->user->role,
-            'amount' => number_format((float) $payout->amount, 2),
+            'amount' => round((float) $payout->amount, 2),
             'currency' => $payout->currency,
             'payment_method' => $payout->payment_method_label,
             'payment_reference' => $payout->payment_reference,

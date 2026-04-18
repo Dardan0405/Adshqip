@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\AdvertiserController;
+use App\Http\Controllers\Auth\WebLoginController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\RegisterController;
+use App\Support\ActivityLogger;
+use App\Support\TwoFactorAuth;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -14,7 +17,7 @@ Route::get('/', function () {
 Route::get('/signin', function () {
     if (Auth::check()) {
         return redirect(match (Auth::user()->role) {
-            'admin', 'manager' => '/admin',
+            'admin', 'manager', 'operational' => '/admin',
             'publisher' => '/publisher',
             'advertiser' => '/advertisers',
             default => '/',
@@ -26,6 +29,7 @@ Route::get('/signin', function () {
 // Register page (Blade)
 Route::get('/register', [RegisterController::class, 'showForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register'])->name('register.submit');
+Route::get('/verify-email/{id}/{hash}', [RegisterController::class, 'verifyEmail'])->name('account.email.verify');
 
 // Redirect Laravel's default /login to /signin
 Route::get('/login', function () {
@@ -47,12 +51,61 @@ Route::get('/auto-login', function (\Illuminate\Http\Request $request) {
         return redirect()->route('signin');
     }
 
+    if ($user->status !== 'active') {
+        return redirect()->route('signin')->withErrors([
+            'email' => WebLoginController::inactiveAccountMessageFor($user),
+        ]);
+    }
+
+    if ($user->two_factor_enabled) {
+        $twoFactorAuth = app(TwoFactorAuth::class);
+        $availableMethods = $twoFactorAuth->availableMethods($user);
+
+        if ($availableMethods === []) {
+            return redirect()->route('signin')->withErrors([
+                'email' => '2 Factor Authentication is enabled but not configured correctly. Please update your account settings.',
+            ]);
+        }
+
+        if ($twoFactorAuth->shouldRequireChallenge($user, $request)) {
+            $issuedCodes = [];
+
+            foreach ([TwoFactorAuth::METHOD_EMAIL, TwoFactorAuth::METHOD_SMS] as $method) {
+                if (! in_array($method, $availableMethods, true)) {
+                    continue;
+                }
+
+                $code = $twoFactorAuth->generateOtpCode();
+                $twoFactorAuth->deliverChannelCode($user, $method, $code);
+                $issuedCodes[$method] = $twoFactorAuth->issueOtpPayload($code);
+            }
+
+            $request->session()->put('two_factor_login', [
+                'user_id' => $user->id,
+                'remember' => false,
+                'started_at' => now()->toDateTimeString(),
+                'available_methods' => $availableMethods,
+                'current_method' => in_array(TwoFactorAuth::METHOD_EMAIL, $availableMethods, true)
+                    ? TwoFactorAuth::METHOD_EMAIL
+                    : (in_array(TwoFactorAuth::METHOD_SMS, $availableMethods, true)
+                        ? TwoFactorAuth::METHOD_SMS
+                        : ($availableMethods[0] ?? TwoFactorAuth::METHOD_TOTP)),
+                'issued_codes' => $issuedCodes,
+            ]);
+
+            return redirect()->route('two-factor.challenge');
+        }
+    }
+
     Auth::login($user);
     $request->session()->regenerate();
     $user->update(['last_login_at' => now(), 'last_login_ip' => $request->ip()]);
+    if ($user->two_factor_enabled) {
+        $twoFactorAuth->rememberTrustedContext($user, $request);
+    }
 
     return redirect(match ($user->role) {
-        'admin', 'manager' => '/admin',
+        'admin', 'manager', 'operational' => '/admin',
         'publisher' => '/publisher',
         'advertiser' => '/advertisers',
         default => '/',
@@ -60,51 +113,24 @@ Route::get('/auto-login', function (\Illuminate\Http\Request $request) {
 });
 
 // Web-based login (POST from signin.html or form)
-Route::post('/web-login', function (\Illuminate\Http\Request $request) {
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required|string',
-    ]);
-
-    $user = \App\Models\User::where('email', $request->email)
-        ->where('is_deleted', false)
-        ->first();
-
-    if (! $user || ! \Illuminate\Support\Facades\Hash::check($request->password, $user->password_hash)) {
-        return response()->json(['success' => false, 'message' => 'Invalid email or password.'], 401);
-    }
-
-    if ($user->status !== 'active') {
-        return response()->json(['success' => false, 'message' => 'Account not active.'], 403);
-    }
-
-    Auth::login($user, $request->boolean('remember'));
-
-    $user->update(['last_login_at' => now(), 'last_login_ip' => $request->ip()]);
-
-    $redirect = match ($user->role) {
-        'admin'      => '/admin',
-        'publisher'  => '/publisher',
-        'advertiser' => '/advertisers',
-        'manager'    => '/admin',
-        default      => '/',
-    };
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Login successful.',
-        'redirect' => $redirect,
-        'user' => [
-            'id' => $user->id,
-            'email' => $user->email,
-            'role' => $user->role,
-        ],
-    ]);
-})->name('web.login');
+Route::post('/web-login', [WebLoginController::class, 'login'])->name('web.login');
+Route::get('/two-factor-challenge', [WebLoginController::class, 'showChallenge'])->name('two-factor.challenge');
+Route::post('/two-factor-challenge', [WebLoginController::class, 'verifyChallenge'])->name('two-factor.verify');
+Route::post('/two-factor-challenge/cancel', [WebLoginController::class, 'cancelChallenge'])->name('two-factor.cancel');
 
 // Logout
 Route::post('/logout', function () {
+    if (Auth::check()) {
+        app(ActivityLogger::class)->logRequest(request(), 200, [
+            'action' => 'auth_logout',
+            'description' => 'Auth logout',
+            'entity_type' => 'user',
+            'entity_id' => Auth::id(),
+        ]);
+    }
+
     Auth::logout();
+    request()->session()->forget('two_factor_login');
     request()->session()->invalidate();
     request()->session()->regenerateToken();
     return redirect('/');
@@ -118,6 +144,10 @@ Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfTok
         Route::get('/serve/ad/{id}/view', [\App\Http\Controllers\Admin\AdCreativeController::class, 'view'])->name('ad.view');
         Route::get('/serve/ad/{id}/adblock', [\App\Http\Controllers\Admin\AdCreativeController::class, 'adblock'])->name('ad.adblock');
         Route::get('/serve/ad/{id}/conversion', [\App\Http\Controllers\Admin\AdCreativeController::class, 'conversion'])->name('ad.conversion');
+        Route::get('/t/{trackingPath}/ad/{id}/click', [\App\Http\Controllers\Admin\AdCreativeController::class, 'mobileClick'])->name('ad.mobile.click');
+        Route::get('/t/{trackingPath}/ad/{id}/view', [\App\Http\Controllers\Admin\AdCreativeController::class, 'mobileView'])->name('ad.mobile.view');
+        Route::get('/t/{trackingPath}/ad/{id}/adblock', [\App\Http\Controllers\Admin\AdCreativeController::class, 'mobileAdblock'])->name('ad.mobile.adblock');
+        Route::get('/t/{trackingPath}/ad/{id}/conversion', [\App\Http\Controllers\Admin\AdCreativeController::class, 'mobileConversion'])->name('ad.mobile.conversion');
 
         // S2S (Server-to-Server) Postback endpoint — accepts GET or POST
         Route::match(['get', 'post'], '/track/campaign/{id}/postback', [\App\Http\Controllers\Admin\AdCreativeController::class, 'postback'])->name('track.postback');
@@ -128,6 +158,10 @@ Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfTok
         Route::get('/serve/direct/{id}/view', [\App\Http\Controllers\Admin\DirectCampaignServeController::class, 'view'])->name('direct.view');
         Route::get('/serve/direct/{id}/adblock', [\App\Http\Controllers\Admin\DirectCampaignServeController::class, 'adblock'])->name('direct.adblock');
         Route::get('/serve/direct/{id}/conversion', [\App\Http\Controllers\Admin\DirectCampaignServeController::class, 'conversion'])->name('direct.conversion');
+        Route::get('/t/{trackingPath}/direct/{id}/click', [\App\Http\Controllers\Admin\DirectCampaignServeController::class, 'mobileClick'])->name('direct.mobile.click');
+        Route::get('/t/{trackingPath}/direct/{id}/view', [\App\Http\Controllers\Admin\DirectCampaignServeController::class, 'mobileView'])->name('direct.mobile.view');
+        Route::get('/t/{trackingPath}/direct/{id}/adblock', [\App\Http\Controllers\Admin\DirectCampaignServeController::class, 'mobileAdblock'])->name('direct.mobile.adblock');
+        Route::get('/t/{trackingPath}/direct/{id}/conversion', [\App\Http\Controllers\Admin\DirectCampaignServeController::class, 'mobileConversion'])->name('direct.mobile.conversion');
 
         // Direct Campaign S2S Postback
         Route::match(['get', 'post'], '/track/direct/{id}/postback', [\App\Http\Controllers\Admin\DirectCampaignServeController::class, 'postback'])->name('direct.postback');
@@ -140,6 +174,9 @@ Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfTok
 
         // ─── Zone Ad Serving (obfuscated path, token-based) ───
         Route::get('/d/{token}.js', [\App\Http\Controllers\ZoneServeController::class, 'serve'])->name('zone.serve');
+
+        // ─── Direct Link Serve ───
+        Route::get('/dl/{code}', [\App\Http\Controllers\Admin\AddDirectLinkController::class, 'serve'])->name('direct-link.serve');
     });
 
 // Protected dashboards (role-restricted)
@@ -154,10 +191,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/publisher/notifications', [\App\Http\Controllers\PublisherController::class, 'notifications'])->middleware('role:publisher')->name('publisher.notifications');
     Route::post('/publisher/notifications/{id}/read', [\App\Http\Controllers\PublisherController::class, 'markNotificationRead'])->middleware('role:publisher')->name('publisher.notifications.read');
     Route::post('/publisher/notifications/read-all', [\App\Http\Controllers\PublisherController::class, 'markAllNotificationsRead'])->middleware('role:publisher')->name('publisher.notifications.readAll');
-    Route::get('/admin', [\App\Http\Controllers\AdminController::class, 'dashboard'])->middleware('role:admin,manager')->name('admin.dashboard');
+    Route::get('/admin', [\App\Http\Controllers\AdminController::class, 'dashboard'])->middleware('role:admin,manager,operational')->name('admin.dashboard');
 
     // Admin sub-pages
-    Route::middleware('role:admin,manager')->prefix('admin')->group(function () {
+    Route::middleware(['role:admin,manager,operational', 'admin.permission', 'audit.admin'])->prefix('admin')->group(function () {
         Route::get('/campaigns', [\App\Http\Controllers\Admin\CampaignController::class, 'index'])->name('admin.campaigns');
         Route::get('/campaigns/create', [\App\Http\Controllers\Admin\CampaignController::class, 'create'])->name('admin.campaigns.create');
         Route::post('/campaigns', [\App\Http\Controllers\Admin\CampaignController::class, 'store'])->name('admin.campaigns.store');
@@ -176,6 +213,55 @@ Route::middleware('auth')->group(function () {
         Route::get('/campaign-approvals', [\App\Http\Controllers\Admin\CampaignApprovalController::class, 'index'])->name('admin.campaign-approvals');
         Route::patch('/campaign-approvals/{id}/approve', [\App\Http\Controllers\Admin\CampaignApprovalController::class, 'approve'])->name('admin.campaign-approvals.approve');
         Route::patch('/campaign-approvals/{id}/reject', [\App\Http\Controllers\Admin\CampaignApprovalController::class, 'reject'])->name('admin.campaign-approvals.reject');
+
+        // Account Settings
+        Route::get('/account-settings', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'show'])->name('admin.account-settings');
+        Route::put('/account-settings', [\App\Http\Controllers\Admin\AccountSettingsController::class, 'update'])->name('admin.account-settings.update');
+        Route::get('/personal-information', [\App\Http\Controllers\Admin\PersonalInformationController::class, 'show'])->name('admin.personal-information');
+        Route::put('/personal-information', [\App\Http\Controllers\Admin\PersonalInformationController::class, 'update'])->name('admin.personal-information.update');
+        Route::get('/company-information', [\App\Http\Controllers\Admin\CompanyInformationController::class, 'show'])->name('admin.company-information');
+        Route::put('/company-information', [\App\Http\Controllers\Admin\CompanyInformationController::class, 'update'])->name('admin.company-information.update');
+        Route::get('/billing-information', [\App\Http\Controllers\Admin\BillingInformationController::class, 'show'])->name('admin.billing-information');
+        Route::put('/billing-information', [\App\Http\Controllers\Admin\BillingInformationController::class, 'update'])->name('admin.billing-information.update');
+        Route::get('/app-configurations', [\App\Http\Controllers\Admin\AppConfigurationController::class, 'show'])->name('admin.app-configurations');
+        Route::put('/app-configurations', [\App\Http\Controllers\Admin\AppConfigurationController::class, 'update'])->name('admin.app-configurations.update');
+        Route::get('/audit-logs', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('admin.audit-logs');
+        Route::delete('/audit-logs/{auditLog}', [\App\Http\Controllers\Admin\AuditLogController::class, 'destroy'])->name('admin.audit-logs.destroy');
+        Route::get('/activity-log-settings', [\App\Http\Controllers\Admin\ActivityLogSettingsController::class, 'show'])->name('admin.activity-log-settings');
+        Route::put('/activity-log-settings', [\App\Http\Controllers\Admin\ActivityLogSettingsController::class, 'update'])->name('admin.activity-log-settings.update');
+        Route::get('/two-factor-authentication', [\App\Http\Controllers\Admin\TwoFactorAuthenticationController::class, 'show'])->name('admin.two-factor-authentication');
+        Route::put('/two-factor-authentication', [\App\Http\Controllers\Admin\TwoFactorAuthenticationController::class, 'update'])->name('admin.two-factor-authentication.update');
+        Route::get('/user-roles', [\App\Http\Controllers\Admin\UserRoleController::class, 'index'])->name('admin.user-roles');
+        Route::get('/user-roles/{userRole}/edit', [\App\Http\Controllers\Admin\UserRoleController::class, 'edit'])->name('admin.user-roles.edit');
+        Route::put('/user-roles/{userRole}', [\App\Http\Controllers\Admin\UserRoleController::class, 'update'])->name('admin.user-roles.update');
+        Route::get('/payment-settings', [\App\Http\Controllers\Admin\PaymentSettingsController::class, 'show'])->name('admin.payment-settings');
+        Route::put('/payment-settings', [\App\Http\Controllers\Admin\PaymentSettingsController::class, 'update'])->name('admin.payment-settings.update');
+        Route::get('/cpm-geo-settings', [\App\Http\Controllers\Admin\CpmGeoSettingController::class, 'index'])->name('admin.cpm-geo-settings');
+        Route::post('/cpm-geo-settings', [\App\Http\Controllers\Admin\CpmGeoSettingController::class, 'store'])->name('admin.cpm-geo-settings.store');
+        Route::delete('/cpm-geo-settings/{cpmGeoSetting}', [\App\Http\Controllers\Admin\CpmGeoSettingController::class, 'destroy'])->name('admin.cpm-geo-settings.destroy');
+        Route::get('/display-screens', [\App\Http\Controllers\Admin\DisplayScreenController::class, 'index'])->name('admin.display-screens');
+        Route::post('/display-screens', [\App\Http\Controllers\Admin\DisplayScreenController::class, 'store'])->name('admin.display-screens.store');
+        Route::put('/display-screens/{displayScreen}', [\App\Http\Controllers\Admin\DisplayScreenController::class, 'update'])->name('admin.display-screens.update');
+        Route::patch('/display-screens/{displayScreen}/block', [\App\Http\Controllers\Admin\DisplayScreenController::class, 'block'])->name('admin.display-screens.block');
+        Route::patch('/display-screens/{displayScreen}/unblock', [\App\Http\Controllers\Admin\DisplayScreenController::class, 'unblock'])->name('admin.display-screens.unblock');
+        Route::get('/kyc-verifications', [\App\Http\Controllers\Admin\KycVerificationController::class, 'index'])->name('admin.kyc-verifications');
+        Route::post('/kyc-verifications', [\App\Http\Controllers\Admin\KycVerificationController::class, 'store'])->name('admin.kyc-verifications.store');
+        Route::get('/kyc-verifications/{kycVerification}/edit', [\App\Http\Controllers\Admin\KycVerificationController::class, 'edit'])->name('admin.kyc-verifications.edit');
+        Route::put('/kyc-verifications/{kycVerification}', [\App\Http\Controllers\Admin\KycVerificationController::class, 'update'])->name('admin.kyc-verifications.update');
+        Route::patch('/kyc-verifications/{kycVerification}/approve', [\App\Http\Controllers\Admin\KycVerificationController::class, 'approve'])->name('admin.kyc-verifications.approve');
+        Route::patch('/kyc-verifications/{kycVerification}/reject', [\App\Http\Controllers\Admin\KycVerificationController::class, 'reject'])->name('admin.kyc-verifications.reject');
+
+        // Mass Email
+        Route::get('/mass-email', [\App\Http\Controllers\Admin\MassEmailController::class, 'index'])->name('admin.mass-email');
+        Route::post('/mass-email/send', [\App\Http\Controllers\Admin\MassEmailController::class, 'send'])->name('admin.mass-email.send');
+        Route::get('/mass-email/history', [\App\Http\Controllers\Admin\MassEmailController::class, 'history'])->name('admin.mass-email.history');
+
+        // Add Direct Link
+        Route::get('/add-direct-link', [\App\Http\Controllers\Admin\AddDirectLinkController::class, 'index'])->name('admin.add-direct-link');
+        Route::post('/add-direct-link', [\App\Http\Controllers\Admin\AddDirectLinkController::class, 'store'])->name('admin.add-direct-link.store');
+        Route::get('/add-direct-link/adblocks', [\App\Http\Controllers\Admin\AddDirectLinkController::class, 'getAdblocksByPublisher'])->name('admin.add-direct-link.adblocks');
+        Route::patch('/add-direct-link/{directLink}/status', [\App\Http\Controllers\Admin\AddDirectLinkController::class, 'updateStatus'])->name('admin.add-direct-link.status');
+        Route::delete('/add-direct-link/{directLink}', [\App\Http\Controllers\Admin\AddDirectLinkController::class, 'destroy'])->name('admin.add-direct-link.destroy');
 
         // Manage AdMarket Campaigns
         Route::get('/manage-admarket-campaigns', [\App\Http\Controllers\Admin\ManageAdMarketCampaignController::class, 'index'])->name('admin.manage-admarket-campaigns');

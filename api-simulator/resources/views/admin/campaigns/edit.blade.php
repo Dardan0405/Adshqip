@@ -215,7 +215,8 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Total Budget (&euro;) <span class="text-red-500">*</span></label>
-                    <input type="number" name="total_budget" step="0.01" min="0" required value="{{ $campaign['budget'] }}" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    <input type="number" name="total_budget" step="0.01" min="{{ $campaignSettings['minimum_budget'] }}" required value="{{ $campaign['budget'] }}" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    <p class="mt-1 text-xs text-gray-400">Minimum total budget: {{ number_format((float) $campaignSettings['minimum_budget'], 2) }}</p>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Daily Budget (&euro;)</label>
@@ -223,7 +224,8 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Bid Amount (&euro;)</label>
-                    <input type="number" name="bid_amount" step="0.0001" min="0" value="{{ $campaign['bid_amount'] ?? '' }}" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    <input type="number" name="bid_amount" step="0.0001" min="{{ $campaignSettings['minimum_bid_rate'] }}" value="{{ $campaign['bid_amount'] ?? '' }}" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    <p class="mt-1 text-xs text-gray-400">Minimum bid rate: {{ number_format((float) $campaignSettings['minimum_bid_rate'], 4) }}</p>
                 </div>
             </div>
 
@@ -738,10 +740,11 @@
                         <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Ad Type</label>
                         <select id="adTypeSelect" name="ad_type" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white">
                             <option value="all">All</option>
-                            <option value="display_web">Display Web</option>
-                            <option value="special_web">Special Web</option>
-                            <option value="display_video">Display Video</option>
+                            <option value="display_web" {{ $defaultAdTypeGroup === 'display_web' ? 'selected' : '' }}>Display Web</option>
+                            <option value="special_web" {{ $defaultAdTypeGroup === 'special_web' ? 'selected' : '' }}>Special Web</option>
+                            <option value="display_video" {{ $defaultAdTypeGroup === 'display_video' ? 'selected' : '' }}>Display Video</option>
                         </select>
+                        <p class="mt-1 text-xs text-gray-400">Default group follows App Configurations: {{ $campaignSettings['creative_type'] }}</p>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Ad Format</label>
@@ -984,6 +987,8 @@
                                             <input type="hidden" name="ad_formats[{{ $index }}][content_type]" value="{{ $af['content_type'] ?? '' }}">
                                             <input type="hidden" name="ad_formats[{{ $index }}][filename]" value="{{ $af['filename'] ?? '' }}">
                                             <input type="hidden" name="ad_formats[{{ $index }}][dimension]" value="{{ $af['dimension'] ?? '' }}">
+                                            <input type="hidden" name="ad_formats[{{ $index }}][display_screen_id]" value="{{ $af['display_screen_id'] ?? '' }}">
+                                            <input type="hidden" name="ad_formats[{{ $index }}][display_screen_name]" value="{{ $af['display_screen_name'] ?? '' }}">
                                             <input type="hidden" name="ad_formats[{{ $index }}][file_path]" value="{{ $af['file_path'] ?? '' }}">
                                             <input type="hidden" name="ad_formats[{{ $index }}][file_size]" value="{{ $af['file_size'] ?? 0 }}">
                                         </td>
@@ -1058,6 +1063,8 @@ document.querySelectorAll('.keyword-cb').forEach(cb => cb.addEventListener('chan
 
 // ─── Ad Formats Data (from PHP) ───
 const adFormats = @json($adFormats);
+const defaultAdTypeGroup = @json($defaultAdTypeGroup);
+const displayScreens = @json($displayScreens);
 
 // ─── Ad Type / Format change ───
 document.getElementById('adTypeSelect').addEventListener('change', function() {
@@ -1068,23 +1075,49 @@ document.getElementById('adTypeSelect').addEventListener('change', function() {
         Object.entries(adFormats).forEach(([key, group]) => {
             const optgroup = document.createElement('optgroup');
             optgroup.label = group.label;
-            Object.entries(group.sizes).forEach(([val, label]) => {
-                const o = document.createElement('option');
-                o.value = val;
-                o.textContent = label;
-                o.dataset.group = key;
-                optgroup.appendChild(o);
-            });
+            if (key === 'display_web') {
+                displayScreens.forEach((screen) => {
+                    const o = document.createElement('option');
+                    o.value = 'screen:' + screen.id;
+                    o.textContent = screen.label;
+                    o.dataset.group = key;
+                    o.dataset.screenId = screen.id;
+                    o.dataset.screenName = screen.screen_name;
+                    o.dataset.dimension = screen.dimension;
+                    optgroup.appendChild(o);
+                });
+            } else {
+                Object.entries(group.sizes).forEach(([val, label]) => {
+                    const o = document.createElement('option');
+                    o.value = val;
+                    o.textContent = label;
+                    o.dataset.group = key;
+                    optgroup.appendChild(o);
+                });
+            }
             formatSel.appendChild(optgroup);
         });
     } else if (adFormats[type]) {
-        Object.entries(adFormats[type].sizes).forEach(([val, label]) => {
-            const o = document.createElement('option');
-            o.value = val;
-            o.textContent = label;
-            o.dataset.group = type;
-            formatSel.appendChild(o);
-        });
+        if (type === 'display_web') {
+            displayScreens.forEach((screen) => {
+                const o = document.createElement('option');
+                o.value = 'screen:' + screen.id;
+                o.textContent = screen.label;
+                o.dataset.group = type;
+                o.dataset.screenId = screen.id;
+                o.dataset.screenName = screen.screen_name;
+                o.dataset.dimension = screen.dimension;
+                formatSel.appendChild(o);
+            });
+        } else {
+            Object.entries(adFormats[type].sizes).forEach(([val, label]) => {
+                const o = document.createElement('option');
+                o.value = val;
+                o.textContent = label;
+                o.dataset.group = type;
+                formatSel.appendChild(o);
+            });
+        }
     }
     document.getElementById('creativeFormBlock').classList.add('hidden');
 });
@@ -1139,6 +1172,14 @@ document.getElementById('adFormatSelect').addEventListener('change', function() 
     }
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    const adTypeSelect = document.getElementById('adTypeSelect');
+    if (adTypeSelect && defaultAdTypeGroup && adTypeSelect.value !== defaultAdTypeGroup) {
+        adTypeSelect.value = defaultAdTypeGroup;
+    }
+    adTypeSelect?.dispatchEvent(new Event('change'));
+});
+
 // Video source type toggle
 document.addEventListener('DOMContentLoaded', function() {
     const videoSourceSelect = document.getElementById('cr_video_source');
@@ -1165,7 +1206,10 @@ let crCounter = {{ !empty($campaign['ad_formats']) ? count($campaign['ad_formats
 function addCreative() {
     const name = document.getElementById('cr_name').value;
     const url = document.getElementById('cr_url').value;
-    const format = document.getElementById('adFormatSelect').value;
+    const formatSelect = document.getElementById('adFormatSelect');
+    const selectedFormatOption = formatSelect.options[formatSelect.selectedIndex];
+    const rawFormat = formatSelect.value;
+    const format = selectedFormatOption?.dataset.screenId ? 'display_web' : rawFormat;
     const adType = document.getElementById('adTypeSelect').value;
     const isUrlOnly = urlOnlyCreativeFormats.includes(format);
     const isVideo = videoFormats.includes(format) || adType === 'display_video';
@@ -1307,8 +1351,10 @@ function addCreative() {
     const ippIconFile = ippIconInput ? ippIconInput.files[0] : null;
     const filename = file ? file.name : (isInPagePush ? (ippIconFile ? ippIconFile.name : 'In-Page Push') : (isPopunder ? 'Popunder' : (isInterstitial ? (interstitialImageFile ? interstitialImageFile.name : 'Interstitial') : (isNative ? (nativeImageFile ? nativeImageFile.name : 'Native Ad') : (isSocialBar ? 'Social Bar' : (isUrlOnly ? 'URL-only' : (isVideo && videoUrl ? 'Video URL' : (isText ? 'Text Ad' : '—'))))))));
     const fileSize = file ? (file.size / 1024).toFixed(1) : '—';
-    const dimension = format.includes('x') ? format : '—';
-    const formatLabel = document.getElementById('adFormatSelect').options[document.getElementById('adFormatSelect').selectedIndex].textContent;
+    const displayScreenId = selectedFormatOption?.dataset.screenId || '';
+    const displayScreenName = selectedFormatOption?.dataset.screenName || '';
+    const dimension = selectedFormatOption?.dataset.dimension || (rawFormat.includes('x') ? rawFormat : '—');
+    const formatLabel = selectedFormatOption?.textContent || '—';
 
     // Preview column content
     let previewHtml = contentType.toUpperCase();
@@ -1359,6 +1405,8 @@ function addCreative() {
         <input type="hidden" name="ad_formats[${crCounter}][content_type]" value="${contentType}">
         <input type="hidden" name="ad_formats[${crCounter}][filename]" value="${filename}">
         <input type="hidden" name="ad_formats[${crCounter}][dimension]" value="${dimension}">
+        <input type="hidden" name="ad_formats[${crCounter}][display_screen_id]" value="${displayScreenId}">
+        <input type="hidden" name="ad_formats[${crCounter}][display_screen_name]" value="${displayScreenName.replace(/"/g, '&quot;')}">
         <input type="hidden" name="ad_formats[${crCounter}][file_path]" value="">
         <input type="hidden" name="ad_formats[${crCounter}][file_size]" value="${file ? file.size : 0}">
     `;

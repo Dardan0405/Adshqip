@@ -7,6 +7,11 @@ use App\Models\DirectCampaign;
 use App\Models\DirectCampaignCreative;
 use App\Models\DirectCampaignStat;
 use App\Models\DirectCampaignTargeting;
+use App\Models\PlatformSetting;
+use App\Support\AdDeliveryOptions;
+use App\Support\AntiFraudClickGuard;
+use App\Support\GeoCpmResolver;
+use App\Support\UrlAdReporter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -42,12 +47,18 @@ class DirectCampaignServeController extends Controller
     {
         $campaign = DirectCampaign::with(['creatives', 'targeting'])->find($id);
         $request  = request();
+        $deliveryOptions = app(AdDeliveryOptions::class);
         $debug    = $request->query('debug') === '1';
 
         // ── Basic availability ──
         if (! $campaign || $campaign->is_deleted) {
             if ($debug) return $this->adResponse('<pre>BLOCKED: campaign not found or deleted.</pre>');
             return $this->adResponse('<!-- direct campaign not available -->', 204);
+        }
+
+        if (! $deliveryOptions->mobileAdsEnabled() && $deliveryOptions->isMobileOrTabletRequest($request)) {
+            if ($debug) return $this->adResponse('<pre>BLOCKED: mobile ads are disabled.</pre>');
+            return $this->adResponse('<!-- mobile ads disabled -->', 204);
         }
 
         // ── 1. Status check ──
@@ -113,6 +124,10 @@ class DirectCampaignServeController extends Controller
 
         // ── Track impression ──
         $creative = $this->selectCreative($campaign);
+        if (! $deliveryOptions->videoAdsEnabled() && $creative && in_array($creative->creative_type, ['video', 'clip'], true)) {
+            if ($debug) return $this->adResponse('<pre>BLOCKED: video ads are disabled.</pre>');
+            return $this->adResponse('<!-- video ads disabled -->', 204);
+        }
         $this->trackStat($campaign, $creative, 'impression');
 
         // ── Build the ad HTML ──
@@ -125,8 +140,9 @@ class DirectCampaignServeController extends Controller
         if ($zoneId) {
             $query['zone_id'] = $zoneId;
         }
-        $clickUrl = route('direct.click', $id) . (!empty($query) ? '?' . http_build_query($query) : '');
-        $tracking = $this->trackingScript($id, $countryParam, $zoneId ? (int) $zoneId : null);
+        $clickUrl = $this->buildTrackingUrl('click', $id, $query, $request, $campaign->destination_url);
+        $tracking = $this->trackingScript($id, $countryParam, $zoneId ? (int) $zoneId : null, $request);
+        app(UrlAdReporter::class)->logDirectEvent($request, $campaign, $creative, 'serve', $clickUrl, $campaign->destination_url);
 
         // Determine which creative to render
         if ($creative && $creative->creative_type === 'image' && $creative->file_path) {
@@ -159,18 +175,36 @@ class DirectCampaignServeController extends Controller
     public function click(int $id, Request $request)
     {
         $campaign = DirectCampaign::with('creatives')->find($id);
+        $deliveryOptions = app(AdDeliveryOptions::class);
 
         if (! $campaign || $campaign->is_deleted) {
             return redirect('/');
         }
 
+        if (! $deliveryOptions->mobileAdsEnabled() && $deliveryOptions->isMobileOrTabletRequest($request)) {
+            return response('Mobile ads are disabled.', 204);
+        }
+
         $creative = $this->selectCreative($campaign);
+
+        if (! $deliveryOptions->videoAdsEnabled() && $creative && in_array($creative->creative_type, ['video', 'clip'], true)) {
+            return response('Video ads are disabled.', 204);
+        }
+
+        $clickId = Str::uuid()->toString();
+        $zoneId = $request->query('zone_id');
+        $guardResult = app(AntiFraudClickGuard::class)->inspect($request, [
+            'ad_id' => null,
+            'zone_id' => is_numeric($zoneId) ? (int) $zoneId : null,
+            'viewer_id' => $request->cookie('aq_viewer_id', $clickId),
+        ]);
+
+        if (! $guardResult['allowed']) {
+            return response('Click blocked by anti-fraud protection.', 429);
+        }
 
         // Track click stat
         $this->trackStat($campaign, $creative, 'click');
-
-        // Generate unique click_id for S2S attribution
-        $clickId = Str::uuid()->toString();
 
         // Detect device info
         $ua = strtolower($request->userAgent() ?? '');
@@ -181,7 +215,7 @@ class DirectCampaignServeController extends Controller
             DB::table('aq_direct_campaign_clicks')->insert([
                 'campaign_id' => $campaign->id,
                 'creative_id' => $creative?->id,
-                'viewer_id'   => $request->cookie('aq_viewer_id', $clickId),
+                'viewer_id'   => $guardResult['viewer_id'],
                 'ip_address'  => $request->ip(),
                 'user_agent'  => substr($request->userAgent() ?? '', 0, 500),
                 'country_code' => $this->detectCountry($request),
@@ -194,7 +228,7 @@ class DirectCampaignServeController extends Controller
         }
 
         // Build destination URL with click_id appended
-        $destinationUrl = $campaign->destination_url;
+        $destinationUrl = $deliveryOptions->resolveDestinationUrl($request->query('target'), $campaign->destination_url) ?? $campaign->destination_url;
 
         // If campaign has a click_tracking_url, fire it as a pixel
         if ($campaign->click_tracking_url) {
@@ -208,6 +242,7 @@ class DirectCampaignServeController extends Controller
 
         $separator = str_contains($destinationUrl, '?') ? '&' : '?';
         $destinationUrl .= $separator . 'click_id=' . $clickId . '&aq_dcid=' . $campaign->id;
+        app(UrlAdReporter::class)->logDirectEvent($request, $campaign, $creative, 'click', $request->fullUrl(), $destinationUrl);
 
         return redirect($destinationUrl);
     }
@@ -230,6 +265,7 @@ class DirectCampaignServeController extends Controller
         if ($campaign && ! $campaign->is_deleted) {
             $creative = $this->selectCreative($campaign);
             $this->trackStat($campaign, $creative, 'view');
+            app(UrlAdReporter::class)->logDirectEvent(request(), $campaign, $creative, 'view');
         }
 
         return $this->pixelResponse();
@@ -249,6 +285,7 @@ class DirectCampaignServeController extends Controller
         if ($campaign && ! $campaign->is_deleted) {
             $creative = $this->selectCreative($campaign);
             $this->trackStat($campaign, $creative, 'adblock');
+            app(UrlAdReporter::class)->logDirectEvent(request(), $campaign, $creative, 'adblock');
         }
 
         return $this->pixelResponse();
@@ -271,6 +308,7 @@ class DirectCampaignServeController extends Controller
         if ($campaign && ! $campaign->is_deleted) {
             $creative = $this->selectCreative($campaign);
             $this->trackStat($campaign, $creative, 'conversion');
+            app(UrlAdReporter::class)->logDirectEvent(request(), $campaign, $creative, 'conversion');
         }
 
         return $this->pixelResponse();
@@ -413,6 +451,13 @@ class DirectCampaignServeController extends Controller
         // Get pricing info
         $bidAmount    = (float) ($campaign->bid_amount ?? 0);
         $pricingModel = strtolower($campaign->pricing_model ?? 'cpm');
+
+        if ($pricingModel === 'cpm' && $countryCode) {
+            $geoCpm = app(GeoCpmResolver::class)->resolve($countryCode);
+            if ($geoCpm !== null) {
+                $bidAmount = $geoCpm;
+            }
+        }
 
         // ── Increment counters + revenue ──
         if ($type === 'impression') {
@@ -773,11 +818,13 @@ video{max-width:100%;display:block;border-radius:4px}
 <div class="vc" id="aq-ad">
     <span class="v-label">Sponsored</span>
     <div class="v-headline">{$headline}</div>
-    <video {$w} {$h} {$poster} autoplay muted playsinline controls>
+    <div id="aq-jw-player-slot" style="display:none;max-width:100%;"></div>
+    <video id="aq-video-fallback" {$w} {$h} {$poster} autoplay muted playsinline controls>
         <source src="{$videoSrc}" type="video/mp4">
     </video>
     <a href="{$clickUrl}" target="_blank" rel="noopener" class="v-cta">{$cta}</a>
 </div>
+{$this->jwPlayerBootstrapScript('aq-jw-player-slot', 'aq-video-fallback', $videoSrc, $creative->thumbnail_path ? asset($creative->thumbnail_path) : null)}
 {$tracking}
 </body></html>
 HTML;
@@ -880,8 +927,9 @@ HTML;
     /**
      * Generate tracking JavaScript for view and adblock detection.
      */
-    private function trackingScript(int $campaignId, ?string $countryOverride = null, ?int $zoneId = null): string
+    private function trackingScript(int $campaignId, ?string $countryOverride = null, ?int $zoneId = null, ?Request $request = null): string
     {
+        $request ??= request();
         $extraParams = [];
         if ($countryOverride) {
             $extraParams[] = 'country=' . urlencode($countryOverride);
@@ -890,8 +938,14 @@ HTML;
             $extraParams[] = 'zone_id=' . $zoneId;
         }
         $suffix = !empty($extraParams) ? '&' . implode('&', $extraParams) : '';
-        $viewUrl    = route('direct.view', $campaignId);
-        $adblockUrl = route('direct.adblock', $campaignId);
+        $viewUrl = $this->buildTrackingUrl('view', $campaignId, array_filter([
+            'country' => $countryOverride,
+            'zone_id' => $zoneId,
+        ], fn ($value) => $value !== null && $value !== ''), $request);
+        $adblockUrl = $this->buildTrackingUrl('adblock', $campaignId, array_filter([
+            'country' => $countryOverride,
+            'zone_id' => $zoneId,
+        ], fn ($value) => $value !== null && $value !== ''), $request);
 
         return <<<SCRIPT
 <script>
@@ -914,6 +968,26 @@ setTimeout(function(){
 },2000);
 </script>
 SCRIPT;
+    }
+
+    public function mobileClick(string $trackingPath, int $id, Request $request)
+    {
+        return $this->click($id, $request);
+    }
+
+    public function mobileView(string $trackingPath, int $id)
+    {
+        return $this->view($id);
+    }
+
+    public function mobileAdblock(string $trackingPath, int $id)
+    {
+        return $this->adblock($id);
+    }
+
+    public function mobileConversion(string $trackingPath, int $id)
+    {
+        return $this->conversion($id);
     }
 
     /**
@@ -1106,5 +1180,94 @@ SCRIPT;
         } catch (\Exception $e) {}
 
         return null;
+    }
+
+    private function buildTrackingUrl(string $event, int $id, array $params, Request $request, ?string $destinationUrl = null): string
+    {
+        $baseUrl = PlatformSetting::getTerawurlMobileTrackingUrl();
+        $deviceType = $this->detectDeviceType(strtolower($request->userAgent() ?? ''), $request);
+        $deliveryOptions = app(AdDeliveryOptions::class);
+
+        if ($baseUrl && in_array($deviceType, ['mobile', 'tablet'], true)) {
+            $url = rtrim($baseUrl, '/') . '/direct/' . $id . '/' . $event;
+        } else {
+            $routeName = match ($event) {
+                'click' => 'direct.click',
+                'view' => 'direct.view',
+                'adblock' => 'direct.adblock',
+                'conversion' => 'direct.conversion',
+                default => 'direct.serve',
+            };
+
+            $url = route($routeName, $id);
+        }
+
+        if ($event === 'click') {
+            $params = $deliveryOptions->appendEncodedTarget($params, $destinationUrl);
+        }
+
+        return ! empty($params) ? $url . '?' . http_build_query($params) : $url;
+    }
+
+    private function jwPlayerBootstrapScript(string $playerElementId, string $fallbackVideoId, string $videoSrc, ?string $posterSrc = null): string
+    {
+        $licenseKey = PlatformSetting::getJwPlayerLicenseKey();
+
+        if (! $licenseKey) {
+            return '';
+        }
+
+        $playerElementId = json_encode($playerElementId);
+        $fallbackVideoId = json_encode($fallbackVideoId);
+        $videoSrc = json_encode($videoSrc);
+        $posterSrc = json_encode($posterSrc);
+        $licenseKey = json_encode($licenseKey);
+
+        return <<<SCRIPT
+<script>
+(function () {
+    var licenseKey = {$licenseKey};
+    var playerId = {$playerElementId};
+    var fallbackId = {$fallbackVideoId};
+    var file = {$videoSrc};
+    var image = {$posterSrc};
+
+    window.JWPLAYER_LICENSE_KEY = licenseKey;
+
+    if (typeof window.jwplayer !== 'function') {
+        return;
+    }
+
+    var slot = document.getElementById(playerId);
+    var fallback = document.getElementById(fallbackId);
+
+    if (!slot || !fallback) {
+        return;
+    }
+
+    try {
+        window.jwplayer.key = licenseKey;
+        slot.style.display = 'block';
+        fallback.style.display = 'none';
+
+        window.jwplayer(playerId).setup({
+            file: file,
+            image: image || undefined,
+            width: '100%',
+            aspectratio: '16:9',
+            autostart: true,
+            mute: true,
+            controls: true,
+            stretching: 'uniform',
+            preload: 'auto'
+        });
+    } catch (error) {
+        slot.style.display = 'none';
+        fallback.style.display = 'block';
+        console.error('JW Player setup failed.', error);
+    }
+})();
+</script>
+SCRIPT;
     }
 }

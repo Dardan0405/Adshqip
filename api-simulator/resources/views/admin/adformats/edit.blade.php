@@ -404,43 +404,24 @@
             {{-- Dimension Selector --}}
             @php
                 $currentDimension = ($ad['width'] && $ad['height']) ? $ad['width'] . 'x' . $ad['height'] : '';
-                $presetSizes = [
-                    '300x250' => '300x250 (Medium Rectangle)',
-                    '728x90' => '728x90 (Leaderboard)',
-                    '160x600' => '160x600 (Wide Skyscraper)',
-                    '300x600' => '300x600 (Half Page)',
-                    '320x50' => '320x50 (Mobile Banner)',
-                    '970x250' => '970x250 (Billboard)',
-                    '468x60' => '468x60 (Banner)',
-                    '120x600' => '120x600 (Skyscraper)',
-                    '250x250' => '250x250 (Square)',
-                    '336x280' => '336x280 (Large Rectangle)',
-                    '970x90' => '970x90 (Large Leaderboard)',
-                    '320x100' => '320x100 (Large Mobile Banner)',
-                ];
-                $isPreset = array_key_exists($currentDimension, $presetSizes);
+                $selectedScreenId = old('display_screen_id', $ad['display_screen_id']);
             @endphp
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Dimensions</label>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Display Screen</label>
                     <select id="dimensionSelect" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white">
                         <option value="" {{ $currentDimension === '' ? 'selected' : '' }}>No dimensions</option>
-                        <optgroup label="Display Web">
-                            <option value="300x250" {{ $currentDimension === '300x250' ? 'selected' : '' }}>300x250 (Medium Rectangle)</option>
-                            <option value="728x90" {{ $currentDimension === '728x90' ? 'selected' : '' }}>728x90 (Leaderboard)</option>
-                            <option value="160x600" {{ $currentDimension === '160x600' ? 'selected' : '' }}>160x600 (Wide Skyscraper)</option>
-                            <option value="300x600" {{ $currentDimension === '300x600' ? 'selected' : '' }}>300x600 (Half Page)</option>
-                            <option value="970x250" {{ $currentDimension === '970x250' ? 'selected' : '' }}>970x250 (Billboard)</option>
-                            <option value="970x90" {{ $currentDimension === '970x90' ? 'selected' : '' }}>970x90 (Large Leaderboard)</option>
-                            <option value="468x60" {{ $currentDimension === '468x60' ? 'selected' : '' }}>468x60 (Banner)</option>
-                            <option value="336x280" {{ $currentDimension === '336x280' ? 'selected' : '' }}>336x280 (Large Rectangle)</option>
-                            <option value="250x250" {{ $currentDimension === '250x250' ? 'selected' : '' }}>250x250 (Square)</option>
-                            <option value="120x600" {{ $currentDimension === '120x600' ? 'selected' : '' }}>120x600 (Skyscraper)</option>
-                        </optgroup>
-                        <optgroup label="Mobile">
-                            <option value="320x50" {{ $currentDimension === '320x50' ? 'selected' : '' }}>320x50 (Mobile Banner)</option>
-                            <option value="320x100" {{ $currentDimension === '320x100' ? 'selected' : '' }}>320x100 (Large Mobile Banner)</option>
-                        </optgroup>
+                        @foreach($displayScreens as $screen)
+                            <option
+                                value="{{ $screen['id'] }}"
+                                data-width="{{ $screen['width'] }}"
+                                data-height="{{ $screen['height'] }}"
+                                data-dimension="{{ $screen['dimension'] }}"
+                                {{ (string) $selectedScreenId === (string) $screen['id'] ? 'selected' : '' }}
+                            >
+                                {{ $screen['screen_name'] }} ({{ $screen['dimension'] }})
+                            </option>
+                        @endforeach
                     </select>
                 </div>
                 <div>
@@ -452,6 +433,7 @@
             </div>
 
             {{-- Hidden inputs that actually get submitted --}}
+            <input type="hidden" name="display_screen_id" id="hiddenDisplayScreenId" value="{{ $selectedScreenId }}">
             <input type="hidden" name="width" id="hiddenWidth" value="{{ old('width', $ad['width']) }}">
             <input type="hidden" name="height" id="hiddenHeight" value="{{ old('height', $ad['height']) }}">
 
@@ -501,6 +483,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const dimensionSelect = document.getElementById('dimensionSelect');
+    const hiddenDisplayScreenId = document.getElementById('hiddenDisplayScreenId');
     const hiddenWidth = document.getElementById('hiddenWidth');
     const hiddenHeight = document.getElementById('hiddenHeight');
     const preview = document.getElementById('dimensionPreview');
@@ -523,17 +506,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     dimensionSelect.addEventListener('change', function() {
         const val = dimensionSelect.value;
+        const selectedOption = dimensionSelect.options[dimensionSelect.selectedIndex];
         if (val === '') {
+            hiddenDisplayScreenId.value = '';
             hiddenWidth.value = '';
             hiddenHeight.value = '';
             preview.textContent = '—';
             updateImagePreview(null, null);
         } else {
-            const parts = val.split('x');
-            hiddenWidth.value = parts[0];
-            hiddenHeight.value = parts[1];
-            preview.textContent = val + ' px';
-            updateImagePreview(parts[0], parts[1]);
+            hiddenDisplayScreenId.value = val;
+            hiddenWidth.value = selectedOption.dataset.width;
+            hiddenHeight.value = selectedOption.dataset.height;
+            preview.textContent = selectedOption.dataset.dimension + ' px';
+            updateImagePreview(selectedOption.dataset.width, selectedOption.dataset.height);
         }
     });
 });

@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->web(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
+            \App\Http\Middleware\ApplyAdminCurrencyDisplay::class,
         ]);
         $middleware->validateCsrfTokens(except: [
             'web-login',
@@ -24,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
+            'audit.admin' => \App\Http\Middleware\LogAdminActivity::class,
+            'admin.permission' => \App\Http\Middleware\EnsureAdminPermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -7,7 +7,8 @@ use App\Models\User;
 use App\Models\Site;
 use App\Models\Zone;
 use App\Models\StatDaily;
-use App\Models\Notification;
+use App\Models\PlatformSetting;
+use App\Support\MessageDeliveryManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -235,19 +236,26 @@ class PublisherController extends Controller
     {
         $publisher = User::where('role', 'publisher')->where('is_deleted', false)->findOrFail($id);
 
+        if (! PlatformSetting::getPublisherMessagesEnabled()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Publisher messages are disabled in app configurations.',
+            ], 422);
+        }
+
         $request->validate([
             'title'   => 'required|string|max:255',
             'message' => 'required|string',
             'type'    => 'nullable|in:success,warning,error,info,payment,campaign,system',
         ]);
 
-        Notification::create([
-            'user_id'    => $publisher->id,
-            'type'       => $request->input('type', 'info'),
-            'title'      => $request->title,
-            'message'    => $request->message,
-            'action_url' => $request->input('action_url'),
-        ]);
+        MessageDeliveryManager::createInAppMessage(
+            $publisher,
+            $request->title,
+            $request->message,
+            $request->input('type', 'info'),
+            $request->input('action_url'),
+        );
 
         return response()->json(['success' => true, 'message' => 'Notification sent to ' . $publisher->email]);
     }

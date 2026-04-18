@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Payout;
 use App\Models\User;
+use App\Support\PublisherPaymentManager;
 use Illuminate\Http\Request;
 
 class PayoutController extends Controller
 {
     public function index(Request $request)
     {
+        app(PublisherPaymentManager::class)->syncPendingPayouts();
+
         $request->validate([
             'search' => ['nullable', 'string', 'max:255'],
             'user_id' => ['nullable', 'integer'],
@@ -119,6 +122,8 @@ class PayoutController extends Controller
 
     public function export(Request $request)
     {
+        app(PublisherPaymentManager::class)->syncPendingPayouts();
+
         $payouts = $this->buildBaseQuery($request)
             ->with(['user.userProfile'])
             ->orderByDesc('aq_payouts.created_at')

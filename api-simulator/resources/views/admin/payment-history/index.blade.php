@@ -23,10 +23,10 @@
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         @php
             $statCards = [
-                ['label' => 'Total Deposits', 'value' => '€' . number_format($totalDeposits, 2), 'color' => 'text-emerald-700', 'bg' => 'bg-emerald-50', 'border' => 'border-emerald-200', 'icon' => '<path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5"/>'],
-                ['label' => 'Total Spend', 'value' => '€' . number_format($totalSpend, 2), 'color' => 'text-red-700', 'bg' => 'bg-red-50', 'border' => 'border-red-200', 'icon' => '<path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'],
+                ['label' => 'Total Deposits', 'value' => $adminCurrency->format($totalDeposits), 'color' => 'text-emerald-700', 'bg' => 'bg-emerald-50', 'border' => 'border-emerald-200', 'icon' => '<path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5"/>'],
+                ['label' => 'Total Spend', 'value' => $adminCurrency->format($totalSpend), 'color' => 'text-red-700', 'bg' => 'bg-red-50', 'border' => 'border-red-200', 'icon' => '<path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'],
                 ['label' => 'Active Advertisers', 'value' => number_format($activeAdvertisers), 'color' => 'text-blue-700', 'bg' => 'bg-blue-50', 'border' => 'border-blue-200', 'icon' => '<path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'],
-                ['label' => 'This Month', 'value' => '€' . number_format($currentMonthDeposits, 2), 'color' => 'text-purple-700', 'bg' => 'bg-purple-50', 'border' => 'border-purple-200', 'icon' => '<path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'],
+                ['label' => 'This Month', 'value' => $adminCurrency->format($currentMonthDeposits), 'color' => 'text-purple-700', 'bg' => 'bg-purple-50', 'border' => 'border-purple-200', 'icon' => '<path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'],
             ];
         @endphp
         @foreach($statCards as $card)
@@ -99,10 +99,10 @@
                                 <div class="text-xs text-gray-400">{{ $payment->advertiser_email }}</div>
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <div class="font-semibold text-emerald-700">€{{ number_format($payment->total_deposits, 2) }}</div>
+                                <div class="font-semibold text-emerald-700">{{ $adminCurrency->format($payment->total_deposits) }}</div>
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <div class="font-semibold text-red-700">€{{ number_format($payment->total_spend, 2) }}</div>
+                                <div class="font-semibold text-red-700">{{ $adminCurrency->format($payment->total_spend) }}</div>
                             </td>
                         </tr>
                     @empty
