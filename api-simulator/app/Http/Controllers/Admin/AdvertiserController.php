@@ -19,7 +19,7 @@ class AdvertiserController extends Controller
     {
         $query = User::where('role', 'advertiser')
             ->where('is_deleted', false)
-            ->with(['profile', 'campaigns' => function ($q) {
+            ->with(['profile', 'accountManager', 'campaigns' => function ($q) {
                 $q->where('is_deleted', false);
             }]);
 
@@ -40,7 +40,21 @@ class AdvertiserController extends Controller
             $query->where('status', $status);
         }
 
+        if ($accountManagerId = $request->input('account_manager')) {
+            if ($accountManagerId === 'unassigned') {
+                $query->whereNull('account_manager_id');
+            } else {
+                $query->where('account_manager_id', $accountManagerId);
+            }
+        }
+
         $advertisers = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
+        $accountManagers = User::query()
+            ->whereIn('role', ['admin', 'manager', 'operational'])
+            ->where('is_deleted', false)
+            ->where('status', 'active')
+            ->orderBy('email')
+            ->get(['id', 'email', 'role']);
 
         // Aggregate stats
         $totalAdvertisers = User::where('role', 'advertiser')->where('is_deleted', false)->count();
@@ -77,6 +91,7 @@ class AdvertiserController extends Controller
             'totalSpend',
             'campaignCounts',
             'spendPerAdvertiser',
+            'accountManagers',
         ));
     }
 
@@ -143,6 +158,7 @@ class AdvertiserController extends Controller
             'created_at'     => $advertiser->created_at?->format('M d, Y'),
             'last_login_at'  => $advertiser->last_login_at?->format('M d, Y H:i'),
             'last_login_ip'  => $advertiser->last_login_ip,
+            'account_manager' => $advertiser->accountManager?->email,
         ]);
     }
 

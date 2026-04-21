@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SecurityQuestion;
 use App\Models\User;
+use App\Support\AdminEventNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -85,6 +86,13 @@ class PublisherApprovalController extends Controller
             'website_url' => $request->website_url,
         ]);
 
+        app(AdminEventNotifier::class)->notifyAdmins(
+            'New Publisher Created',
+            $user->email . ' was created by admin and is pending approval.',
+            'system',
+            route('admin.publisher-approvals'),
+        );
+
         return redirect()->route('admin.publisher-approvals')->with('success', 'Publisher created and pending approval.');
     }
 
@@ -96,6 +104,13 @@ class PublisherApprovalController extends Controller
 
         $user->update(['status' => 'active']);
 
+        app(AdminEventNotifier::class)->notifyAdmins(
+            'Publisher Approved',
+            $user->email . ' was approved by admin.',
+            'success',
+            route('admin.publisher-approvals'),
+        );
+
         return response()->json(['success' => true, 'message' => 'Publisher approved successfully.']);
     }
 
@@ -106,6 +121,13 @@ class PublisherApprovalController extends Controller
             ->findOrFail($id);
 
         $user->update(['status' => 'closed']);
+
+        app(AdminEventNotifier::class)->notifyAdmins(
+            'Publisher Rejected',
+            $user->email . ' was rejected by admin.',
+            'warning',
+            route('admin.publisher-approvals'),
+        );
 
         return response()->json(['success' => true, 'message' => 'Publisher rejected.']);
     }

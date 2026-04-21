@@ -36,6 +36,9 @@ class DatabaseSeeder extends Seeder
             PublisherEarningsSeeder::class,
             PublisherInvoiceSeeder::class,
             PayoutSeeder::class,
+            VideoAnalyticsSeeder::class,
+            NotificationSeeder::class,
+            AdminMessageSeeder::class,
         ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Transaction extends Model
 {
@@ -43,49 +44,36 @@ class Transaction extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get the user that owns the transaction.
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the campaign associated with the transaction (for ad_spend type).
-     */
     public function campaign()
     {
         return $this->belongsTo(Campaign::class);
     }
 
-    /**
-     * Scope a query to only include deposit transactions.
-     */
+    public function paymentMethod()
+    {
+        return $this->belongsTo(SavedPaymentMethod::class, 'payment_method_id');
+    }
+
     public function scopeDeposits($query)
     {
         return $query->where('aq_transactions.type', 'deposit');
     }
 
-    /**
-     * Scope a query to only include ad spend transactions.
-     */
     public function scopeAdSpend($query)
     {
         return $query->where('aq_transactions.type', 'ad_spend');
     }
 
-    /**
-     * Scope a query to only include completed transactions.
-     */
     public function scopeCompleted($query)
     {
         return $query->where('aq_transactions.status', 'completed');
     }
 
-    /**
-     * Scope a query to completed advertiser deposit transactions.
-     */
     public function scopeCompletedAdvertiserDeposits($query)
     {
         return $query->deposits()
@@ -94,28 +82,69 @@ class Transaction extends Model
             ->where('aq_users.role', 'advertiser');
     }
 
-    /**
-     * Scope a query to only include withdrawals.
-     */
     public function scopeWithdrawals($query)
     {
         return $query->where('aq_transactions.type', 'withdrawal');
     }
 
-    /**
-     * Scope a query to only include refunds.
-     */
     public function scopeRefunds($query)
     {
         return $query->where('aq_transactions.type', 'refund');
     }
 
-    /**
-     * Get formatted amount with currency symbol.
-     */
-    public function getFormattedAmountAttribute()
+    public function scopeBetweenDates($query, ?string $startDate, ?string $endDate)
     {
-        $symbol = $this->currency === 'EUR' ? '€' : $this->currency;
-        return $symbol . number_format($this->amount, 2);
+        if ($startDate) {
+            $query->whereDate('aq_transactions.created_at', '>=', $startDate);
+        }
+
+        if ($endDate) {
+            $query->whereDate('aq_transactions.created_at', '<=', $endDate);
+        }
+
+        return $query;
+    }
+
+    public function getFormattedAmountAttribute(): string
+    {
+        $symbol = match ($this->currency) {
+            'EUR' => 'EUR ',
+            'USD' => 'USD ',
+            'GBP' => 'GBP ',
+            default => ((string) $this->currency) . ' ',
+        };
+
+        return $symbol . number_format((float) $this->amount, 2);
+    }
+
+    public function getTypeLabelAttribute(): string
+    {
+        return Str::headline(str_replace('_', ' ', (string) $this->type));
+    }
+
+    public function getGatewayLabelAttribute(): string
+    {
+        $value = $this->payment_gateway ?: optional($this->paymentMethod)->gateway;
+
+        if (! $value) {
+            return 'N/A';
+        }
+
+        return match ($value) {
+            'wire_transfer' => 'Bank Wire',
+            'coinbase' => 'Bitcoin',
+            default => Str::headline((string) $value),
+        };
+    }
+
+    public function getStatusBadgeAttribute(): array
+    {
+        return match ($this->status) {
+            'completed' => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-700', 'border' => 'border-emerald-200'],
+            'pending' => ['bg' => 'bg-amber-50', 'text' => 'text-amber-700', 'border' => 'border-amber-200'],
+            'failed' => ['bg' => 'bg-rose-50', 'text' => 'text-rose-700', 'border' => 'border-rose-200'],
+            'reversed' => ['bg' => 'bg-slate-50', 'text' => 'text-slate-700', 'border' => 'border-slate-200'],
+            default => ['bg' => 'bg-gray-50', 'text' => 'text-gray-700', 'border' => 'border-gray-200'],
+        };
     }
 }

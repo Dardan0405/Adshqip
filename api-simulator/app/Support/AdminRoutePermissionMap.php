@@ -35,6 +35,7 @@ class AdminRoutePermissionMap
             str_starts_with($routeName, 'admin.direct-campaign-request-approvals') => 'approvals.permissions.creative',
 
             str_starts_with($routeName, 'admin.advertiser-payment-history') => 'payments.permissions.advertiser_payment_history',
+            str_starts_with($routeName, 'admin.invoices') => 'payments.permissions.advertiser_payment_history',
             str_starts_with($routeName, 'admin.publisher-payment-history') => 'payments.permissions.publisher_payment_history',
             str_starts_with($routeName, 'admin.publisher-invoices') => 'payments.permissions.publisher_invoice',
             str_starts_with($routeName, 'admin.balance-sheet') => 'payments.permissions.your_balance_sheet',
@@ -42,6 +43,7 @@ class AdminRoutePermissionMap
 
             str_starts_with($routeName, 'admin.reports.environment') => 'reports.permissions.view_enviroment_report',
             str_starts_with($routeName, 'admin.reports.graphical') => 'reports.permissions.view_geographical_report',
+            str_starts_with($routeName, 'admin.geo-analytics') => 'reports.permissions.view_geographical_report',
             str_starts_with($routeName, 'admin.reports.advertiser') => 'reports.permissions.advertiser_report',
             str_starts_with($routeName, 'admin.reports.publisher') => 'reports.permissions.publisher_report',
             str_starts_with($routeName, 'admin.reports.site') => 'reports.permissions.publisher_report',
@@ -52,6 +54,7 @@ class AdminRoutePermissionMap
             str_starts_with($routeName, 'admin.reports.requests') => 'reports.permissions.your_revneue_related_statistics',
             str_starts_with($routeName, 'admin.reports.dsp') => 'reports.permissions.your_revneue_related_statistics',
             str_starts_with($routeName, 'admin.reports.ssp') => 'reports.permissions.your_revneue_related_statistics',
+            str_starts_with($routeName, 'admin.video-analytics') => 'reports.permissions.your_revneue_related_statistics',
             str_starts_with($routeName, 'admin.network-kit') => 'reports.permissions.your_revneue_related_statistics',
 
             str_starts_with($routeName, 'admin.anti-fraud') => 'analystics.permissions.view_ant_fraud_clicks',
@@ -67,6 +70,21 @@ class AdminRoutePermissionMap
             str_starts_with($routeName, 'admin.connection-types') => 'targetting.permissions.mobile.capability',
             str_starts_with($routeName, 'admin.carrier-isp-connections') => 'targetting.permissions.mobile.capability',
             str_starts_with($routeName, 'admin.keywords') => 'targetting.permissions.contextual.keyword',
+
+            // Content management - accessible to all admin users
+            str_starts_with($routeName, 'admin.faqs') => null,
+            str_starts_with($routeName, 'admin.testimonials') => null,
+            str_starts_with($routeName, 'admin.newsletters') => null,
+            str_starts_with($routeName, 'admin.support-tickets') => null,
+            str_starts_with($routeName, 'admin.notifications') => null,
+            str_starts_with($routeName, 'admin.referral-codes') => null,
+            str_starts_with($routeName, 'admin.api-keys') => null,
+            str_starts_with($routeName, 'admin.sessions-security') => null,
+            str_starts_with($routeName, 'admin.telegram-integration') => null,
+            str_starts_with($routeName, 'admin.account-managers') => null,
+            str_starts_with($routeName, 'admin.messages') => null,
+            str_starts_with($routeName, 'admin.search') => null,
+            str_starts_with($routeName, 'admin.push') => null,
 
             default => null,
         };

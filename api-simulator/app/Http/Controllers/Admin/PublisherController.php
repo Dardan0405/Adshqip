@@ -19,7 +19,7 @@ class PublisherController extends Controller
     {
         $query = User::where('role', 'publisher')
             ->where('is_deleted', false)
-            ->with(['profile', 'sites' => function ($q) {
+            ->with(['profile', 'accountManager', 'sites' => function ($q) {
                 $q->where('is_deleted', false);
             }]);
 
@@ -40,7 +40,21 @@ class PublisherController extends Controller
             $query->where('status', $status);
         }
 
+        if ($accountManagerId = $request->input('account_manager')) {
+            if ($accountManagerId === 'unassigned') {
+                $query->whereNull('account_manager_id');
+            } else {
+                $query->where('account_manager_id', $accountManagerId);
+            }
+        }
+
         $publishers = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
+        $accountManagers = User::query()
+            ->whereIn('role', ['admin', 'manager', 'operational'])
+            ->where('is_deleted', false)
+            ->where('status', 'active')
+            ->orderBy('email')
+            ->get(['id', 'email', 'role']);
 
         // Aggregate stats
         $totalPublishers = User::where('role', 'publisher')->where('is_deleted', false)->count();
@@ -87,6 +101,7 @@ class PublisherController extends Controller
             'totalEarnings',
             'siteCounts',
             'earningsPerPublisher',
+            'accountManagers',
         ));
     }
 
@@ -155,6 +170,7 @@ class PublisherController extends Controller
             'created_at'     => $publisher->created_at?->format('M d, Y'),
             'last_login_at'  => $publisher->last_login_at?->format('M d, Y H:i'),
             'last_login_ip'  => $publisher->last_login_ip,
+            'account_manager' => $publisher->accountManager?->email,
         ]);
     }
 

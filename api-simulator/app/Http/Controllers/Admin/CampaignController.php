@@ -22,6 +22,7 @@ use App\Models\User;
 use App\Models\Zone;
 use App\Models\Category;
 use App\Models\Keyword;
+use App\Support\AdminEventNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
@@ -812,6 +813,13 @@ class CampaignController extends Controller
             $updatedAdFormats = $this->processAdFormats($campaign, $originalAdFormats, $request);
             $campaign->update(['ad_formats' => $updatedAdFormats]);
         }
+
+        app(AdminEventNotifier::class)->notifyAdmins(
+            'New Campaign Created',
+            'Campaign "' . $campaign->name . '" was created with status: ' . $campaign->status . '.',
+            'campaign',
+            route('admin.campaigns.show', $campaign->id),
+        );
 
         return redirect()
             ->route('admin.campaigns')

@@ -18,7 +18,7 @@
                     <div class="text-[10px] text-gray-400 uppercase tracking-wide">Total Revenue</div>
                     <div class="text-2xl font-bold text-gray-900 mt-1">${{ number_format($stats['total_revenue'], 2) }}</div>
                     <div class="flex items-center gap-1 mt-1">
-                        <span class="text-xs font-medium text-brand-600">↑ {{ $stats['revenue_change'] }}%</span>
+                        <span class="text-xs font-medium {{ $stats['revenue_change'] >= 0 ? 'text-brand-600' : 'text-red-500' }}">{{ $stats['revenue_change'] >= 0 ? '↑' : '↓' }} {{ abs($stats['revenue_change']) }}%</span>
                         <span class="text-[10px] text-gray-400">vs last month</span>
                     </div>
                 </div>
@@ -35,7 +35,7 @@
                     <div class="text-[10px] text-gray-400 uppercase tracking-wide">Active Users</div>
                     <div class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($stats['active_users']) }}</div>
                     <div class="flex items-center gap-1 mt-1">
-                        <span class="text-xs font-medium text-brand-600">↑ {{ $stats['users_change'] }}%</span>
+                        <span class="text-xs font-medium {{ $stats['users_change'] >= 0 ? 'text-brand-600' : 'text-red-500' }}">{{ $stats['users_change'] >= 0 ? '↑' : '↓' }} {{ abs($stats['users_change']) }}%</span>
                         <span class="text-[10px] text-gray-400">vs last month</span>
                     </div>
                 </div>
@@ -69,7 +69,7 @@
                     <div class="text-[10px] text-gray-400 uppercase tracking-wide">Fraud Blocked</div>
                     <div class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($stats['fraud_blocked']) }}</div>
                     <div class="flex items-center gap-1 mt-1">
-                        <span class="text-xs font-medium text-red-500">↑ {{ $stats['fraud_change'] }}%</span>
+                        <span class="text-xs font-medium {{ $stats['fraud_change'] >= 0 ? 'text-red-500' : 'text-brand-600' }}">{{ $stats['fraud_change'] >= 0 ? '↑' : '↓' }} {{ abs($stats['fraud_change']) }}%</span>
                         <span class="text-[10px] text-gray-400">events this month</span>
                     </div>
                 </div>
@@ -91,16 +91,24 @@
                     <span class="flex items-center gap-1.5 text-gray-500"><span class="w-3 h-3 rounded-sm bg-gray-300"></span> Payouts</span>
                 </div>
             </div>
-            <div class="relative h-56">
-                <div class="absolute inset-0 flex items-end gap-1 px-1">
+            <div class="flex flex-col h-56">
+                {{-- Chart bars area --}}
+                <div class="flex-1 flex items-end gap-1 px-1">
                     @foreach($chartData as $day)
-                        <div class="flex-1 flex flex-col items-center gap-0 group">
-                            <div class="w-full rounded-t bg-brand-400 group-hover:bg-brand-500 transition-all" style="height: {{ $day['revenue_pct'] }}%"></div>
-                            <div class="w-full rounded-t bg-gray-200 group-hover:bg-gray-300 transition-all" style="height: {{ $day['payout_pct'] }}%"></div>
+                        <div class="flex-1 flex items-end gap-px group h-full">
+                            <div class="flex-1 bg-brand-400 group-hover:bg-brand-500 transition-all rounded-t" style="height: {{ max(2, $day['revenue_pct']) }}%"></div>
+                            <div class="flex-1 bg-gray-200 group-hover:bg-gray-300 transition-all rounded-t" style="height: {{ max(2, $day['payout_pct']) }}%"></div>
+                        </div>
+                    @endforeach
+                </div>
+                {{-- X-axis labels --}}
+                <div class="flex gap-1 px-1 pt-1 border-t border-gray-100">
+                    @foreach($chartData as $day)
+                        <div class="flex-1 text-center">
                             @if($loop->index % 3 === 0)
-                                <span class="text-[8px] text-gray-400 mt-1">{{ $day['label'] }}</span>
+                                <span class="text-[8px] text-gray-400">{{ $day['label'] }}</span>
                             @else
-                                <span class="text-[8px] text-transparent mt-1">.</span>
+                                <span class="text-[8px] text-transparent">.</span>
                             @endif
                         </div>
                     @endforeach
@@ -144,23 +152,25 @@
         <div class="bg-white rounded-xl border border-gray-200">
             <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h3 class="text-sm font-semibold text-gray-700">Recent Users</h3>
-                <a href="#" class="text-xs text-brand-600 hover:underline">View all →</a>
+                <a href="{{ route('admin.advertisers') }}" class="text-xs text-brand-600 hover:underline">View users</a>
             </div>
             <div class="divide-y divide-gray-50">
-                @foreach($recentUsers as $user)
+                @forelse($recentUsers as $user)
                     <div class="px-6 py-3 flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-full {{ $user['avatar_bg'] }} flex items-center justify-center text-white text-xs font-bold">
                                 {{ strtoupper(substr($user['email'], 0, 1)) }}
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-800 truncate max-w-[140px]">{{ $user['email'] }}</p>
+                                <a href="{{ $user['url'] }}" class="text-sm font-medium text-gray-800 hover:text-brand-600 truncate max-w-[140px] block">{{ $user['email'] }}</a>
                                 <p class="text-[10px] text-gray-400">{{ $user['joined'] }}</p>
                             </div>
                         </div>
                         <span class="text-[10px] font-semibold px-2 py-0.5 rounded {{ $user['role_color'] }}">{{ $user['role'] }}</span>
                     </div>
-                @endforeach
+                @empty
+                    <div class="px-6 py-8 text-sm text-gray-400 text-center">No users found yet.</div>
+                @endforelse
             </div>
         </div>
 
@@ -171,10 +181,10 @@
                 <span class="text-xs font-semibold text-white bg-red-500 rounded-full px-2 py-0.5">{{ count($openTickets) }}</span>
             </div>
             <div class="divide-y divide-gray-50">
-                @foreach($openTickets as $ticket)
+                @forelse($openTickets as $ticket)
                     <div class="px-6 py-3">
                         <div class="flex items-center justify-between">
-                            <p class="text-sm font-medium text-gray-800 truncate max-w-[180px]">{{ $ticket['subject'] }}</p>
+                            <a href="{{ $ticket['url'] }}" class="text-sm font-medium text-gray-800 hover:text-brand-600 truncate max-w-[180px]">{{ $ticket['subject'] }}</a>
                             @php
                                 $prioColors = ['urgent' => 'bg-red-100 text-red-700', 'high' => 'bg-orange-100 text-orange-700', 'medium' => 'bg-yellow-100 text-yellow-700', 'low' => 'bg-gray-100 text-gray-600'];
                             @endphp
@@ -186,7 +196,9 @@
                             <span>{{ $ticket['created'] }}</span>
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <div class="px-6 py-8 text-sm text-gray-400 text-center">No open support tickets.</div>
+                @endforelse
             </div>
         </div>
 

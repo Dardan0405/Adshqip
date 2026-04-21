@@ -2,79 +2,238 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Campaign;
+use App\Models\StatDaily;
+use App\Models\SupportTicket;
+use App\Models\User;
+use Carbon\CarbonPeriod;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
     public function dashboard()
     {
-        $user = Auth::user();
+        $today = Carbon::today();
+        $currentMonthStart = $today->copy()->startOfMonth();
+        $previousMonthStart = $today->copy()->subMonthNoOverflow()->startOfMonth();
+        $previousMonthEnd = $today->copy()->subMonthNoOverflow()->endOfMonth();
+        $last30Start = $today->copy()->subDays(29);
+        $previous30Start = $today->copy()->subDays(59);
+        $previous30End = $today->copy()->subDays(30);
 
-        // Top stat cards
+        $currentMonthRevenue = (float) StatDaily::whereBetween('date', [$currentMonthStart, $today])->sum('revenue');
+        $previousMonthRevenue = (float) StatDaily::whereBetween('date', [$previousMonthStart, $previousMonthEnd])->sum('revenue');
+        $last30Impressions = (int) StatDaily::whereBetween('date', [$last30Start, $today])->sum('impressions');
+        $previous30Impressions = (int) StatDaily::whereBetween('date', [$previous30Start, $previous30End])->sum('impressions');
+        $currentMonthFraud = (int) StatDaily::whereBetween('date', [$currentMonthStart, $today])->sum('adblock_detected');
+        $previousMonthFraud = (int) StatDaily::whereBetween('date', [$previousMonthStart, $previousMonthEnd])->sum('adblock_detected');
+
+        $activeUsers = User::query()
+            ->where('is_deleted', false)
+            ->where('status', 'active')
+            ->count();
+
+        $activeUsersLastMonth = User::query()
+            ->where('is_deleted', false)
+            ->where('status', 'active')
+            ->where('created_at', '<=', $previousMonthEnd)
+            ->count();
+
         $stats = [
-            'total_revenue' => 347891.42,
-            'revenue_change' => 12.4,
-            'active_users' => 2847,
-            'users_change' => 8.2,
-            'impressions' => 48723150,
-            'impressions_change' => 5.1,
-            'fraud_blocked' => 14382,
-            'fraud_change' => 3.7,
-            'total_users' => 3214,
-            'new_users_month' => 187,
-            'total_campaigns' => 1456,
-            'pending_review' => 23,
+            'total_revenue' => (float) StatDaily::sum('revenue'),
+            'revenue_change' => $this->percentageChange($currentMonthRevenue, $previousMonthRevenue),
+            'active_users' => $activeUsers,
+            'users_change' => $this->percentageChange($activeUsers, $activeUsersLastMonth),
+            'impressions' => $last30Impressions,
+            'impressions_change' => $this->percentageChange($last30Impressions, $previous30Impressions),
+            'fraud_blocked' => $currentMonthFraud,
+            'fraud_change' => $this->percentageChange($currentMonthFraud, $previousMonthFraud),
+            'total_users' => User::where('is_deleted', false)->count(),
+            'new_users_month' => User::where('is_deleted', false)
+                ->whereBetween('created_at', [$currentMonthStart, $today->copy()->endOfDay()])
+                ->count(),
+            'total_campaigns' => Campaign::where('is_deleted', false)->count(),
+            'pending_review' => Campaign::where('is_deleted', false)
+                ->where('status', 'pending_review')
+                ->count(),
         ];
 
-        // Revenue chart — 30 days
-        $chartData = [];
-        for ($i = 1; $i <= 30; $i++) {
-            $chartData[] = [
-                'label' => sprintf('%02d', $i),
-                'revenue_pct' => rand(30, 95),
-                'payout_pct' => rand(10, 35),
-            ];
-        }
-
-        // User breakdown
-        $userBreakdown = [
-            ['role' => 'advertiser', 'count' => 1842, 'pct' => 57, 'color' => 'bg-blue-500'],
-            ['role' => 'publisher', 'count' => 1024, 'pct' => 32, 'color' => 'bg-green-500'],
-            ['role' => 'admin', 'count' => 12, 'pct' => 0.4, 'color' => 'bg-indigo-500'],
-            ['role' => 'manager', 'count' => 36, 'pct' => 1.1, 'color' => 'bg-orange-500'],
-        ];
-
-        // Recent users
-        $recentUsers = [
-            ['email' => 'newadvertiser@test.com', 'role' => 'advertiser', 'joined' => '2 hours ago', 'avatar_bg' => 'bg-blue-500', 'role_color' => 'bg-blue-100 text-blue-700'],
-            ['email' => 'publisher42@media.al', 'role' => 'publisher', 'joined' => '5 hours ago', 'avatar_bg' => 'bg-green-500', 'role_color' => 'bg-green-100 text-green-700'],
-            ['email' => 'balkanads@gmail.com', 'role' => 'advertiser', 'joined' => '1 day ago', 'avatar_bg' => 'bg-purple-500', 'role_color' => 'bg-blue-100 text-blue-700'],
-            ['email' => 'news-portal@kosovo.net', 'role' => 'publisher', 'joined' => '2 days ago', 'avatar_bg' => 'bg-teal-500', 'role_color' => 'bg-green-100 text-green-700'],
-            ['email' => 'ecom-shop@adshqip.com', 'role' => 'advertiser', 'joined' => '3 days ago', 'avatar_bg' => 'bg-pink-500', 'role_color' => 'bg-blue-100 text-blue-700'],
-        ];
-
-        // Open support tickets
-        $openTickets = [
-            ['subject' => 'Payment not received', 'priority' => 'urgent', 'category' => 'billing', 'created' => '1 hour ago'],
-            ['subject' => 'Campaign rejected without reason', 'priority' => 'high', 'category' => 'campaign', 'created' => '3 hours ago'],
-            ['subject' => 'Ad code not loading', 'priority' => 'medium', 'category' => 'technical', 'created' => '6 hours ago'],
-            ['subject' => 'Need account verification', 'priority' => 'low', 'category' => 'account', 'created' => '1 day ago'],
-            ['subject' => 'Suspicious click activity', 'priority' => 'high', 'category' => 'fraud', 'created' => '1 day ago'],
-        ];
-
-        // Campaign status summary
-        $campaignStatus = [
-            ['label' => 'active', 'count' => 834, 'dot' => 'bg-green-500'],
-            ['label' => 'paused', 'count' => 215, 'dot' => 'bg-yellow-500'],
-            ['label' => 'draft', 'count' => 189, 'dot' => 'bg-gray-400'],
-            ['label' => 'completed', 'count' => 142, 'dot' => 'bg-blue-500'],
-            ['label' => 'rejected', 'count' => 53, 'dot' => 'bg-red-500'],
-            ['label' => 'pending review', 'count' => 23, 'dot' => 'bg-orange-500'],
-        ];
+        $chartData = $this->revenueChartData($last30Start, $today);
+        $userBreakdown = $this->userBreakdown((int) $stats['total_users']);
+        $recentUsers = $this->recentUsers();
+        $openTickets = $this->openTickets();
+        $campaignStatus = $this->campaignStatus();
 
         return view('admin.dashboard', compact(
-            'stats', 'chartData', 'userBreakdown', 'recentUsers', 'openTickets', 'campaignStatus'
+            'stats',
+            'chartData',
+            'userBreakdown',
+            'recentUsers',
+            'openTickets',
+            'campaignStatus'
         ));
+    }
+
+    private function revenueChartData(Carbon $startDate, Carbon $endDate): array
+    {
+        $dailyFinancials = StatDaily::query()
+            ->selectRaw('date, SUM(revenue) as revenue, SUM(publisher_earnings) as payouts')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->keyBy(fn (StatDaily $row) => $row->date->toDateString());
+
+        $maxChartValue = max(1, (float) $dailyFinancials->max(fn ($row) => max((float) $row->revenue, (float) $row->payouts)));
+
+        return collect(CarbonPeriod::create($startDate, $endDate))
+            ->map(function (Carbon $date) use ($dailyFinancials, $maxChartValue) {
+                $row = $dailyFinancials->get($date->toDateString());
+                $revenue = (float) ($row->revenue ?? 0);
+                $payouts = (float) ($row->payouts ?? 0);
+
+                return [
+                    'label' => $date->format('d M'),
+                    'revenue' => $revenue,
+                    'payouts' => $payouts,
+                    'revenue_pct' => $this->chartPercent($revenue, $maxChartValue),
+                    'payout_pct' => $this->chartPercent($payouts, $maxChartValue),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function userBreakdown(int $totalUsers): array
+    {
+        $roleColors = [
+            'advertiser' => 'bg-blue-500',
+            'publisher' => 'bg-green-500',
+            'admin' => 'bg-indigo-500',
+            'manager' => 'bg-orange-500',
+            'operational' => 'bg-cyan-500',
+        ];
+
+        $safeTotal = max(1, $totalUsers);
+
+        return User::query()
+            ->select('role', DB::raw('COUNT(*) as count'))
+            ->where('is_deleted', false)
+            ->groupBy('role')
+            ->orderByDesc('count')
+            ->get()
+            ->map(fn ($role) => [
+                'role' => $role->role,
+                'count' => (int) $role->count,
+                'pct' => round(((int) $role->count / $safeTotal) * 100, 1),
+                'color' => $roleColors[$role->role] ?? 'bg-gray-500',
+            ])
+            ->all();
+    }
+
+    private function recentUsers(): array
+    {
+        $roleColors = [
+            'advertiser' => 'bg-blue-500',
+            'publisher' => 'bg-green-500',
+            'admin' => 'bg-indigo-500',
+            'manager' => 'bg-orange-500',
+            'operational' => 'bg-cyan-500',
+        ];
+
+        $roleBadgeColors = [
+            'advertiser' => 'bg-blue-100 text-blue-700',
+            'publisher' => 'bg-green-100 text-green-700',
+            'admin' => 'bg-indigo-100 text-indigo-700',
+            'manager' => 'bg-orange-100 text-orange-700',
+            'operational' => 'bg-cyan-100 text-cyan-700',
+        ];
+
+        return User::query()
+            ->where('is_deleted', false)
+            ->latest('created_at')
+            ->limit(5)
+            ->get(['id', 'email', 'role', 'created_at'])
+            ->map(fn (User $recentUser) => [
+                'email' => $recentUser->email,
+                'role' => $recentUser->role,
+                'joined' => $recentUser->created_at?->diffForHumans() ?? 'Unknown',
+                'avatar_bg' => $roleColors[$recentUser->role] ?? 'bg-gray-500',
+                'role_color' => $roleBadgeColors[$recentUser->role] ?? 'bg-gray-100 text-gray-700',
+                'url' => $this->userUrl($recentUser),
+            ])
+            ->all();
+    }
+
+    private function openTickets(): array
+    {
+        return SupportTicket::query()
+            ->whereIn('status', ['open', 'in_progress', 'waiting_reply'])
+            ->orderByRaw("FIELD(priority, 'urgent', 'high', 'medium', 'low')")
+            ->latest('updated_at')
+            ->limit(5)
+            ->get(['id', 'subject', 'priority', 'category', 'created_at'])
+            ->map(fn (SupportTicket $ticket) => [
+                'subject' => $ticket->subject,
+                'priority' => $ticket->priority,
+                'category' => $ticket->category,
+                'created' => $ticket->created_at?->diffForHumans() ?? 'Unknown',
+                'url' => route('admin.support-tickets.show', $ticket),
+            ])
+            ->all();
+    }
+
+    private function campaignStatus(): array
+    {
+        $statusDots = [
+            'active' => 'bg-green-500',
+            'paused' => 'bg-yellow-500',
+            'draft' => 'bg-gray-400',
+            'completed' => 'bg-blue-500',
+            'rejected' => 'bg-red-500',
+            'pending_review' => 'bg-orange-500',
+        ];
+
+        $campaignCounts = Campaign::query()
+            ->select('status', DB::raw('COUNT(*) as count'))
+            ->where('is_deleted', false)
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
+        return collect(['active', 'paused', 'draft', 'completed', 'rejected', 'pending_review'])
+            ->map(fn (string $status) => [
+                'label' => str_replace('_', ' ', $status),
+                'count' => (int) ($campaignCounts[$status] ?? 0),
+                'dot' => $statusDots[$status] ?? 'bg-gray-400',
+            ])
+            ->all();
+    }
+
+    private function percentageChange(float|int $current, float|int $previous): float
+    {
+        if ((float) $previous === 0.0) {
+            return (float) $current > 0 ? 100.0 : 0.0;
+        }
+
+        return round((($current - $previous) / $previous) * 100, 1);
+    }
+
+    private function chartPercent(float $value, float $max): float
+    {
+        if ($value <= 0.0 || $max <= 0.0) {
+            return 0.0;
+        }
+
+        return round(max(4, ($value / $max) * 100), 1);
+    }
+
+    private function userUrl(User $user): string
+    {
+        return match ($user->role) {
+            'advertiser' => route('admin.advertisers.show', $user->id),
+            'publisher' => route('admin.publishers.show', $user->id),
+            default => route('admin.notifications', ['user_id' => $user->id]),
+        };
     }
 }

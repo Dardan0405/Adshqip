@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TwoFactorBackupCode;
 use App\Models\User;
 use App\Support\ActivityLogger;
+use App\Support\SessionTracker;
 use App\Support\TwoFactorAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 
 class WebLoginController extends Controller
 {
-    public function login(Request $request, TwoFactorAuth $twoFactorAuth, ActivityLogger $activityLogger)
+    public function login(Request $request, TwoFactorAuth $twoFactorAuth, ActivityLogger $activityLogger, SessionTracker $sessionTracker)
     {
         $request->validate([
             'email' => 'required|email',
@@ -65,6 +66,7 @@ class WebLoginController extends Controller
 
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
+        $sessionTracker->trackLogin($request, $user);
         $user->update(['last_login_at' => now(), 'last_login_ip' => $request->ip()]);
         if ($user->two_factor_enabled) {
             $twoFactorAuth->rememberTrustedContext($user, $request);
@@ -130,7 +132,7 @@ class WebLoginController extends Controller
         ]);
     }
 
-    public function verifyChallenge(Request $request, TwoFactorAuth $twoFactorAuth, ActivityLogger $activityLogger)
+    public function verifyChallenge(Request $request, TwoFactorAuth $twoFactorAuth, ActivityLogger $activityLogger, SessionTracker $sessionTracker)
     {
         $pending = $request->session()->get('two_factor_login');
 
@@ -228,6 +230,7 @@ class WebLoginController extends Controller
         Auth::login($user, (bool) ($pending['remember'] ?? false));
         $request->session()->forget('two_factor_login');
         $request->session()->regenerate();
+        $sessionTracker->trackLogin($request, $user);
 
         $user->update([
             'last_login_at' => now(),

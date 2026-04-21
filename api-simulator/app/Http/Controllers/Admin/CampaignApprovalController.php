@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\User;
+use App\Support\AdminEventNotifier;
 use Illuminate\Http\Request;
 
 class CampaignApprovalController extends Controller
@@ -71,6 +72,13 @@ class CampaignApprovalController extends Controller
             'admin_approved' => true,
         ]);
 
+        app(AdminEventNotifier::class)->notifyAdmins(
+            'Campaign Approved',
+            'Campaign "' . $campaign->name . '" was approved by admin.',
+            'success',
+            route('admin.campaigns.show', $campaign->id),
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Campaign approved successfully.',
@@ -87,6 +95,13 @@ class CampaignApprovalController extends Controller
             'status' => 'rejected',
             'admin_approved' => false,
         ]);
+
+        app(AdminEventNotifier::class)->notifyAdmins(
+            'Campaign Rejected',
+            'Campaign "' . $campaign->name . '" was rejected by admin.',
+            'warning',
+            route('admin.campaigns.show', $campaign->id),
+        );
 
         return response()->json([
             'success' => true,

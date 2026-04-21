@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\KycDocument;
 use App\Models\KycVerification;
 use App\Models\User;
+use App\Support\AdminEventNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -272,7 +273,7 @@ class KycVerificationController extends Controller
         $validated = $request->validate($this->baseRules());
         $payload = $this->normalizePayload($validated);
 
-        DB::transaction(function () use ($request, $payload) {
+        $verification = DB::transaction(function () use ($request, $payload) {
             $verification = KycVerification::create($payload + [
                 'status' => 'pending',
                 'submitted_at' => now(),
@@ -283,7 +284,16 @@ class KycVerificationController extends Controller
             /** @var User $user */
             $user = User::query()->findOrFail($verification->user_id);
             $this->syncUserKyc($user, $verification);
+
+            return $verification->load('user');
         });
+
+        app(AdminEventNotifier::class)->notifyAdmins(
+            'New KYC Verification Submitted',
+            ($verification->user->email ?? 'A user') . ' submitted a KYC verification for review.',
+            'system',
+            route('admin.kyc-verifications.edit', $verification),
+        );
 
         return redirect()
             ->route('admin.kyc-verifications')
@@ -365,6 +375,15 @@ class KycVerificationController extends Controller
             $this->syncUserKyc($user, $kycVerification->fresh());
         });
 
+        $kycVerification->loadMissing('user');
+
+        app(AdminEventNotifier::class)->notifyAdmins(
+            'KYC Verification Approved',
+            ($kycVerification->user->email ?? 'A user') . ' KYC verification was approved.',
+            'success',
+            route('admin.kyc-verifications.edit', $kycVerification),
+        );
+
         return redirect()
             ->route('admin.kyc-verifications.edit', $kycVerification)
             ->with('success', 'KYC verification approved successfully.');
@@ -401,6 +420,15 @@ class KycVerificationController extends Controller
             $user = User::query()->findOrFail($kycVerification->user_id);
             $this->syncUserKyc($user, $kycVerification->fresh());
         });
+
+        $kycVerification->loadMissing('user');
+
+        app(AdminEventNotifier::class)->notifyAdmins(
+            'KYC Verification Rejected',
+            ($kycVerification->user->email ?? 'A user') . ' KYC verification was rejected.',
+            'warning',
+            route('admin.kyc-verifications.edit', $kycVerification),
+        );
 
         return redirect()
             ->route('admin.kyc-verifications.edit', $kycVerification)

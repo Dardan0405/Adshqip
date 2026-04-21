@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SecurityQuestion;
 use App\Models\User;
+use App\Support\AdminEventNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -83,6 +84,13 @@ class AdvertiserApprovalController extends Controller
             'last_name'  => $request->last_name,
         ]);
 
+        app(AdminEventNotifier::class)->notifyAdmins(
+            'New Advertiser Created',
+            $user->email . ' was created by admin and is pending approval.',
+            'system',
+            route('admin.advertiser-approvals'),
+        );
+
         return redirect()->route('admin.advertiser-approvals')->with('success', 'Advertiser created and pending approval.');
     }
 
@@ -94,6 +102,13 @@ class AdvertiserApprovalController extends Controller
 
         $user->update(['status' => 'active']);
 
+        app(AdminEventNotifier::class)->notifyAdmins(
+            'Advertiser Approved',
+            $user->email . ' was approved by admin.',
+            'success',
+            route('admin.advertiser-approvals'),
+        );
+
         return response()->json(['success' => true, 'message' => 'Advertiser approved successfully.']);
     }
 
@@ -104,6 +119,13 @@ class AdvertiserApprovalController extends Controller
             ->findOrFail($id);
 
         $user->update(['status' => 'closed']);
+
+        app(AdminEventNotifier::class)->notifyAdmins(
+            'Advertiser Rejected',
+            $user->email . ' was rejected by admin.',
+            'warning',
+            route('admin.advertiser-approvals'),
+        );
 
         return response()->json(['success' => true, 'message' => 'Advertiser rejected.']);
     }

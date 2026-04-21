@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\WebLoginController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\RegisterController;
 use App\Support\ActivityLogger;
+use App\Support\SessionTracker;
 use App\Support\TwoFactorAuth;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,13 @@ Route::get('/signin', function () {
 Route::get('/register', [RegisterController::class, 'showForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register'])->name('register.submit');
 Route::get('/verify-email/{id}/{hash}', [RegisterController::class, 'verifyEmail'])->name('account.email.verify');
+Route::get('/pricing-plans-feed', [\App\Http\Controllers\PricingPlanFeedController::class, 'index'])->name('pricing-plans.feed');
+Route::options('/faq-feed', [\App\Http\Controllers\FaqFeedController::class, 'options'])->name('faq.feed.options');
+Route::get('/faq-feed', [\App\Http\Controllers\FaqFeedController::class, 'index'])->name('faq.feed');
+Route::options('/testimonials-feed', [\App\Http\Controllers\TestimonialFeedController::class, 'options'])->name('testimonials.feed.options');
+Route::get('/testimonials-feed', [\App\Http\Controllers\TestimonialFeedController::class, 'index'])->name('testimonials.feed');
+Route::options('/newsletter/subscribe', [\App\Http\Controllers\NewsletterSubscriptionController::class, 'options'])->name('newsletter.subscribe.options');
+Route::post('/newsletter/subscribe', [\App\Http\Controllers\NewsletterSubscriptionController::class, 'store'])->name('newsletter.subscribe');
 
 // Redirect Laravel's default /login to /signin
 Route::get('/login', function () {
@@ -99,6 +107,7 @@ Route::get('/auto-login', function (\Illuminate\Http\Request $request) {
 
     Auth::login($user);
     $request->session()->regenerate();
+    app(SessionTracker::class)->trackLogin($request, $user);
     $user->update(['last_login_at' => now(), 'last_login_ip' => $request->ip()]);
     if ($user->two_factor_enabled) {
         $twoFactorAuth->rememberTrustedContext($user, $request);
@@ -128,6 +137,8 @@ Route::post('/logout', function () {
             'entity_id' => Auth::id(),
         ]);
     }
+
+    app(SessionTracker::class)->revokeCurrent(request());
 
     Auth::logout();
     request()->session()->forget('two_factor_login');
@@ -244,6 +255,30 @@ Route::middleware('auth')->group(function () {
         Route::put('/display-screens/{displayScreen}', [\App\Http\Controllers\Admin\DisplayScreenController::class, 'update'])->name('admin.display-screens.update');
         Route::patch('/display-screens/{displayScreen}/block', [\App\Http\Controllers\Admin\DisplayScreenController::class, 'block'])->name('admin.display-screens.block');
         Route::patch('/display-screens/{displayScreen}/unblock', [\App\Http\Controllers\Admin\DisplayScreenController::class, 'unblock'])->name('admin.display-screens.unblock');
+        Route::get('/api-keys', [\App\Http\Controllers\Admin\ApiKeyController::class, 'index'])->name('admin.api-keys');
+        Route::post('/api-keys', [\App\Http\Controllers\Admin\ApiKeyController::class, 'store'])->name('admin.api-keys.store');
+        Route::patch('/api-keys/{apiKey}/revoke', [\App\Http\Controllers\Admin\ApiKeyController::class, 'revoke'])->name('admin.api-keys.revoke');
+        Route::patch('/api-keys/{apiKey}/activate', [\App\Http\Controllers\Admin\ApiKeyController::class, 'activate'])->name('admin.api-keys.activate');
+        Route::get('/sessions-security', [\App\Http\Controllers\Admin\SessionSecurityController::class, 'index'])->name('admin.sessions-security');
+        Route::delete('/sessions-security/{adminSession}', [\App\Http\Controllers\Admin\SessionSecurityController::class, 'revoke'])->name('admin.sessions-security.revoke');
+        Route::post('/sessions-security/clear-expired', [\App\Http\Controllers\Admin\SessionSecurityController::class, 'clearExpired'])->name('admin.sessions-security.clear-expired');
+        Route::get('/telegram-integration', [\App\Http\Controllers\Admin\TelegramIntegrationController::class, 'index'])->name('admin.telegram-integration');
+        Route::post('/telegram-integration/mini-apps', [\App\Http\Controllers\Admin\TelegramIntegrationController::class, 'storeMiniApp'])->name('admin.telegram-integration.store-mini-app');
+        Route::put('/telegram-integration', [\App\Http\Controllers\Admin\TelegramIntegrationController::class, 'update'])->name('admin.telegram-integration.update');
+        Route::patch('/telegram-integration/{telegramMiniApp}/activate', [\App\Http\Controllers\Admin\TelegramIntegrationController::class, 'activate'])->name('admin.telegram-integration.activate');
+        Route::patch('/telegram-integration/{telegramMiniApp}/suspend', [\App\Http\Controllers\Admin\TelegramIntegrationController::class, 'suspend'])->name('admin.telegram-integration.suspend');
+
+        // Account Managers
+        Route::get('/account-managers', [\App\Http\Controllers\Admin\AccountManagerController::class, 'index'])->name('admin.account-managers');
+        Route::post('/account-managers/assign', [\App\Http\Controllers\Admin\AccountManagerController::class, 'assign'])->name('admin.account-managers.assign');
+        Route::post('/account-managers/bulk-assign', [\App\Http\Controllers\Admin\AccountManagerController::class, 'bulkAssign'])->name('admin.account-managers.bulk-assign');
+        Route::get('/account-managers/{user}', [\App\Http\Controllers\Admin\AccountManagerController::class, 'show'])->name('admin.account-managers.show');
+
+        Route::get('/transactions', [\App\Http\Controllers\Admin\TransactionController::class, 'index'])->name('admin.transactions');
+        Route::get('/newsletters', [\App\Http\Controllers\Admin\NewsletterController::class, 'index'])->name('admin.newsletters');
+        Route::get('/newsletters/export', [\App\Http\Controllers\Admin\NewsletterController::class, 'export'])->name('admin.newsletters.export');
+        Route::patch('/newsletters/{newsletter}/unsubscribe', [\App\Http\Controllers\Admin\NewsletterController::class, 'unsubscribe'])->name('admin.newsletters.unsubscribe');
+        Route::patch('/newsletters/{newsletter}/resubscribe', [\App\Http\Controllers\Admin\NewsletterController::class, 'resubscribe'])->name('admin.newsletters.resubscribe');
         Route::get('/kyc-verifications', [\App\Http\Controllers\Admin\KycVerificationController::class, 'index'])->name('admin.kyc-verifications');
         Route::post('/kyc-verifications', [\App\Http\Controllers\Admin\KycVerificationController::class, 'store'])->name('admin.kyc-verifications.store');
         Route::get('/kyc-verifications/{kycVerification}/edit', [\App\Http\Controllers\Admin\KycVerificationController::class, 'edit'])->name('admin.kyc-verifications.edit');
@@ -464,6 +499,8 @@ Route::middleware('auth')->group(function () {
         // Graphical Reports (Geographic)
         Route::get('/reports/graphical', [\App\Http\Controllers\Admin\GraphicalReportController::class, 'index'])->name('admin.reports.graphical');
         Route::get('/reports/graphical/export', [\App\Http\Controllers\Admin\GraphicalReportController::class, 'export'])->name('admin.reports.graphical.export');
+        Route::get('/geo-analytics', [\App\Http\Controllers\Admin\GeoAnalyticsController::class, 'index'])->name('admin.geo-analytics');
+        Route::get('/geo-analytics/export', [\App\Http\Controllers\Admin\GeoAnalyticsController::class, 'export'])->name('admin.geo-analytics.export');
 
         // Environment Performance
         Route::get('/reports/environment', [\App\Http\Controllers\Admin\EnvironmentPerformanceController::class, 'index'])->name('admin.reports.environment');
@@ -480,6 +517,8 @@ Route::middleware('auth')->group(function () {
         // SSP Report
         Route::get('/reports/ssp', [\App\Http\Controllers\Admin\SspReportController::class, 'index'])->name('admin.reports.ssp');
         Route::get('/reports/ssp/export', [\App\Http\Controllers\Admin\SspReportController::class, 'export'])->name('admin.reports.ssp.export');
+        Route::get('/video-analytics', [\App\Http\Controllers\Admin\VideoAnalyticsController::class, 'index'])->name('admin.video-analytics');
+        Route::get('/video-analytics/export', [\App\Http\Controllers\Admin\VideoAnalyticsController::class, 'export'])->name('admin.video-analytics.export');
 
         // Anti-fraud Clicks
         Route::get('/anti-fraud', [\App\Http\Controllers\Admin\AntiFraudController::class, 'index'])->name('admin.anti-fraud');
@@ -516,6 +555,51 @@ Route::middleware('auth')->group(function () {
         Route::get('/publisher-invoices/{id}', [\App\Http\Controllers\Admin\PublisherInvoiceController::class, 'show'])->name('admin.publisher-invoices.show');
         Route::patch('/publisher-invoices/{id}/approve', [\App\Http\Controllers\Admin\PublisherInvoiceController::class, 'approve'])->name('admin.publisher-invoices.approve');
         Route::get('/publisher-invoices/{id}/download', [\App\Http\Controllers\Admin\PublisherInvoiceController::class, 'download'])->name('admin.publisher-invoices.download');
+        Route::get('/invoices', [\App\Http\Controllers\Admin\InvoiceController::class, 'index'])->name('admin.invoices');
+        Route::get('/invoices/export', [\App\Http\Controllers\Admin\InvoiceController::class, 'export'])->name('admin.invoices.export');
+        Route::get('/invoices/{id}/download', [\App\Http\Controllers\Admin\InvoiceController::class, 'download'])->name('admin.invoices.download');
+        Route::get('/pricing-plans', [\App\Http\Controllers\Admin\PricingPlanController::class, 'index'])->name('admin.pricing-plans');
+        Route::post('/pricing-plans', [\App\Http\Controllers\Admin\PricingPlanController::class, 'store'])->name('admin.pricing-plans.store');
+        Route::put('/pricing-plans/{pricingPlan}', [\App\Http\Controllers\Admin\PricingPlanController::class, 'update'])->name('admin.pricing-plans.update');
+        Route::patch('/pricing-plans/{pricingPlan}/block', [\App\Http\Controllers\Admin\PricingPlanController::class, 'block'])->name('admin.pricing-plans.block');
+        Route::patch('/pricing-plans/{pricingPlan}/unblock', [\App\Http\Controllers\Admin\PricingPlanController::class, 'unblock'])->name('admin.pricing-plans.unblock');
+        Route::get('/support-tickets', [\App\Http\Controllers\Admin\SupportTicketController::class, 'index'])->name('admin.support-tickets');
+        Route::get('/support-tickets/{supportTicket}', [\App\Http\Controllers\Admin\SupportTicketController::class, 'show'])->name('admin.support-tickets.show');
+        Route::put('/support-tickets/{supportTicket}', [\App\Http\Controllers\Admin\SupportTicketController::class, 'update'])->name('admin.support-tickets.update');
+        Route::post('/support-tickets/{supportTicket}/reply', [\App\Http\Controllers\Admin\SupportTicketController::class, 'reply'])->name('admin.support-tickets.reply');
+        Route::get('/notifications', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'index'])->name('admin.notifications');
+        Route::post('/notifications', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'store'])->name('admin.notifications.store');
+        Route::patch('/notifications/{notification}/read', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'markRead'])->name('admin.notifications.read');
+        Route::patch('/notifications/{notification}/unread', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'markUnread'])->name('admin.notifications.unread');
+        Route::post('/notifications/read-all', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'markAllRead'])->name('admin.notifications.read-all');
+        Route::get('/notifications/api/list', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'getForUser'])->name('admin.notifications.api.list');
+        Route::post('/notifications/{notification}/api/read', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'markReadAjax'])->name('admin.notifications.api.read');
+        Route::post('/notifications/api/read-all', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'markAllReadAjax'])->name('admin.notifications.api.read-all');
+
+        // Admin Messages (Internal)
+        Route::get('/messages', [\App\Http\Controllers\Admin\AdminMessageController::class, 'index'])->name('admin.messages');
+        Route::post('/messages', [\App\Http\Controllers\Admin\AdminMessageController::class, 'store'])->name('admin.messages.store');
+        Route::get('/messages/api/unread', [\App\Http\Controllers\Admin\AdminMessageController::class, 'getUnread'])->name('admin.messages.api.unread');
+        Route::get('/messages/{message}', [\App\Http\Controllers\Admin\AdminMessageController::class, 'show'])->name('admin.messages.show');
+        Route::patch('/messages/{message}/read', [\App\Http\Controllers\Admin\AdminMessageController::class, 'markRead'])->name('admin.messages.read');
+        Route::post('/messages/read-all', [\App\Http\Controllers\Admin\AdminMessageController::class, 'markAllRead'])->name('admin.messages.read-all');
+        Route::patch('/messages/{message}/archive', [\App\Http\Controllers\Admin\AdminMessageController::class, 'archive'])->name('admin.messages.archive');
+
+        // Admin Global Search
+        Route::get('/search', [\App\Http\Controllers\Admin\AdminSearchController::class, 'search'])->name('admin.search');
+
+        // Push Notifications
+        Route::get('/push/vapid-key', [\App\Http\Controllers\Admin\PushNotificationController::class, 'getVapidKey'])->name('admin.push.vapid-key');
+        Route::post('/push/subscribe', [\App\Http\Controllers\Admin\PushNotificationController::class, 'subscribe'])->name('admin.push.subscribe');
+        Route::post('/push/unsubscribe', [\App\Http\Controllers\Admin\PushNotificationController::class, 'unsubscribe'])->name('admin.push.unsubscribe');
+        Route::get('/push/status', [\App\Http\Controllers\Admin\PushNotificationController::class, 'status'])->name('admin.push.status');
+        Route::post('/push/test', [\App\Http\Controllers\Admin\PushNotificationController::class, 'test'])->name('admin.push.test');
+        Route::post('/push/send', [\App\Http\Controllers\Admin\PushNotificationController::class, 'sendToUser'])->name('admin.push.send');
+        Route::post('/push/broadcast', [\App\Http\Controllers\Admin\PushNotificationController::class, 'broadcast'])->name('admin.push.broadcast');
+
+        Route::get('/referral-codes', [\App\Http\Controllers\Admin\ReferralCodeController::class, 'index'])->name('admin.referral-codes');
+        Route::post('/referral-codes', [\App\Http\Controllers\Admin\ReferralCodeController::class, 'store'])->name('admin.referral-codes.store');
+        Route::patch('/referral-codes/{referralLink}/status', [\App\Http\Controllers\Admin\ReferralCodeController::class, 'updateStatus'])->name('admin.referral-codes.update-status');
 
         // Balance Sheet
         Route::get('/balance-sheet', [\App\Http\Controllers\Admin\BalanceSheetController::class, 'index'])->name('admin.balance-sheet');
@@ -617,5 +701,24 @@ Route::middleware('auth')->group(function () {
         Route::patch('/keywords/{id}/block', [\App\Http\Controllers\Admin\KeywordController::class, 'block'])->name('admin.keywords.block');
         Route::patch('/keywords/{id}/unblock', [\App\Http\Controllers\Admin\KeywordController::class, 'unblock'])->name('admin.keywords.unblock');
         Route::delete('/keywords/{id}', [\App\Http\Controllers\Admin\KeywordController::class, 'destroy'])->name('admin.keywords.destroy');
+
+        // FAQ Management
+        Route::get('/faqs', [\App\Http\Controllers\Admin\FaqController::class, 'index'])->name('admin.faqs');
+        Route::post('/faqs', [\App\Http\Controllers\Admin\FaqController::class, 'store'])->name('admin.faqs.store');
+        Route::get('/faqs/{id}', [\App\Http\Controllers\Admin\FaqController::class, 'show'])->name('admin.faqs.show');
+        Route::put('/faqs/{id}', [\App\Http\Controllers\Admin\FaqController::class, 'update'])->name('admin.faqs.update');
+        Route::patch('/faqs/{id}/publish', [\App\Http\Controllers\Admin\FaqController::class, 'publish'])->name('admin.faqs.publish');
+        Route::patch('/faqs/{id}/unpublish', [\App\Http\Controllers\Admin\FaqController::class, 'unpublish'])->name('admin.faqs.unpublish');
+        Route::delete('/faqs/{id}', [\App\Http\Controllers\Admin\FaqController::class, 'destroy'])->name('admin.faqs.destroy');
+
+        // Testimonials Management
+        Route::get('/testimonials', [\App\Http\Controllers\Admin\TestimonialController::class, 'index'])->name('admin.testimonials');
+        Route::post('/testimonials', [\App\Http\Controllers\Admin\TestimonialController::class, 'store'])->name('admin.testimonials.store');
+        Route::get('/testimonials/{id}', [\App\Http\Controllers\Admin\TestimonialController::class, 'show'])->name('admin.testimonials.show');
+        Route::put('/testimonials/{id}', [\App\Http\Controllers\Admin\TestimonialController::class, 'update'])->name('admin.testimonials.update');
+        Route::patch('/testimonials/{id}/publish', [\App\Http\Controllers\Admin\TestimonialController::class, 'publish'])->name('admin.testimonials.publish');
+        Route::patch('/testimonials/{id}/unpublish', [\App\Http\Controllers\Admin\TestimonialController::class, 'unpublish'])->name('admin.testimonials.unpublish');
+        Route::patch('/testimonials/{id}/toggle-featured', [\App\Http\Controllers\Admin\TestimonialController::class, 'toggleFeatured'])->name('admin.testimonials.toggle-featured');
+        Route::delete('/testimonials/{id}', [\App\Http\Controllers\Admin\TestimonialController::class, 'destroy'])->name('admin.testimonials.destroy');
     });
 });

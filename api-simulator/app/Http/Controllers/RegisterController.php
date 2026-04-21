@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PlatformSetting;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Support\AdminEventNotifier;
 use App\Support\MessageDeliveryManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -97,6 +98,15 @@ class RegisterController extends Controller
             $verificationUrl,
         );
 
+        app(AdminEventNotifier::class)->notifyAdmins(
+            'New ' . ucfirst($user->role) . ' Registered',
+            $user->email . ' registered as ' . $user->role . ' and currently has status: ' . $user->status . '.',
+            'system',
+            $user->role === 'publisher'
+                ? route('admin.publisher-approvals')
+                : route('admin.advertiser-approvals'),
+        );
+
         if ($approvalType === PlatformSetting::ADVERTISER_APPROVAL_ADMIN) {
             return redirect()->route('signin')->with('success', $this->adminApprovalMessageFor($user->role));
         }
@@ -127,6 +137,15 @@ class RegisterController extends Controller
             'email_verified_at' => now(),
             'status' => 'active',
         ]);
+
+        app(AdminEventNotifier::class)->notifyAdmins(
+            ucfirst($user->role) . ' Email Verified',
+            $user->email . ' verified their email and the account is now active.',
+            'success',
+            $user->role === 'publisher'
+                ? route('admin.publisher-approvals')
+                : route('admin.advertiser-approvals'),
+        );
 
         return redirect()->route('signin')->with('success', 'Email verified successfully. You can now sign in.');
     }

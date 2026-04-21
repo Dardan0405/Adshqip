@@ -45,6 +45,9 @@ class User extends Authenticatable
         'is_deleted',
         'security_question_id',
         'security_answer_hash',
+        'telegram_user_id',
+        'telegram_username',
+        'account_manager_id',
     ];
 
     public function profile()
@@ -87,6 +90,26 @@ class User extends Authenticatable
         return $this->hasMany(ReferralPayout::class, 'referrer_id');
     }
 
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class, 'user_id');
+    }
+
+    public function supportTickets()
+    {
+        return $this->hasMany(SupportTicket::class, 'user_id');
+    }
+
+    public function assignedSupportTickets()
+    {
+        return $this->hasMany(SupportTicket::class, 'assigned_to');
+    }
+
+    public function referralLinks()
+    {
+        return $this->hasMany(ReferralLink::class, 'referrer_id');
+    }
+
     public function securityQuestion()
     {
         return $this->belongsTo(SecurityQuestion::class, 'security_question_id');
@@ -95,6 +118,22 @@ class User extends Authenticatable
     public function userRole()
     {
         return $this->belongsTo(UserRole::class, 'role', 'role_key');
+    }
+
+    /**
+     * Get the account manager assigned to this user.
+     */
+    public function accountManager()
+    {
+        return $this->belongsTo(User::class, 'account_manager_id');
+    }
+
+    /**
+     * Get all users managed by this account manager.
+     */
+    public function managedAccounts()
+    {
+        return $this->hasMany(User::class, 'account_manager_id');
     }
 
     public function hasRolePermission(string $permission): bool

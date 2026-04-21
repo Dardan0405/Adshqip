@@ -247,7 +247,7 @@
                     <span class="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Finance</span>
                 </div>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 mt-1">
+                <a href="{{ route('admin.transactions') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 mt-1 {{ request()->routeIs('admin.transactions*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5"/></svg>
                     Transactions
                 </a>
@@ -292,7 +292,7 @@
                     Referral Invoices
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('admin.invoices') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.invoices*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Invoices
                 </a>
@@ -302,7 +302,7 @@
                     Payouts
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('admin.pricing-plans') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.pricing-plans*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-16 0H3m2 0h14M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Pricing Plans
                 </a>
@@ -387,42 +387,39 @@
                     Anti-fraud Clicks
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('admin.geo-analytics') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.geo-analytics*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Geo Analytics
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('admin.rtb') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.rtb*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     RTB / Programmatic
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('admin.video-analytics') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.video-analytics*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Video Analytics
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    Traffic Sources
-                </a>
+                
 
                 {{-- Content --}}
                 <div class="pt-4">
                     <span class="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Content</span>
                 </div>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 mt-1">
+                <a href="{{ route('admin.newsletters') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 mt-1 {{ request()->routeIs('admin.newsletters*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V9a2 2 0 012-2h2a2 2 0 012 2v9a2 2 0 01-2 2h-2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Newsletters
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('admin.faqs') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.faqs*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     FAQ Management
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('admin.testimonials') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.testimonials*') ? 'active bg-brand-50 text-brand-600' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" stroke="currentColor" stroke-width="1.5"/></svg>
                     Testimonials
                 </a>
@@ -437,17 +434,22 @@
                     <span class="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Support</span>
                 </div>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 mt-1">
+                <a href="{{ route('admin.support-tickets') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 mt-1 {{ request()->routeIs('admin.support-tickets*') ? 'active bg-brand-50 text-brand-600' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Support Tickets
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('admin.account-managers') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.account-managers*') ? 'active bg-brand-50 text-brand-600' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Account Managers
+                </a>
+
+                <a href="{{ route('admin.notifications') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.notifications*') ? 'active bg-brand-50 text-brand-600' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Notifications
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('admin.referral-codes') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.referral-codes*') ? 'active bg-brand-50 text-brand-600' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Referral Program
                 </a>
@@ -457,23 +459,23 @@
                     <span class="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">System</span>
                 </div>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('admin.api-keys') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.api-keys*') ? 'active bg-brand-50 text-brand-600' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     API Keys
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('admin.sessions-security') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.sessions-security*') ? 'active bg-brand-50 text-brand-600' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Sessions & Security
                 </a>
 
                 
-                <a href="{{ route('admin.app-configurations') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.app-configurations*') ? 'active' : '' }}">
+                <a href="{{ route('admin.app-configurations') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.app-configurations*') ? 'active bg-brand-50 text-brand-600' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke="currentColor" stroke-width="1.5"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="1.5"/></svg>
                     App Configurations
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('admin.telegram-integration') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.telegram-integration*') ? 'active bg-brand-50 text-brand-600' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     Telegram Integration
                 </a>
@@ -509,21 +511,111 @@
             <header class="sticky top-0 z-30 h-14 border-b border-gray-200 bg-white flex items-center justify-between px-6">
                 <div class="flex items-center gap-4">
                     <h2 class="text-sm font-semibold text-gray-700">@yield('title', 'Dashboard')</h2>
-                    <div class="relative ml-4">
+                    {{-- Global Search --}}
+                    <div class="relative ml-4" x-data="adminSearch()" @click.away="showResults = false">
                         <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" viewBox="0 0 24 24" fill="none"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                        <input type="text" placeholder="Search users, campaigns..." class="pl-10 pr-4 py-2 w-72 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                        <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="if(results.length) showResults = true" placeholder="Search users, campaigns..." class="pl-10 pr-4 py-2 w-72 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                        {{-- Search Results Dropdown --}}
+                        <div x-show="showResults && results.length > 0" x-transition class="absolute top-full left-0 mt-1 w-96 bg-white rounded-xl border border-gray-200 shadow-lg py-2 z-50 max-h-96 overflow-y-auto" style="display: none;">
+                            <template x-for="result in results" :key="result.url">
+                                <a :href="result.url" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition">
+                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center" :class="{'bg-blue-100 text-blue-600': result.type === 'user', 'bg-purple-100 text-purple-600': result.type === 'campaign', 'bg-emerald-100 text-emerald-600': result.type === 'site', 'bg-amber-100 text-amber-600': result.type === 'creative'}">
+                                        <svg x-show="result.type === 'user'" class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                        <svg x-show="result.type === 'campaign'" class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                        <svg x-show="result.type === 'site'" class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                        <svg x-show="result.type === 'creative'" class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-sm font-medium text-gray-900 truncate" x-text="result.label"></div>
+                                        <div class="text-xs text-gray-500 truncate" x-text="result.sublabel"></div>
+                                    </div>
+                                </a>
+                            </template>
+                        </div>
+                        <div x-show="showResults && results.length === 0 && query.length >= 2 && !loading" x-transition class="absolute top-full left-0 mt-1 w-96 bg-white rounded-xl border border-gray-200 shadow-lg py-6 z-50 text-center text-sm text-gray-500" style="display: none;">
+                            No results found for "<span x-text="query"></span>"
+                        </div>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    {{-- Notifications --}}
-                    <button class="relative p-2 rounded-lg hover:bg-gray-100" title="Notifications">
-                        <svg class="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                        <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500"></span>
-                    </button>
-                    {{-- Messages --}}
-                    <button class="relative p-2 rounded-lg hover:bg-gray-100" title="Messages">
-                        <svg class="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    </button>
+                    {{-- Push Notifications Toggle --}}
+                    <div x-data="pushNotifications()" class="relative">
+                        <button @click="toggle()" :disabled="loading || !supported" class="relative p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" :title="subscribed ? 'Disable push notifications' : 'Enable push notifications'">
+                            <svg x-show="!subscribed" class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none"><path d="M18.364 5.636a9 9 0 010 12.728M5.636 18.364a9 9 0 010-12.728M15.536 8.464a5 5 0 010 7.072M8.464 15.536a5 5 0 010-7.072M12 12h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            <svg x-show="subscribed" class="w-5 h-5 text-emerald-500" viewBox="0 0 24 24" fill="none"><path d="M18.364 5.636a9 9 0 010 12.728M5.636 18.364a9 9 0 010-12.728M15.536 8.464a5 5 0 010 7.072M8.464 15.536a5 5 0 010-7.072M12 12h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            <span x-show="loading" class="absolute inset-0 flex items-center justify-center">
+                                <svg class="w-4 h-4 animate-spin text-brand-500" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            </span>
+                        </button>
+                    </div>
+                    {{-- Notifications Dropdown --}}
+                    <div class="relative" x-data="notificationsDropdown()" @click.away="open = false">
+                        <button @click="toggle()" class="relative p-2 rounded-lg hover:bg-gray-100" title="Notifications">
+                            <svg class="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            <span x-show="unreadCount > 0" class="absolute top-1 right-1 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-1" x-text="unreadCount > 9 ? '9+' : unreadCount"></span>
+                        </button>
+                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-80 bg-white rounded-xl border border-gray-200 shadow-lg z-50" style="display: none;">
+                            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                                <span class="text-sm font-semibold text-gray-900">Notifications</span>
+                                <button x-show="unreadCount > 0" @click="markAllRead()" class="text-xs text-brand-600 hover:text-brand-700">Mark all read</button>
+                            </div>
+                            <div class="max-h-80 overflow-y-auto divide-y divide-gray-100">
+                                <template x-if="notifications.length === 0">
+                                    <div class="px-4 py-8 text-center text-sm text-gray-500">No notifications yet</div>
+                                </template>
+                                <template x-for="notif in notifications" :key="notif.id">
+                                    <a :href="notif.action_url || '{{ route('admin.notifications') }}'" class="block px-4 py-3 hover:bg-gray-50 transition" :class="{ 'bg-brand-50/50': !notif.is_read }">
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" :class="{'bg-emerald-100 text-emerald-600': notif.type === 'success', 'bg-amber-100 text-amber-600': notif.type === 'warning', 'bg-red-100 text-red-600': notif.type === 'error', 'bg-blue-100 text-blue-600': notif.type === 'info', 'bg-purple-100 text-purple-600': notif.type === 'payment', 'bg-indigo-100 text-indigo-600': notif.type === 'campaign', 'bg-gray-100 text-gray-600': notif.type === 'system'}">
+                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium text-gray-900" x-text="notif.title"></div>
+                                                <div class="text-xs text-gray-500 mt-0.5 line-clamp-2" x-text="notif.message"></div>
+                                                <div class="text-[10px] text-gray-400 mt-1" x-text="notif.created_at"></div>
+                                            </div>
+                                            <div x-show="!notif.is_read" class="w-2 h-2 rounded-full bg-brand-500 flex-shrink-0 mt-2"></div>
+                                        </div>
+                                    </a>
+                                </template>
+                            </div>
+                            <a href="{{ route('admin.notifications') }}" class="block px-4 py-3 text-center text-sm text-brand-600 hover:bg-gray-50 border-t border-gray-100">View all notifications</a>
+                        </div>
+                    </div>
+                    {{-- Messages Dropdown --}}
+                    <div class="relative" x-data="messagesDropdown()" @click.away="open = false">
+                        <button @click="toggle()" class="relative p-2 rounded-lg hover:bg-gray-100" title="Messages">
+                            <svg class="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            <span x-show="unreadCount > 0" class="absolute top-1 right-1 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-1" x-text="unreadCount > 9 ? '9+' : unreadCount"></span>
+                        </button>
+                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-80 bg-white rounded-xl border border-gray-200 shadow-lg z-50" style="display: none;">
+                            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                                <span class="text-sm font-semibold text-gray-900">Messages</span>
+                                <a href="{{ route('admin.messages') }}" class="text-xs text-brand-600 hover:text-brand-700">Compose</a>
+                            </div>
+                            <div class="max-h-80 overflow-y-auto divide-y divide-gray-100">
+                                <template x-if="messages.length === 0">
+                                    <div class="px-4 py-8 text-center text-sm text-gray-500">No messages yet</div>
+                                </template>
+                                <template x-for="msg in messages" :key="msg.id">
+                                    <a :href="msg.url" class="block px-4 py-3 hover:bg-gray-50 transition bg-brand-50/50">
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-semibold text-xs flex-shrink-0" x-text="msg.sender_initials"></div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-sm font-medium text-gray-900 truncate" x-text="msg.subject"></span>
+                                                    <span x-show="msg.priority === 'urgent'" class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">URGENT</span>
+                                                </div>
+                                                <div class="text-xs text-gray-500 truncate mt-0.5" x-text="msg.preview"></div>
+                                                <div class="text-[10px] text-gray-400 mt-1"><span x-text="msg.sender"></span> &bull; <span x-text="msg.created_at"></span></div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </template>
+                            </div>
+                            <a href="{{ route('admin.messages') }}" class="block px-4 py-3 text-center text-sm text-brand-600 hover:bg-gray-50 border-t border-gray-100">View all messages</a>
+                        </div>
+                    </div>
                     <div class="h-6 w-px bg-gray-200"></div>
                     {{-- User dropdown --}}
                     <div class="relative" x-data="{ open: false }">
@@ -582,6 +674,10 @@
                             <a href="{{ route('admin.payment-settings') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors {{ request()->routeIs('admin.payment-settings*') ? 'bg-gray-50 text-brand-600' : '' }}">
                                 <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none"><path d="M4 7.5A2.5 2.5 0 016.5 5h11A2.5 2.5 0 0120 7.5v9A2.5 2.5 0 0117.5 19h-11A2.5 2.5 0 014 16.5v-9z" stroke="currentColor" stroke-width="1.5"/><path d="M4 10h16M16 14h.01M13 14h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                                 Payment Settings
+                            </a>
+                            <a href="{{ route('admin.transactions') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors {{ request()->routeIs('admin.transactions*') ? 'bg-gray-50 text-brand-600' : '' }}">
+                                <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5"/></svg>
+                                Transactions
                             </a>
                             <a href="{{ route('admin.cpm-geo-settings') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors {{ request()->routeIs('admin.cpm-geo-settings*') ? 'bg-gray-50 text-brand-600' : '' }}">
                                 <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none"><path d="M3 12h18M12 3c4.971 0 9 4.029 9 9s-4.029 9-9 9m0-18c-4.971 0-9 4.029-9 9s4.029 9 9 9m0-18c2.761 2.467 4.5 5.467 4.5 9S14.761 18.533 12 21m0-18C9.239 5.467 7.5 8.467 7.5 12S9.239 18.533 12 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -656,6 +752,249 @@
 
         function toggleSubmenu(id) {
             document.getElementById(id).classList.toggle('hidden');
+        }
+
+        // Admin Search Component
+        function adminSearch() {
+            return {
+                query: '',
+                results: [],
+                showResults: false,
+                loading: false,
+                async search() {
+                    if (this.query.length < 2) {
+                        this.results = [];
+                        this.showResults = false;
+                        return;
+                    }
+                    this.loading = true;
+                    try {
+                        const response = await fetch(`{{ route('admin.search') }}?q=${encodeURIComponent(this.query)}`);
+                        const data = await response.json();
+                        this.results = data.results || [];
+                        this.showResults = true;
+                    } catch (e) {
+                        console.error('Search failed:', e);
+                        this.results = [];
+                    }
+                    this.loading = false;
+                }
+            };
+        }
+
+        // Notifications Dropdown Component
+        function notificationsDropdown() {
+            return {
+                open: false,
+                notifications: [],
+                unreadCount: 0,
+                loaded: false,
+                async toggle() {
+                    this.open = !this.open;
+                    if (this.open && !this.loaded) {
+                        await this.loadNotifications();
+                        this.loaded = true;
+                    }
+                },
+                async loadNotifications() {
+                    try {
+                        const response = await fetch('{{ route('admin.notifications.api.list') }}');
+                        const data = await response.json();
+                        this.notifications = data.notifications || [];
+                        this.unreadCount = data.unread_count || 0;
+                    } catch (e) {
+                        console.error('Failed to load notifications:', e);
+                    }
+                },
+                async markAllRead() {
+                    try {
+                        await fetch('{{ route('admin.notifications.api.read-all') }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        this.notifications = this.notifications.map(n => ({ ...n, is_read: true }));
+                        this.unreadCount = 0;
+                    } catch (e) {
+                        console.error('Failed to mark all read:', e);
+                    }
+                },
+                init() {
+                    // Initial count load
+                    this.loadNotifications();
+                    // Refresh every 60 seconds
+                    setInterval(() => this.loadNotifications(), 60000);
+                }
+            };
+        }
+
+        // Messages Dropdown Component
+        function messagesDropdown() {
+            return {
+                open: false,
+                messages: [],
+                unreadCount: 0,
+                loaded: false,
+                async toggle() {
+                    this.open = !this.open;
+                    if (this.open && !this.loaded) {
+                        await this.loadMessages();
+                        this.loaded = true;
+                    }
+                },
+                async loadMessages() {
+                    try {
+                        const response = await fetch('{{ route('admin.messages.api.unread') }}');
+                        const data = await response.json();
+                        this.messages = data.messages || [];
+                        this.unreadCount = data.unread_count || 0;
+                    } catch (e) {
+                        console.error('Failed to load messages:', e);
+                    }
+                },
+                init() {
+                    // Initial count load
+                    this.loadMessages();
+                    // Refresh every 60 seconds
+                    setInterval(() => this.loadMessages(), 60000);
+                }
+            };
+        }
+
+        // Push Notifications Component
+        function pushNotifications() {
+            return {
+                supported: false,
+                subscribed: false,
+                loading: false,
+                permission: 'default',
+                init() {
+                    this.supported = 'serviceWorker' in navigator && 'PushManager' in window;
+                    if (this.supported) {
+                        this.permission = Notification.permission;
+                        this.checkSubscription();
+                    }
+                },
+                async checkSubscription() {
+                    try {
+                        const registration = await navigator.serviceWorker.ready;
+                        const subscription = await registration.pushManager.getSubscription();
+                        this.subscribed = !!subscription;
+                    } catch (e) {
+                        console.error('Failed to check push subscription:', e);
+                    }
+                },
+                async toggle() {
+                    if (this.loading) return;
+                    this.loading = true;
+
+                    try {
+                        if (this.subscribed) {
+                            await this.unsubscribe();
+                        } else {
+                            await this.subscribe();
+                        }
+                    } catch (e) {
+                        console.error('Push notification toggle failed:', e);
+                        alert('Failed to update push notification settings. Please try again.');
+                    }
+
+                    this.loading = false;
+                },
+                async subscribe() {
+                    // Request permission first
+                    const permission = await Notification.requestPermission();
+                    this.permission = permission;
+
+                    if (permission !== 'granted') {
+                        alert('Notification permission denied. Please enable notifications in your browser settings.');
+                        return;
+                    }
+
+                    // Register service worker
+                    const registration = await navigator.serviceWorker.register('/sw.js');
+                    await navigator.serviceWorker.ready;
+
+                    // Get VAPID key
+                    const vapidResponse = await fetch('{{ route('admin.push.vapid-key') }}');
+                    const { publicKey } = await vapidResponse.json();
+
+                    if (!publicKey) {
+                        console.warn('VAPID key not configured, using demo mode');
+                        this.subscribed = true;
+                        return;
+                    }
+
+                    // Subscribe to push
+                    const subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: this.urlBase64ToUint8Array(publicKey)
+                    });
+
+                    // Send subscription to server
+                    await fetch('{{ route('admin.push.subscribe') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify(subscription.toJSON())
+                    });
+
+                    this.subscribed = true;
+                },
+                async unsubscribe() {
+                    const registration = await navigator.serviceWorker.ready;
+                    const subscription = await registration.pushManager.getSubscription();
+
+                    if (subscription) {
+                        // Notify server
+                        await fetch('{{ route('admin.push.unsubscribe') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({ endpoint: subscription.endpoint })
+                        });
+
+                        await subscription.unsubscribe();
+                    }
+
+                    this.subscribed = false;
+                },
+                async test() {
+                    if (!this.subscribed) {
+                        alert('Please enable push notifications first.');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('{{ route('admin.push.test') }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            }
+                        });
+                        const data = await response.json();
+                        alert(data.message);
+                    } catch (e) {
+                        alert('Failed to send test notification.');
+                    }
+                },
+                urlBase64ToUint8Array(base64String) {
+                    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+                    const rawData = window.atob(base64);
+                    const outputArray = new Uint8Array(rawData.length);
+                    for (let i = 0; i < rawData.length; ++i) {
+                        outputArray[i] = rawData.charCodeAt(i);
+                    }
+                    return outputArray;
+                }
+            };
         }
     </script>
     @stack('scripts')

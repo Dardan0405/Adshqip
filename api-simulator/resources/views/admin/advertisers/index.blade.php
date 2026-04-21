@@ -66,6 +66,13 @@
                     <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
                     <option value="pending_verification" {{ request('status') === 'pending_verification' ? 'selected' : '' }}>Pending</option>
                 </select>
+                <select name="account_manager" onchange="this.form.submit()" class="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+                    <option value="">All Managers</option>
+                    <option value="unassigned" {{ request('account_manager') === 'unassigned' ? 'selected' : '' }}>Unassigned</option>
+                    @foreach($accountManagers as $manager)
+                        <option value="{{ $manager->id }}" {{ (string) request('account_manager') === (string) $manager->id ? 'selected' : '' }}>{{ $manager->email }}</option>
+                    @endforeach
+                </select>
                 <button type="submit" class="px-4 py-2 rounded-lg bg-gray-100 text-sm font-medium text-gray-600 hover:bg-gray-200 transition-colors">Search</button>
             </form>
 
@@ -94,6 +101,7 @@
                         <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">ID</th>
                         <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Advertiser Name</th>
                         <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Status</th>
+                        <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Manager</th>
                         <th class="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-400">Total Campaigns</th>
                         <th class="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-400">Total Spend</th>
                         <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Created</th>
@@ -140,6 +148,13 @@
                                     {{ ucfirst(str_replace('_', ' ', $adv->status)) }}
                                 </span>
                             </td>
+                            <td class="px-4 py-3 text-xs text-gray-600">
+                                @if($adv->accountManager)
+                                    <a href="{{ route('admin.account-managers.show', $adv->accountManager) }}" class="text-brand-600 hover:underline">{{ $adv->accountManager->email }}</a>
+                                @else
+                                    <span class="text-gray-400 italic">Unassigned</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-right font-semibold text-gray-900">{{ number_format($camps) }}</td>
                             <td class="px-4 py-3 text-right font-semibold text-gray-900">{{ $adminCurrency->format($spend) }}</td>
                             <td class="px-4 py-3 text-xs text-gray-500">{{ $adv->created_at?->format('M d, Y') }}</td>
@@ -181,7 +196,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-12 text-center">
+                            <td colspan="8" class="px-4 py-12 text-center">
                                 <div class="flex flex-col items-center gap-3">
                                     <svg class="w-12 h-12 text-gray-300" viewBox="0 0 24 24" fill="none"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                                     <p class="text-sm text-gray-500">No advertisers found.</p>

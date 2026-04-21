@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'web-login',
             'serve/*',
+            'newsletter/subscribe',
         ]);
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
