@@ -467,16 +467,18 @@
         </div>
     </div>
 
-    {{-- Bottom Save bar --}}
-    <div class="flex items-center justify-between py-4">
-        <a href="{{ route('admin.adformats') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Cancel
-        </a>
-        <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-brand-600 text-sm font-semibold text-white hover:bg-brand-700 shadow-sm transition-colors">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Save Changes
-        </button>
+    {{-- Bottom action footer --}}
+    <div class="sticky bottom-0 z-20 -mx-6 mt-8 border-t border-gray-200 bg-gray-50/95 px-6 py-4 backdrop-blur">
+        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
+            <a href="{{ route('admin.adformats') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Cancel
+            </a>
+            <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-brand-600 text-sm font-semibold text-white hover:bg-brand-700 shadow-sm transition-colors">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Save Changes
+            </button>
+        </div>
     </div>
 </form>
 

@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'audit.admin' => \App\Http\Middleware\LogAdminActivity::class,
+            'audit.advertiser' => \App\Http\Middleware\LogAdvertiserActivity::class,
             'admin.permission' => \App\Http\Middleware\EnsureAdminPermission::class,
         ]);
     })

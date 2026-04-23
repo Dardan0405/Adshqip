@@ -21,6 +21,9 @@ class UserProfile extends Model
         'gender',
         'date_of_birth',
         'mobile_number',
+        'skype_address',
+        'icq_address',
+        'jabber_address',
         'alternative_email',
         'company_name',
         'company_address_line1',
@@ -41,12 +44,14 @@ class UserProfile extends Model
         'currency',
         'payment_method',
         'payment_details',
+        'notification_settings',
         'balance',
     ];
 
     protected $casts = [
         'date_of_birth' => 'date',
         'payment_details' => 'array',
+        'notification_settings' => 'array',
     ];
 
     public function user()

@@ -13,7 +13,78 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Advertiser Payment Approvals</h1>
-            <p class="text-sm text-gray-500 mt-1">Review advertiser payment requests and approve or reject pending payouts.</p>
+            <p class="text-sm text-gray-500 mt-1">Review pending advertiser payments that need admin approval.</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 mb-6">
+        <div class="flex items-center justify-between gap-3 p-4 border-b border-gray-100">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900">Pending Add Funds Deposits</h2>
+                <p class="text-sm text-gray-500 mt-1">Bank Wire deposits submitted by advertisers and waiting for admin confirmation.</p>
+            </div>
+            <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                {{ $pendingDeposits->count() }} Pending
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50/50">
+                        <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">ID</th>
+                        <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Submitted</th>
+                        <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Advertiser</th>
+                        <th class="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-400">Amount</th>
+                        <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Payment Type</th>
+                        <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-gray-400">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @forelse($pendingDeposits as $deposit)
+                        @php
+                            $depositName = trim(($deposit->user->userProfile->first_name ?? '') . ' ' . ($deposit->user->userProfile->last_name ?? '')) ?: 'Unknown';
+                        @endphp
+                        <tr class="hover:bg-gray-50/50">
+                            <td class="px-4 py-3 font-medium text-gray-900">#{{ $deposit->id }}</td>
+                            <td class="px-4 py-3">
+                                <div class="font-medium text-gray-900">{{ $deposit->created_at?->format('M d, Y') }}</div>
+                                <div class="text-xs text-gray-400">{{ $deposit->created_at?->format('H:i') }}</div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="font-medium text-gray-900">{{ $depositName }}</div>
+                                <div class="text-xs text-gray-400">{{ $deposit->user->email ?? 'N/A' }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-right font-semibold text-emerald-700">{{ $adminCurrency->format((float) $deposit->amount) }}</td>
+                            <td class="px-4 py-3 text-gray-700">{{ $deposit->payment_type_label }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center justify-center gap-2">
+                                    <form method="POST" action="{{ route('admin.advertiser-deposits.complete', $deposit) }}" onsubmit="return confirm('Approve deposit #{{ $deposit->id }} and add funds to advertiser balance?')">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="redirect_to" value="approvals">
+                                        <button type="submit" class="inline-flex items-center gap-1 rounded-lg bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">
+                                            Approve
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ route('admin.advertiser-deposits.reject', $deposit) }}" onsubmit="return confirm('Reject deposit #{{ $deposit->id }}?')">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="redirect_to" value="approvals">
+                                        <button type="submit" class="inline-flex items-center gap-1 rounded-lg bg-red-50 border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100">
+                                            Reject
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-4 py-10 text-center text-sm text-gray-500">No pending Add Funds deposits need approval.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 

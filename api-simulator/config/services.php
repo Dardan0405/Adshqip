@@ -35,4 +35,29 @@ return [
         ],
     ],
 
+    'paypal' => [
+        'mode' => env('PAYPAL_MODE', 'sandbox'),
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'secret' => env('PAYPAL_CLIENT_SECRET'),
+    ],
+
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET_KEY'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
+    'bitpay' => [
+        'mode' => env('BITPAY_MODE', 'test'),
+        'api_token' => env('BITPAY_API_TOKEN'),
+        'webhook_secret' => env('BITPAY_WEBHOOK_SECRET'),
+    ],
+
+    'authorize_net' => [
+        'mode' => env('AUTHORIZE_NET_MODE', 'sandbox'),
+        'login_id' => env('AUTHORIZE_NET_LOGIN_ID'),
+        'transaction_key' => env('AUTHORIZE_NET_TRANSACTION_KEY'),
+        'signature_key' => env('AUTHORIZE_NET_SIGNATURE_KEY'),
+        'client_key' => env('AUTHORIZE_NET_CLIENT_KEY'),
+    ],
+
 ];

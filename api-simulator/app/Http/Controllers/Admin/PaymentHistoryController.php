@@ -18,22 +18,30 @@ class PaymentHistoryController extends Controller
      */
     public function index(Request $request)
     {
+        $transactionDate = 'COALESCE(aq_transactions.completed_at, aq_transactions.updated_at, aq_transactions.created_at)';
+        $transactionMonth = $this->monthExpression($transactionDate);
+        $statMonth = $this->monthExpression('aq_stats_daily.date');
+
         // Get deposits by month and advertiser
         $depositsQuery = Transaction::selectRaw("
-                DATE_FORMAT(aq_transactions.completed_at, '%Y-%m') as month,
+                {$transactionMonth} as month,
                 aq_transactions.user_id as advertiser_id,
-                SUM(aq_transactions.amount) as total_deposits
+                SUM(aq_transactions.amount) as total_deposits,
+                SUM(CASE WHEN aq_transactions.payment_gateway = 'paypal' THEN aq_transactions.amount ELSE 0 END) as paypal_deposits,
+                SUM(CASE WHEN aq_transactions.payment_gateway IN ('bitcoin', 'coinbase', 'crypto') THEN aq_transactions.amount ELSE 0 END) as bitcoin_deposits,
+                SUM(CASE WHEN aq_transactions.payment_gateway IN ('wire_transfer', 'manual') THEN aq_transactions.amount ELSE 0 END) as bank_wire_deposits,
+                SUM(CASE WHEN aq_transactions.payment_gateway = 'stripe' THEN aq_transactions.amount ELSE 0 END) as stripe_deposits,
+                SUM(CASE WHEN aq_transactions.payment_gateway = 'authorize' THEN aq_transactions.amount ELSE 0 END) as authorize_deposits
             ")
             ->join('aq_users', 'aq_transactions.user_id', '=', 'aq_users.id')
             ->where('aq_users.role', 'advertiser')
             ->where('aq_transactions.type', 'deposit')
             ->where('aq_transactions.status', 'completed')
-            ->whereNotNull('aq_transactions.completed_at')
             ->groupBy('month', 'advertiser_id');
 
         // Get spend by month and advertiser
         $spendQuery = StatDaily::selectRaw("
-                DATE_FORMAT(aq_stats_daily.date, '%Y-%m') as month,
+                {$statMonth} as month,
                 aq_stats_daily.advertiser_id,
                 SUM(aq_stats_daily.revenue) as total_spend
             ")
@@ -58,6 +66,11 @@ class PaymentHistoryController extends Controller
                 'month' => $month,
                 'advertiser_id' => $advertiserId,
                 'total_deposits' => $depositsData->get($key)->total_deposits ?? 0,
+                'paypal_deposits' => $depositsData->get($key)->paypal_deposits ?? 0,
+                'bitcoin_deposits' => $depositsData->get($key)->bitcoin_deposits ?? 0,
+                'bank_wire_deposits' => $depositsData->get($key)->bank_wire_deposits ?? 0,
+                'stripe_deposits' => $depositsData->get($key)->stripe_deposits ?? 0,
+                'authorize_deposits' => $depositsData->get($key)->authorize_deposits ?? 0,
                 'total_spend' => $spendData->get($key)->total_spend ?? 0,
             ];
         }
@@ -73,7 +86,7 @@ class PaymentHistoryController extends Controller
             ->keyBy('id');
 
         // Apply filters
-        if ($search = $request->get('search')) {
+        if ($search = trim((string) $request->get('search'))) {
             $collection = $collection->filter(function ($item) use ($advertisers, $search) {
                 $advertiser = $advertisers->get($item->advertiser_id);
                 if (!$advertiser) return false;
@@ -160,22 +173,30 @@ class PaymentHistoryController extends Controller
      */
     public function export(Request $request)
     {
+        $transactionDate = 'COALESCE(aq_transactions.completed_at, aq_transactions.updated_at, aq_transactions.created_at)';
+        $transactionMonth = $this->monthExpression($transactionDate);
+        $statMonth = $this->monthExpression('aq_stats_daily.date');
+
         // Get deposits by month and advertiser
         $depositsQuery = Transaction::selectRaw("
-                DATE_FORMAT(aq_transactions.completed_at, '%Y-%m') as month,
+                {$transactionMonth} as month,
                 aq_transactions.user_id as advertiser_id,
-                SUM(aq_transactions.amount) as total_deposits
+                SUM(aq_transactions.amount) as total_deposits,
+                SUM(CASE WHEN aq_transactions.payment_gateway = 'paypal' THEN aq_transactions.amount ELSE 0 END) as paypal_deposits,
+                SUM(CASE WHEN aq_transactions.payment_gateway IN ('bitcoin', 'coinbase', 'crypto') THEN aq_transactions.amount ELSE 0 END) as bitcoin_deposits,
+                SUM(CASE WHEN aq_transactions.payment_gateway IN ('wire_transfer', 'manual') THEN aq_transactions.amount ELSE 0 END) as bank_wire_deposits,
+                SUM(CASE WHEN aq_transactions.payment_gateway = 'stripe' THEN aq_transactions.amount ELSE 0 END) as stripe_deposits,
+                SUM(CASE WHEN aq_transactions.payment_gateway = 'authorize' THEN aq_transactions.amount ELSE 0 END) as authorize_deposits
             ")
             ->join('aq_users', 'aq_transactions.user_id', '=', 'aq_users.id')
             ->where('aq_users.role', 'advertiser')
             ->where('aq_transactions.type', 'deposit')
             ->where('aq_transactions.status', 'completed')
-            ->whereNotNull('aq_transactions.completed_at')
             ->groupBy('month', 'advertiser_id');
 
         // Get spend by month and advertiser
         $spendQuery = StatDaily::selectRaw("
-                DATE_FORMAT(aq_stats_daily.date, '%Y-%m') as month,
+                {$statMonth} as month,
                 aq_stats_daily.advertiser_id,
                 SUM(aq_stats_daily.revenue) as total_spend
             ")
@@ -200,6 +221,11 @@ class PaymentHistoryController extends Controller
                 'month' => $month,
                 'advertiser_id' => $advertiserId,
                 'total_deposits' => $depositsData->get($key)->total_deposits ?? 0,
+                'paypal_deposits' => $depositsData->get($key)->paypal_deposits ?? 0,
+                'bitcoin_deposits' => $depositsData->get($key)->bitcoin_deposits ?? 0,
+                'bank_wire_deposits' => $depositsData->get($key)->bank_wire_deposits ?? 0,
+                'stripe_deposits' => $depositsData->get($key)->stripe_deposits ?? 0,
+                'authorize_deposits' => $depositsData->get($key)->authorize_deposits ?? 0,
                 'total_spend' => $spendData->get($key)->total_spend ?? 0,
             ];
         }
@@ -215,7 +241,7 @@ class PaymentHistoryController extends Controller
             ->keyBy('id');
 
         // Apply same filters as index
-        if ($search = $request->get('search')) {
+        if ($search = trim((string) $request->get('search'))) {
             $collection = $collection->filter(function ($item) use ($advertisers, $search) {
                 $advertiser = $advertisers->get($item->advertiser_id);
                 if (!$advertiser) return false;
@@ -268,7 +294,7 @@ class PaymentHistoryController extends Controller
             $file = fopen('php://output', 'w');
 
             // Add CSV headers
-            fputcsv($file, ['Deposit Month', 'Advertiser Name', 'Advertiser Email', "Deposit Amount ({$currencyCode})", "Spend Amount ({$currencyCode})"]);
+            fputcsv($file, ['Deposit Month', 'Advertiser Name', 'Advertiser Email', "Total Deposits ({$currencyCode})", "PayPal ({$currencyCode})", "Bitcoin ({$currencyCode})", "Bank Wire ({$currencyCode})", "Stripe ({$currencyCode})", "Authorize.net ({$currencyCode})", "Spend Amount ({$currencyCode})"]);
 
             // Add data rows
             foreach ($collection as $payment) {
@@ -277,6 +303,11 @@ class PaymentHistoryController extends Controller
                     $payment->advertiser_name,
                     $payment->advertiser_email,
                     number_format($payment->total_deposits, 2, '.', ''),
+                    number_format($payment->paypal_deposits, 2, '.', ''),
+                    number_format($payment->bitcoin_deposits, 2, '.', ''),
+                    number_format($payment->bank_wire_deposits, 2, '.', ''),
+                    number_format($payment->stripe_deposits, 2, '.', ''),
+                    number_format($payment->authorize_deposits, 2, '.', ''),
                     number_format($payment->total_spend, 2, '.', ''),
                 ]);
             }
@@ -285,5 +316,12 @@ class PaymentHistoryController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    private function monthExpression(string $column): string
+    {
+        return DB::connection()->getDriverName() === 'sqlite'
+            ? "strftime('%Y-%m', {$column})"
+            : "DATE_FORMAT({$column}, '%Y-%m')";
     }
 }

@@ -132,7 +132,7 @@ class Transaction extends Model
 
         return match ($value) {
             'wire_transfer' => 'Bank Wire',
-            'coinbase' => 'Bitcoin',
+            'coinbase', 'bitcoin' => 'Bitcoin',
             default => Str::headline((string) $value),
         };
     }

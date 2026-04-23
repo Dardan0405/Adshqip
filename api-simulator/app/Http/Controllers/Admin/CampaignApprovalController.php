@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\User;
 use App\Support\AdminEventNotifier;
+use App\Support\AdvertiserNotificationManager;
 use Illuminate\Http\Request;
 
 class CampaignApprovalController extends Controller
@@ -61,7 +62,7 @@ class CampaignApprovalController extends Controller
         ));
     }
 
-    public function approve($id)
+    public function approve(Request $request, $id)
     {
         $campaign = Campaign::where('is_deleted', false)
             ->where('status', 'pending_review')
@@ -79,13 +80,26 @@ class CampaignApprovalController extends Controller
             route('admin.campaigns.show', $campaign->id),
         );
 
+        $campaign->loadMissing('advertiser.profile');
+
+        if ($campaign->advertiser) {
+            app(AdvertiserNotificationManager::class)->deliver(
+                $campaign->advertiser,
+                'campaign_approved',
+                'Campaign Approved',
+                'Your campaign "' . $campaign->name . '" has been approved.',
+                route('advertiser.campaigns.show', $campaign->id),
+                $request->user()?->id
+            );
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Campaign approved successfully.',
         ]);
     }
 
-    public function reject($id)
+    public function reject(Request $request, $id)
     {
         $campaign = Campaign::where('is_deleted', false)
             ->where('status', 'pending_review')
@@ -102,6 +116,19 @@ class CampaignApprovalController extends Controller
             'warning',
             route('admin.campaigns.show', $campaign->id),
         );
+
+        $campaign->loadMissing('advertiser.profile');
+
+        if ($campaign->advertiser) {
+            app(AdvertiserNotificationManager::class)->deliver(
+                $campaign->advertiser,
+                'campaign_rejected',
+                'Campaign Rejected',
+                'Your campaign "' . $campaign->name . '" has been rejected.',
+                route('advertiser.campaigns.show', $campaign->id),
+                $request->user()?->id
+            );
+        }
 
         return response()->json([
             'success' => true,

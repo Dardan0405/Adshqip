@@ -51,14 +51,30 @@ class PaymentSettingsController extends Controller
                 'email',
                 'max:255',
             ],
+            'paypal_mode' => ['nullable', Rule::in(['sandbox', 'live'])],
+            'paypal_client_id' => [
+                Rule::requiredIf(fn () => $request->input('payment_type') === PlatformSetting::ADVERTISER_PAYMENT_PAYPAL),
+                'nullable',
+                'string',
+                'max:500',
+            ],
+            'paypal_secret' => [
+                Rule::requiredIf(fn () => $request->input('payment_type') === PlatformSetting::ADVERTISER_PAYMENT_PAYPAL),
+                'nullable',
+                'string',
+                'max:500',
+            ],
             'paypal_merchant_id' => ['nullable', 'string', 'max:255'],
             'paypal_instructions' => ['nullable', 'string', 'max:500'],
-            'bitcoin_wallet_address' => [
+            'bitcoin_mode' => ['nullable', Rule::in(['test', 'live'])],
+            'bitcoin_bitpay_api_token' => [
                 Rule::requiredIf(fn () => $request->input('payment_type') === PlatformSetting::ADVERTISER_PAYMENT_BITCOIN),
                 'nullable',
                 'string',
                 'max:500',
             ],
+            'bitcoin_bitpay_webhook_secret' => ['nullable', 'string', 'max:500'],
+            'bitcoin_wallet_address' => ['nullable', 'string', 'max:500'],
             'bitcoin_network' => ['nullable', 'string', 'max:100'],
             'bitcoin_instructions' => ['nullable', 'string', 'max:500'],
             'stripe_publishable_key' => [
@@ -81,6 +97,7 @@ class PaymentSettingsController extends Controller
                 'string',
                 'max:255',
             ],
+            'authorize_mode' => ['nullable', Rule::in(['sandbox', 'live'])],
             'authorize_transaction_key' => [
                 Rule::requiredIf(fn () => $request->input('payment_type') === PlatformSetting::ADVERTISER_PAYMENT_AUTHORIZE),
                 'nullable',
@@ -100,11 +117,17 @@ class PaymentSettingsController extends Controller
                 'bank_address' => trim((string) ($validated['wire_bank_address'] ?? '')),
             ],
             PlatformSetting::ADVERTISER_PAYMENT_PAYPAL => [
+                'mode' => $validated['paypal_mode'] ?? 'sandbox',
+                'client_id' => trim((string) ($validated['paypal_client_id'] ?? '')),
+                'secret' => trim((string) ($validated['paypal_secret'] ?? '')),
                 'paypal_email' => trim((string) ($validated['paypal_email'] ?? '')),
                 'merchant_id' => trim((string) ($validated['paypal_merchant_id'] ?? '')),
                 'instructions' => trim((string) ($validated['paypal_instructions'] ?? '')),
             ],
             PlatformSetting::ADVERTISER_PAYMENT_BITCOIN => [
+                'mode' => $validated['bitcoin_mode'] ?? 'test',
+                'bitpay_api_token' => trim((string) ($validated['bitcoin_bitpay_api_token'] ?? '')),
+                'bitpay_webhook_secret' => trim((string) ($validated['bitcoin_bitpay_webhook_secret'] ?? '')),
                 'wallet_address' => trim((string) ($validated['bitcoin_wallet_address'] ?? '')),
                 'network' => trim((string) ($validated['bitcoin_network'] ?? '')),
                 'instructions' => trim((string) ($validated['bitcoin_instructions'] ?? '')),
@@ -116,6 +139,7 @@ class PaymentSettingsController extends Controller
                 'account_email' => trim((string) ($validated['stripe_account_email'] ?? '')),
             ],
             PlatformSetting::ADVERTISER_PAYMENT_AUTHORIZE => [
+                'mode' => $validated['authorize_mode'] ?? 'sandbox',
                 'login_id' => trim((string) ($validated['authorize_login_id'] ?? '')),
                 'transaction_key' => trim((string) ($validated['authorize_transaction_key'] ?? '')),
                 'signature_key' => trim((string) ($validated['authorize_signature_key'] ?? '')),

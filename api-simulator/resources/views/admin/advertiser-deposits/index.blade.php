@@ -99,6 +99,7 @@
                         <th class="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-400">Amount</th>
                         <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Payment Type</th>
                         <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Status</th>
+                        <th class="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-400">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -122,10 +123,23 @@
                                     {{ ucfirst($deposit->status) }}
                                 </span>
                             </td>
+                            <td class="px-4 py-3 text-right">
+                                @if($deposit->status === 'pending')
+                                    <form method="POST" action="{{ route('admin.advertiser-deposits.complete', $deposit) }}" onsubmit="return confirm('Complete deposit #{{ $deposit->id }} and add funds to advertiser balance?')">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700">
+                                            Complete
+                                        </button>
+                                    </form>
+                                @else
+                                    <span class="text-xs text-gray-400">-</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-12 text-center">
+                            <td colspan="8" class="px-4 py-12 text-center">
                                 <div class="flex flex-col items-center gap-3">
                                     <svg class="w-12 h-12 text-gray-300" viewBox="0 0 24 24" fill="none"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5"/></svg>
                                     <p class="text-sm text-gray-500">No advertiser deposits found.</p>

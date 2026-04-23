@@ -85,12 +85,29 @@ class VideoAnalyticsController extends Controller
     {
         [$startDate, $endDate] = $this->dateBounds($filters);
 
-        $query = DB::table('aq_video_tracking as vt')
-            ->join('aq_ads as ads', 'vt.ad_id', '=', 'ads.id')
+        $query = DB::table('aq_ads as ads')
             ->leftJoin('aq_campaigns as campaigns', 'ads.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('aq_ad_creatives as creatives', function ($join) {
+                $join->on('creatives.ad_id', '=', 'ads.id')
+                    ->where('creatives.is_primary', true);
+            })
+            ->leftJoin('aq_video_tracking as vt', function ($join) use ($startDate, $endDate) {
+                $join->on('vt.ad_id', '=', 'ads.id')
+                    ->whereBetween('vt.created_at', [$startDate, $endDate]);
+            })
             ->leftJoin('aq_vast_events as events', 'vt.event_id', '=', 'events.id')
-            ->whereIn('ads.ad_type', self::VIDEO_TYPES)
-            ->whereBetween('vt.created_at', [$startDate, $endDate]);
+            ->where('ads.is_deleted', false)
+            ->where(function ($videoQuery) {
+                $videoQuery
+                    ->whereIn('ads.ad_type', self::VIDEO_TYPES)
+                    ->orWhere('creatives.file_type', 'video')
+                    ->orWhere('creatives.mime_type', 'like', 'video/%')
+                    ->orWhere(function ($urlQuery) {
+                        $urlQuery
+                            ->whereNotNull('creatives.video_url')
+                            ->where('creatives.video_url', '<>', '');
+                    });
+            });
 
         if (! empty($filters['search'])) {
             $search = trim((string) $filters['search']);
@@ -101,7 +118,11 @@ class VideoAnalyticsController extends Controller
         }
 
         if (! empty($filters['event_name'])) {
-            $query->where('events.event_name', $filters['event_name']);
+            $query->where(function ($eventQuery) use ($filters) {
+                $eventQuery
+                    ->where('events.event_name', $filters['event_name'])
+                    ->orWhereNull('events.event_name');
+            });
         }
 
         return $query;
@@ -111,9 +132,9 @@ class VideoAnalyticsController extends Controller
     {
         $summary = $this->baseQuery($filters)
             ->selectRaw('
+                COUNT(DISTINCT ads.id) as video_ads,
                 COUNT(vt.id) as total_events,
                 COUNT(DISTINCT vt.viewer_id) as unique_viewers,
-                COUNT(DISTINCT vt.ad_id) as active_video_ads,
                 SUM(CASE WHEN events.event_name = "start" THEN 1 ELSE 0 END) as starts,
                 SUM(CASE WHEN events.event_name = "complete" THEN 1 ELSE 0 END) as completes,
                 AVG(COALESCE(vt.progress_percent, 0)) as avg_progress
@@ -124,7 +145,7 @@ class VideoAnalyticsController extends Controller
         $completes = (int) ($summary->completes ?? 0);
 
         return [
-            'video_ads' => (int) ($summary->active_video_ads ?? 0),
+            'video_ads' => (int) ($summary->video_ads ?? 0),
             'events' => (int) ($summary->total_events ?? 0),
             'viewers' => (int) ($summary->unique_viewers ?? 0),
             'starts' => $starts,
@@ -138,18 +159,18 @@ class VideoAnalyticsController extends Controller
     {
         $query = $this->baseQuery($filters)
             ->selectRaw('
-                vt.ad_id,
+                ads.id as ad_id,
                 ads.name as ad_name,
                 ads.ad_type,
                 COALESCE(campaigns.name, "Unassigned") as campaign_name,
                 COUNT(vt.id) as total_events,
                 COUNT(DISTINCT vt.viewer_id) as unique_viewers,
-                SUM(CASE WHEN events.event_name = "start" THEN 1 ELSE 0 END) as starts,
-                SUM(CASE WHEN events.event_name = "firstQuartile" THEN 1 ELSE 0 END) as first_quartile,
-                SUM(CASE WHEN events.event_name = "midpoint" THEN 1 ELSE 0 END) as midpoint,
-                SUM(CASE WHEN events.event_name = "thirdQuartile" THEN 1 ELSE 0 END) as third_quartile,
-                SUM(CASE WHEN events.event_name = "complete" THEN 1 ELSE 0 END) as completes,
-                SUM(CASE WHEN events.event_name = "skip" THEN 1 ELSE 0 END) as skips,
+                COALESCE(SUM(CASE WHEN events.event_name = "start" THEN 1 ELSE 0 END), 0) as starts,
+                COALESCE(SUM(CASE WHEN events.event_name = "firstQuartile" THEN 1 ELSE 0 END), 0) as first_quartile,
+                COALESCE(SUM(CASE WHEN events.event_name = "midpoint" THEN 1 ELSE 0 END), 0) as midpoint,
+                COALESCE(SUM(CASE WHEN events.event_name = "thirdQuartile" THEN 1 ELSE 0 END), 0) as third_quartile,
+                COALESCE(SUM(CASE WHEN events.event_name = "complete" THEN 1 ELSE 0 END), 0) as completes,
+                COALESCE(SUM(CASE WHEN events.event_name = "skip" THEN 1 ELSE 0 END), 0) as skips,
                 CASE WHEN SUM(CASE WHEN events.event_name = "start" THEN 1 ELSE 0 END) > 0
                     THEN ROUND((SUM(CASE WHEN events.event_name = "complete" THEN 1 ELSE 0 END) / SUM(CASE WHEN events.event_name = "start" THEN 1 ELSE 0 END)) * 100, 2)
                     ELSE 0
@@ -157,7 +178,7 @@ class VideoAnalyticsController extends Controller
                 AVG(COALESCE(vt.progress_percent, 0)) as avg_progress,
                 MAX(vt.created_at) as last_event_at
             ')
-            ->groupBy('vt.ad_id', 'ads.name', 'ads.ad_type', 'campaigns.name')
+            ->groupBy('ads.id', 'ads.name', 'ads.ad_type', 'campaigns.name')
             ->orderByDesc('total_events');
 
         if (! $paginate) {

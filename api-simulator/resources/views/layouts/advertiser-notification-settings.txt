@@ -1,0 +1,54 @@
+I wish to recievie newsletter from Adshqip for below actions  
+Adshqip News
+Send me mail by:
+Email,
+Adshqip Message,
+Email and Adshqip Message
+Send mail during:
+Campaign Settings:
+Campaign Approved
+Campaign Rejected
+Campaign Create
+Campaign Edit
+Campaign Delete
+Campaign Activated
+Campaign Deactivated
+Campaign Moved
+Campaign Completed
+Creative Approved 
+Creative Rejected
+Creative Added
+Creative Edited
+Creative Deleted
+Campaign Tracking:
+Conversion,
+per (number) Tracking,
+Impression,
+per (number) views,
+Budget Completed,
+Campaign stopped due to total budget limit,
+Campaign is stopped due to policy violation,
+Balance is $0,
+Balance is below treshold
+Payment Settings:
+Payment Approved,
+Payment Rejected,
+Payment Requested
+Network Settings:
+New Pixel Tracker added,
+Create Traffic Sources,
+Remove Traffic Sources,
+Zonelimitation Add,
+Zonelimitation Edit,
+Zonelimitation Delete
+Setting Information:
+Personal Information,
+Company Information,
+Account Settings,
+Forget Password,
+User Block,
+User Unblock
+Login Security:
+Security Disable,
+Password Incorrect,
+Blocked User

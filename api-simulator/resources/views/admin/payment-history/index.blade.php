@@ -83,7 +83,12 @@
                     <tr class="border-t border-gray-100 bg-gray-50/50">
                         <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Deposit Month</th>
                         <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Advertiser Name</th>
-                        <th class="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-400">Deposit Amount</th>
+                        <th class="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-400">Total Deposits</th>
+                        <th class="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-400">PayPal</th>
+                        <th class="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-400">Bitcoin</th>
+                        <th class="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-400">Bank Wire</th>
+                        <th class="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-400">Stripe</th>
+                        <th class="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-400">Authorize.net</th>
                         <th class="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-400">Spend Amount</th>
                     </tr>
                 </thead>
@@ -101,13 +106,18 @@
                             <td class="px-4 py-3 text-right">
                                 <div class="font-semibold text-emerald-700">{{ $adminCurrency->format($payment->total_deposits) }}</div>
                             </td>
+                            <td class="px-4 py-3 text-right text-gray-700">{{ $adminCurrency->format($payment->paypal_deposits) }}</td>
+                            <td class="px-4 py-3 text-right text-gray-700">{{ $adminCurrency->format($payment->bitcoin_deposits) }}</td>
+                            <td class="px-4 py-3 text-right text-gray-700">{{ $adminCurrency->format($payment->bank_wire_deposits) }}</td>
+                            <td class="px-4 py-3 text-right text-gray-700">{{ $adminCurrency->format($payment->stripe_deposits) }}</td>
+                            <td class="px-4 py-3 text-right text-gray-700">{{ $adminCurrency->format($payment->authorize_deposits) }}</td>
                             <td class="px-4 py-3 text-right">
                                 <div class="font-semibold text-red-700">{{ $adminCurrency->format($payment->total_spend) }}</div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-4 py-12 text-center">
+                            <td colspan="9" class="px-4 py-12 text-center">
                                 <div class="flex flex-col items-center gap-3">
                                     <svg class="w-12 h-12 text-gray-300" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                                     <p class="text-sm text-gray-500">No payment history found.</p>

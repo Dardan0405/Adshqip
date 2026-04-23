@@ -208,11 +208,17 @@ class PlatformSetting extends Model
                 'bank_address' => '',
             ],
             self::ADVERTISER_PAYMENT_PAYPAL => [
+                'mode' => 'sandbox',
+                'client_id' => '',
+                'secret' => '',
                 'paypal_email' => '',
                 'merchant_id' => '',
                 'instructions' => '',
             ],
             self::ADVERTISER_PAYMENT_BITCOIN => [
+                'mode' => 'test',
+                'bitpay_api_token' => '',
+                'bitpay_webhook_secret' => '',
                 'wallet_address' => '',
                 'network' => '',
                 'instructions' => '',
@@ -224,6 +230,7 @@ class PlatformSetting extends Model
                 'account_email' => '',
             ],
             self::ADVERTISER_PAYMENT_AUTHORIZE => [
+                'mode' => 'sandbox',
                 'login_id' => '',
                 'transaction_key' => '',
                 'signature_key' => '',

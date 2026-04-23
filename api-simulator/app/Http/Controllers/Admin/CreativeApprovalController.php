@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Ad;
 use App\Models\User;
+use App\Support\AdvertiserNotificationManager;
 use Illuminate\Http\Request;
 
 class CreativeApprovalController extends Controller
@@ -54,7 +55,7 @@ class CreativeApprovalController extends Controller
         ));
     }
 
-    public function approve($id)
+    public function approve(Request $request, $id)
     {
         $ad = Ad::where('is_deleted', false)
             ->where('status', 'pending_review')
@@ -65,13 +66,26 @@ class CreativeApprovalController extends Controller
             'admin_approved' => true,
         ]);
 
+        $ad->loadMissing('campaign.advertiser.profile');
+
+        if ($ad->campaign?->advertiser) {
+            app(AdvertiserNotificationManager::class)->deliver(
+                $ad->campaign->advertiser,
+                'creative_approved',
+                'Creative Approved',
+                'Your creative "' . $ad->name . '" has been approved.',
+                route('advertiser.adformats.edit', $ad->id),
+                $request->user()?->id
+            );
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Creative approved successfully.',
         ]);
     }
 
-    public function reject($id)
+    public function reject(Request $request, $id)
     {
         $ad = Ad::where('is_deleted', false)
             ->where('status', 'pending_review')
@@ -81,6 +95,19 @@ class CreativeApprovalController extends Controller
             'status' => 'rejected',
             'admin_approved' => false,
         ]);
+
+        $ad->loadMissing('campaign.advertiser.profile');
+
+        if ($ad->campaign?->advertiser) {
+            app(AdvertiserNotificationManager::class)->deliver(
+                $ad->campaign->advertiser,
+                'creative_rejected',
+                'Creative Rejected',
+                'Your creative "' . $ad->name . '" has been rejected.',
+                route('advertiser.adformats.edit', $ad->id),
+                $request->user()?->id
+            );
+        }
 
         return response()->json([
             'success' => true,

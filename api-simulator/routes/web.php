@@ -153,6 +153,7 @@ Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfTok
         Route::get('/serve/ad/{id}', [\App\Http\Controllers\Admin\AdCreativeController::class, 'serve'])->name('ad.serve');
         Route::get('/serve/ad/{id}/click', [\App\Http\Controllers\Admin\AdCreativeController::class, 'click'])->name('ad.click');
         Route::get('/serve/ad/{id}/view', [\App\Http\Controllers\Admin\AdCreativeController::class, 'view'])->name('ad.view');
+        Route::match(['get', 'post'], '/serve/ad/{id}/video-event', [\App\Http\Controllers\Admin\AdCreativeController::class, 'videoEvent'])->name('ad.video-event');
         Route::get('/serve/ad/{id}/adblock', [\App\Http\Controllers\Admin\AdCreativeController::class, 'adblock'])->name('ad.adblock');
         Route::get('/serve/ad/{id}/conversion', [\App\Http\Controllers\Admin\AdCreativeController::class, 'conversion'])->name('ad.conversion');
         Route::get('/t/{trackingPath}/ad/{id}/click', [\App\Http\Controllers\Admin\AdCreativeController::class, 'mobileClick'])->name('ad.mobile.click');
@@ -193,10 +194,100 @@ Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfTok
 // Protected dashboards (role-restricted)
 Route::middleware('auth')->group(function () {
     Route::get('/advertisers', [AdvertiserController::class, 'dashboard'])->middleware('role:advertiser')->name('advertiser.dashboard');
+    Route::middleware(['role:advertiser', 'audit.advertiser'])->prefix('advertisers')->group(function () {
+        Route::get('/campaigns', [\App\Http\Controllers\Advertiser\CampaignController::class, 'index'])->name('advertiser.campaigns');
+        Route::get('/campaigns/create', [\App\Http\Controllers\Advertiser\CampaignController::class, 'create'])->name('advertiser.campaigns.create');
+        Route::post('/campaigns', [\App\Http\Controllers\Advertiser\CampaignController::class, 'store'])->name('advertiser.campaigns.store');
+        Route::patch('/campaigns/{id}/status', [\App\Http\Controllers\Advertiser\CampaignController::class, 'updateStatus'])->name('advertiser.campaigns.updateStatus');
+        Route::delete('/campaigns/{id}', [\App\Http\Controllers\Advertiser\CampaignController::class, 'destroy'])->name('advertiser.campaigns.destroy');
+        Route::patch('/campaigns/{id}/group', [\App\Http\Controllers\Advertiser\CampaignController::class, 'moveToGroup'])->name('advertiser.campaigns.moveToGroup');
+        Route::post('/campaigns/{id}/duplicate', [\App\Http\Controllers\Advertiser\CampaignController::class, 'duplicate'])->name('advertiser.campaigns.duplicate');
+        Route::get('/campaigns/export', [\App\Http\Controllers\Advertiser\CampaignController::class, 'export'])->name('advertiser.campaigns.export');
+        Route::get('/campaigns/{id}', [\App\Http\Controllers\Advertiser\CampaignController::class, 'show'])->name('advertiser.campaigns.show');
+        Route::get('/campaigns/{id}/edit', [\App\Http\Controllers\Advertiser\CampaignController::class, 'edit'])->name('advertiser.campaigns.edit');
+        Route::put('/campaigns/{id}', [\App\Http\Controllers\Advertiser\CampaignController::class, 'update'])->name('advertiser.campaigns.update');
+        Route::post('/campaigns/groups', [\App\Http\Controllers\Advertiser\CampaignController::class, 'storeGroup'])->name('advertiser.campaigns.groups.store');
+        Route::post('/campaigns/pixels', [\App\Http\Controllers\Advertiser\CampaignController::class, 'storePixel'])->name('advertiser.campaigns.pixels.store');
+
+        Route::get('/ad-formats', [\App\Http\Controllers\Advertiser\AdCreativeController::class, 'index'])->name('advertiser.adformats');
+        Route::get('/ad-formats/export', [\App\Http\Controllers\Advertiser\AdCreativeController::class, 'export'])->name('advertiser.adformats.export');
+        Route::get('/ad-formats/{id}/edit', [\App\Http\Controllers\Advertiser\AdCreativeController::class, 'edit'])->name('advertiser.adformats.edit');
+        Route::put('/ad-formats/{id}', [\App\Http\Controllers\Advertiser\AdCreativeController::class, 'update'])->name('advertiser.adformats.update');
+        Route::get('/ad-formats/{id}/demo', [\App\Http\Controllers\Advertiser\AdCreativeController::class, 'demo'])->name('advertiser.adformats.demo');
+        Route::get('/ad-formats/{id}/reports', [\App\Http\Controllers\Advertiser\AdCreativeController::class, 'reports'])->name('advertiser.adformats.reports');
+        Route::get('/ad-formats/{id}/reports/export', [\App\Http\Controllers\Advertiser\AdCreativeController::class, 'exportReports'])->name('advertiser.adformats.reports.export');
+
+        Route::get('/reports/overview', [\App\Http\Controllers\Advertiser\OverviewReportController::class, 'index'])->name('advertiser.reports.overview');
+        Route::get('/reports/overview/export', [\App\Http\Controllers\Advertiser\OverviewReportController::class, 'export'])->name('advertiser.reports.overview.export');
+        Route::get('/reports/graphical', [\App\Http\Controllers\Advertiser\GraphicalReportController::class, 'index'])->name('advertiser.reports.graphical');
+        Route::get('/reports/graphical/export', [\App\Http\Controllers\Advertiser\GraphicalReportController::class, 'export'])->name('advertiser.reports.graphical.export');
+        Route::get('/reports/campaign', [\App\Http\Controllers\Advertiser\CampaignReportController::class, 'index'])->name('advertiser.reports.campaign');
+        Route::get('/reports/campaign/export', [\App\Http\Controllers\Advertiser\CampaignReportController::class, 'export'])->name('advertiser.reports.campaign.export');
+        Route::get('/reports/creative', [\App\Http\Controllers\Advertiser\CreativeReportController::class, 'index'])->name('advertiser.reports.creative');
+        Route::get('/reports/creative/export', [\App\Http\Controllers\Advertiser\CreativeReportController::class, 'export'])->name('advertiser.reports.creative.export');
+        Route::get('/reports/video-creative', [\App\Http\Controllers\Advertiser\VideoCreativeReportController::class, 'index'])->name('advertiser.reports.video-creative');
+        Route::get('/reports/video-creative/export', [\App\Http\Controllers\Advertiser\VideoCreativeReportController::class, 'export'])->name('advertiser.reports.video-creative.export');
+        Route::get('/reports/site-url', [\App\Http\Controllers\Advertiser\SiteUrlReportController::class, 'index'])->name('advertiser.reports.site-url');
+        Route::get('/reports/site-url/export', [\App\Http\Controllers\Advertiser\SiteUrlReportController::class, 'export'])->name('advertiser.reports.site-url.export');
+        Route::get('/reports/group-settings', [\App\Http\Controllers\Advertiser\GroupSettingsReportController::class, 'index'])->name('advertiser.reports.group-settings');
+
+        Route::get('/payments/history', [\App\Http\Controllers\Advertiser\PaymentHistoryController::class, 'index'])->name('advertiser.payments.history');
+        Route::get('/payments/deposit-history', [\App\Http\Controllers\Advertiser\DepositHistoryController::class, 'index'])->name('advertiser.payments.deposit-history');
+        Route::get('/payments/add-funds', [\App\Http\Controllers\Advertiser\AddFundsController::class, 'create'])->name('advertiser.payments.add-funds');
+        Route::post('/payments/add-funds', [\App\Http\Controllers\Advertiser\AddFundsController::class, 'store'])->name('advertiser.payments.add-funds.store');
+        Route::get('/payments/add-funds/{transaction}', [\App\Http\Controllers\Advertiser\AddFundsController::class, 'confirm'])->name('advertiser.payments.add-funds.confirm');
+        Route::post('/payments/add-funds/{transaction}/pay', [\App\Http\Controllers\Advertiser\AddFundsController::class, 'pay'])->name('advertiser.payments.add-funds.pay');
+        Route::get('/payments/add-funds/{transaction}/return', [\App\Http\Controllers\Advertiser\AddFundsController::class, 'paymentReturn'])->name('advertiser.payments.add-funds.return');
+        Route::get('/payments/add-funds/{transaction}/cancel', [\App\Http\Controllers\Advertiser\AddFundsController::class, 'cancel'])->name('advertiser.payments.add-funds.cancel');
+        Route::get('/payments/add-funds/{transaction}/authorize-hosted', [\App\Http\Controllers\Advertiser\AddFundsController::class, 'authorizeHosted'])->name('advertiser.payments.add-funds.authorize-hosted');
+        Route::get('/account-settings', [\App\Http\Controllers\Advertiser\AccountSettingsController::class, 'show'])->name('advertiser.account-settings');
+        Route::put('/account-settings', [\App\Http\Controllers\Advertiser\AccountSettingsController::class, 'update'])->name('advertiser.account-settings.update');
+        Route::get('/personal-information', [\App\Http\Controllers\Advertiser\PersonalInformationController::class, 'show'])->name('advertiser.personal-information');
+        Route::put('/personal-information', [\App\Http\Controllers\Advertiser\PersonalInformationController::class, 'update'])->name('advertiser.personal-information.update');
+        Route::get('/company-information', [\App\Http\Controllers\Advertiser\CompanyInformationController::class, 'show'])->name('advertiser.company-information');
+        Route::put('/company-information', [\App\Http\Controllers\Advertiser\CompanyInformationController::class, 'update'])->name('advertiser.company-information.update');
+        Route::get('/audit-logs', [\App\Http\Controllers\Advertiser\AuditLogController::class, 'index'])->name('advertiser.audit-logs');
+        Route::delete('/audit-logs/{auditLog}', [\App\Http\Controllers\Advertiser\AuditLogController::class, 'destroy'])->name('advertiser.audit-logs.destroy');
+        Route::get('/two-factor-authentication', [\App\Http\Controllers\Advertiser\TwoFactorAuthenticationController::class, 'show'])->name('advertiser.two-factor-authentication');
+        Route::put('/two-factor-authentication', [\App\Http\Controllers\Advertiser\TwoFactorAuthenticationController::class, 'update'])->name('advertiser.two-factor-authentication.update');
+        Route::get('/notification-settings', [\App\Http\Controllers\Advertiser\NotificationSettingsController::class, 'show'])->name('advertiser.notification-settings');
+        Route::put('/notification-settings', [\App\Http\Controllers\Advertiser\NotificationSettingsController::class, 'update'])->name('advertiser.notification-settings.update');
+
+        Route::get('/network/country-wise-bidding', [\App\Http\Controllers\Advertiser\CountryWiseBiddingController::class, 'index'])->name('advertiser.network.country-wise-bidding');
+        Route::post('/network/country-wise-bidding', [\App\Http\Controllers\Advertiser\CountryWiseBiddingController::class, 'store'])->name('advertiser.network.country-wise-bidding.store');
+        Route::get('/network/country-wise-bidding/{id}', [\App\Http\Controllers\Advertiser\CountryWiseBiddingController::class, 'show'])->name('advertiser.network.country-wise-bidding.show');
+        Route::put('/network/country-wise-bidding/{id}', [\App\Http\Controllers\Advertiser\CountryWiseBiddingController::class, 'update'])->name('advertiser.network.country-wise-bidding.update');
+        Route::delete('/network/country-wise-bidding/{id}', [\App\Http\Controllers\Advertiser\CountryWiseBiddingController::class, 'destroy'])->name('advertiser.network.country-wise-bidding.destroy');
+        Route::get('/network/traffic-sources', [\App\Http\Controllers\Advertiser\TrafficSourceController::class, 'index'])->name('advertiser.network.traffic-sources');
+        Route::post('/network/traffic-sources', [\App\Http\Controllers\Advertiser\TrafficSourceController::class, 'store'])->name('advertiser.network.traffic-sources.store');
+        Route::delete('/network/traffic-sources/{id}', [\App\Http\Controllers\Advertiser\TrafficSourceController::class, 'destroy'])->name('advertiser.network.traffic-sources.destroy');
+        Route::get('/network/zone-limitations', [\App\Http\Controllers\Advertiser\ZoneLimitationController::class, 'index'])->name('advertiser.network.zone-limitations');
+        Route::post('/network/zone-limitations', [\App\Http\Controllers\Advertiser\ZoneLimitationController::class, 'store'])->name('advertiser.network.zone-limitations.store');
+        Route::get('/network/zone-limitations/zones', [\App\Http\Controllers\Advertiser\ZoneLimitationController::class, 'getZones'])->name('advertiser.network.zone-limitations.zones');
+        Route::get('/network/zone-limitations/{id}', [\App\Http\Controllers\Advertiser\ZoneLimitationController::class, 'show'])->name('advertiser.network.zone-limitations.show');
+        Route::put('/network/zone-limitations/{id}', [\App\Http\Controllers\Advertiser\ZoneLimitationController::class, 'update'])->name('advertiser.network.zone-limitations.update');
+        Route::delete('/network/zone-limitations/{id}', [\App\Http\Controllers\Advertiser\ZoneLimitationController::class, 'destroy'])->name('advertiser.network.zone-limitations.destroy');
+        Route::get('/network/pixel-trackers', [\App\Http\Controllers\Advertiser\PixelTrackerController::class, 'index'])->name('advertiser.network.pixel-trackers');
+        Route::post('/network/pixel-trackers', [\App\Http\Controllers\Advertiser\PixelTrackerController::class, 'store'])->name('advertiser.network.pixel-trackers.store');
+        Route::get('/network/pixel-trackers/{id}', [\App\Http\Controllers\Advertiser\PixelTrackerController::class, 'show'])->name('advertiser.network.pixel-trackers.show');
+        Route::put('/network/pixel-trackers/{id}', [\App\Http\Controllers\Advertiser\PixelTrackerController::class, 'update'])->name('advertiser.network.pixel-trackers.update');
+        Route::get('/network/pixel-trackers/{id}/code', [\App\Http\Controllers\Advertiser\PixelTrackerController::class, 'getCode'])->name('advertiser.network.pixel-trackers.code');
+        Route::post('/network/pixel-trackers/{id}/link', [\App\Http\Controllers\Advertiser\PixelTrackerController::class, 'linkCampaign'])->name('advertiser.network.pixel-trackers.link');
+        Route::delete('/network/pixel-trackers/{id}', [\App\Http\Controllers\Advertiser\PixelTrackerController::class, 'destroy'])->name('advertiser.network.pixel-trackers.destroy');
+        Route::get('/network/network-kit', [\App\Http\Controllers\Advertiser\NetworkKitController::class, 'index'])->name('advertiser.network.network-kit');
+    });
     Route::get('/advertisers/notifications', [AdvertiserController::class, 'notifications'])->middleware('role:advertiser')->name('advertiser.notifications');
     Route::post('/advertisers/notifications/{id}/read', [AdvertiserController::class, 'markNotificationRead'])->middleware('role:advertiser')->name('advertiser.notifications.read');
     Route::post('/advertisers/notifications/read-all', [AdvertiserController::class, 'markAllNotificationsRead'])->middleware('role:advertiser')->name('advertiser.notifications.readAll');
-    
+    Route::get('/advertisers/messages', [\App\Http\Controllers\Advertiser\AdvertiserMessageController::class, 'getUnread'])->middleware('role:advertiser')->name('advertiser.messages.unread');
+    Route::post('/advertisers/messages/{message}/read', [\App\Http\Controllers\Advertiser\AdvertiserMessageController::class, 'markRead'])->middleware('role:advertiser')->name('advertiser.messages.read');
+    Route::post('/advertisers/messages/read-all', [\App\Http\Controllers\Advertiser\AdvertiserMessageController::class, 'markAllRead'])->middleware('role:advertiser')->name('advertiser.messages.readAll');
+    Route::get('/advertisers/push/vapid-key', [\App\Http\Controllers\Advertiser\PushNotificationController::class, 'getVapidKey'])->middleware('role:advertiser')->name('advertiser.push.vapid-key');
+    Route::post('/advertisers/push/subscribe', [\App\Http\Controllers\Advertiser\PushNotificationController::class, 'subscribe'])->middleware('role:advertiser')->name('advertiser.push.subscribe');
+    Route::post('/advertisers/push/unsubscribe', [\App\Http\Controllers\Advertiser\PushNotificationController::class, 'unsubscribe'])->middleware('role:advertiser')->name('advertiser.push.unsubscribe');
+    Route::get('/advertisers/push/status', [\App\Http\Controllers\Advertiser\PushNotificationController::class, 'status'])->middleware('role:advertiser')->name('advertiser.push.status');
+    Route::post('/advertisers/push/test', [\App\Http\Controllers\Advertiser\PushNotificationController::class, 'test'])->middleware('role:advertiser')->name('advertiser.push.test');
+
     Route::get('/publisher', [\App\Http\Controllers\PublisherController::class, 'dashboard'])->middleware('role:publisher')->name('publisher.dashboard');
     Route::get('/publisher/earnings', [\App\Http\Controllers\PublisherEarningsController::class, 'index'])->middleware('role:publisher')->name('publisher.earnings');
     Route::get('/publisher/notifications', [\App\Http\Controllers\PublisherController::class, 'notifications'])->middleware('role:publisher')->name('publisher.notifications');
@@ -538,6 +629,8 @@ Route::middleware('auth')->group(function () {
         // Advertiser Deposits
         Route::get('/advertiser-deposits', [\App\Http\Controllers\Admin\AdvertiserDepositController::class, 'index'])->name('admin.advertiser-deposits');
         Route::get('/advertiser-deposits/export', [\App\Http\Controllers\Admin\AdvertiserDepositController::class, 'export'])->name('admin.advertiser-deposits.export');
+        Route::patch('/advertiser-deposits/{deposit}/complete', [\App\Http\Controllers\Admin\AdvertiserDepositController::class, 'complete'])->name('admin.advertiser-deposits.complete');
+        Route::patch('/advertiser-deposits/{deposit}/reject', [\App\Http\Controllers\Admin\AdvertiserDepositController::class, 'reject'])->name('admin.advertiser-deposits.reject');
 
         // Publisher Payment History
         Route::get('/publisher-payment-history', [\App\Http\Controllers\Admin\PublisherPaymentHistoryController::class, 'index'])->name('admin.publisher-payment-history');

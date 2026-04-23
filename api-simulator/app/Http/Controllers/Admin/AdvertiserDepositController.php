@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AdvertiserDeposit;
 use App\Models\PlatformSetting;
+use App\Models\Transaction;
 use App\Models\User;
+use App\Support\AdvertiserNotificationManager;
+use App\Support\AdvertiserPaymentGateway;
 use App\Support\AdvertiserPaymentManager;
 use Illuminate\Http\Request;
 
@@ -102,6 +105,82 @@ class AdvertiserDepositController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    public function complete(Request $request, AdvertiserDeposit $deposit)
+    {
+        abort_unless($deposit->type === 'deposit', 404);
+        abort_unless(optional($deposit->user)->role === 'advertiser', 404);
+
+        if ($deposit->status === 'completed') {
+            return redirect()
+                ->to($this->depositRedirectUrl($request))
+                ->with('success', 'Deposit #' . $deposit->id . ' is already completed.');
+        }
+
+        $transaction = Transaction::findOrFail($deposit->id);
+        app(AdvertiserPaymentGateway::class)->complete(
+            $transaction,
+            $transaction->gateway_txn_id ?: 'admin-wire-' . $transaction->id,
+            [
+                'provider' => 'bank_wire',
+                'completed_by_admin_id' => $request->user()?->id,
+                'completed_from' => 'admin_advertiser_deposits',
+            ]
+        );
+
+        app(AdvertiserNotificationManager::class)->deliver(
+            $deposit->user->fresh('profile'),
+            'payment_approved',
+            'Payment Approved',
+            'Your deposit #' . $deposit->id . ' has been approved and completed.',
+            route('advertiser.payments.history'),
+            $request->user()?->id,
+            true
+        );
+
+        return redirect()
+            ->to($this->depositRedirectUrl($request))
+            ->with('success', 'Deposit #' . $deposit->id . ' completed and advertiser balance updated.');
+    }
+
+    public function reject(Request $request, AdvertiserDeposit $deposit)
+    {
+        abort_unless($deposit->type === 'deposit', 404);
+        abort_unless(optional($deposit->user)->role === 'advertiser', 404);
+
+        if ($deposit->status !== 'pending') {
+            return redirect()
+                ->to($this->depositRedirectUrl($request))
+                ->with('success', 'Deposit #' . $deposit->id . ' is no longer pending.');
+        }
+
+        $deposit->forceFill([
+            'status' => 'failed',
+            'gateway_status' => 'failed',
+            'admin_note' => trim((string) $deposit->admin_note . ' Admin rejected this deposit.'),
+        ])->save();
+
+        app(AdvertiserNotificationManager::class)->deliver(
+            $deposit->user->fresh('profile'),
+            'payment_rejected',
+            'Payment Rejected',
+            'Your deposit #' . $deposit->id . ' has been rejected by admin.',
+            route('advertiser.payments.history'),
+            $request->user()?->id,
+            true
+        );
+
+        return redirect()
+            ->to($this->depositRedirectUrl($request))
+            ->with('success', 'Deposit #' . $deposit->id . ' rejected.');
+    }
+
+    private function depositRedirectUrl(Request $request): string
+    {
+        return $request->input('redirect_to') === 'approvals'
+            ? route('admin.advertiser-payment-approvals')
+            : route('admin.advertiser-deposits');
     }
 
     protected function buildBaseQuery(Request $request)

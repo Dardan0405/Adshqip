@@ -12,11 +12,17 @@
             'bank_address' => old('wire_bank_address'),
         ] : ($paymentDetails[\App\Models\PlatformSetting::ADVERTISER_PAYMENT_WIRE_TRANSFER] ?? []);
         $paypal = old() ? [
+            'mode' => old('paypal_mode', 'sandbox'),
+            'client_id' => old('paypal_client_id'),
+            'secret' => old('paypal_secret'),
             'paypal_email' => old('paypal_email'),
             'merchant_id' => old('paypal_merchant_id'),
             'instructions' => old('paypal_instructions'),
         ] : ($paymentDetails[\App\Models\PlatformSetting::ADVERTISER_PAYMENT_PAYPAL] ?? []);
         $bitcoin = old() ? [
+            'mode' => old('bitcoin_mode', 'test'),
+            'bitpay_api_token' => old('bitcoin_bitpay_api_token'),
+            'bitpay_webhook_secret' => old('bitcoin_bitpay_webhook_secret'),
             'wallet_address' => old('bitcoin_wallet_address'),
             'network' => old('bitcoin_network'),
             'instructions' => old('bitcoin_instructions'),
@@ -28,6 +34,7 @@
             'account_email' => old('stripe_account_email'),
         ] : ($paymentDetails[\App\Models\PlatformSetting::ADVERTISER_PAYMENT_STRIPE] ?? []);
         $authorize = old() ? [
+            'mode' => old('authorize_mode', 'sandbox'),
             'login_id' => old('authorize_login_id'),
             'transaction_key' => old('authorize_transaction_key'),
             'signature_key' => old('authorize_signature_key'),
@@ -127,6 +134,24 @@
                         </div>
                         <div class="mt-5 grid gap-4">
                             <div>
+                                <label class="text-sm font-medium text-slate-700">Mode</label>
+                                <select name="paypal_mode" class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-100">
+                                    <option value="sandbox" {{ ($paypal['mode'] ?? 'sandbox') === 'sandbox' ? 'selected' : '' }}>Sandbox</option>
+                                    <option value="live" {{ ($paypal['mode'] ?? 'sandbox') === 'live' ? 'selected' : '' }}>Live</option>
+                                </select>
+                                @error('paypal_mode') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-slate-700">Client ID</label>
+                                <input type="text" name="paypal_client_id" value="{{ $paypal['client_id'] ?? '' }}" class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-100">
+                                @error('paypal_client_id') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-slate-700">Secret</label>
+                                <input type="password" name="paypal_secret" value="{{ $paypal['secret'] ?? '' }}" class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-100" autocomplete="off">
+                                @error('paypal_secret') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
                                 <label class="text-sm font-medium text-slate-700">PayPal Email</label>
                                 <input type="email" name="paypal_email" value="{{ $paypal['paypal_email'] ?? '' }}" class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-100">
                                 @error('paypal_email') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
@@ -147,12 +172,30 @@
                     <section class="rounded-3xl border border-slate-200 bg-white p-5">
                         <div class="flex items-center justify-between gap-4">
                             <div>
-                                <h2 class="text-lg font-semibold text-slate-900">Bitcoin</h2>
-                                <p class="mt-1 text-sm text-slate-500">Keep the wallet and network ready for crypto deposit instructions.</p>
+                                <h2 class="text-lg font-semibold text-slate-900">Bitcoin (BitPay)</h2>
+                                <p class="mt-1 text-sm text-slate-500">Configure BitPay for cryptocurrency payment processing.</p>
                             </div>
-                            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Bitcoin</span>
+                            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">BitPay</span>
                         </div>
                         <div class="mt-5 grid gap-4">
+                            <div>
+                                <label class="text-sm font-medium text-slate-700">Mode</label>
+                                <select name="bitcoin_mode" class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-100">
+                                    <option value="test" {{ ($bitcoin['mode'] ?? 'test') === 'test' ? 'selected' : '' }}>Test</option>
+                                    <option value="live" {{ ($bitcoin['mode'] ?? 'test') === 'live' ? 'selected' : '' }}>Live</option>
+                                </select>
+                                @error('bitcoin_mode') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-slate-700">BitPay API Token</label>
+                                <input type="password" name="bitcoin_bitpay_api_token" value="{{ $bitcoin['bitpay_api_token'] ?? '' }}" class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-100" autocomplete="off">
+                                @error('bitcoin_bitpay_api_token') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-slate-700">BitPay Webhook Secret</label>
+                                <input type="password" name="bitcoin_bitpay_webhook_secret" value="{{ $bitcoin['bitpay_webhook_secret'] ?? '' }}" class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-100" autocomplete="off">
+                                @error('bitcoin_bitpay_webhook_secret') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                            </div>
                             <div>
                                 <label class="text-sm font-medium text-slate-700">Wallet Address</label>
                                 <input type="text" name="bitcoin_wallet_address" value="{{ $bitcoin['wallet_address'] ?? '' }}" class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-100">
@@ -212,6 +255,14 @@
                             <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Authorize.net</span>
                         </div>
                         <div class="mt-5 grid gap-4 md:grid-cols-2">
+                            <div>
+                                <label class="text-sm font-medium text-slate-700">Mode</label>
+                                <select name="authorize_mode" class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-100">
+                                    <option value="sandbox" {{ ($authorize['mode'] ?? 'sandbox') === 'sandbox' ? 'selected' : '' }}>Sandbox</option>
+                                    <option value="live" {{ ($authorize['mode'] ?? 'sandbox') === 'live' ? 'selected' : '' }}>Live</option>
+                                </select>
+                                @error('authorize_mode') <p class="mt-1.5 text-xs text-rose-500">{{ $message }}</p> @enderror
+                            </div>
                             <div>
                                 <label class="text-sm font-medium text-slate-700">Login ID</label>
                                 <input type="text" name="authorize_login_id" value="{{ $authorize['login_id'] ?? '' }}" class="mt-1.5 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-100">

@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Campaign;
 use App\Models\Ad;
 use App\Models\StatDaily;
+use App\Support\AdvertiserNotificationManager;
 use App\Support\MessageDeliveryManager;
 use App\Models\PlatformSetting;
 use Illuminate\Http\Request;
@@ -212,6 +213,15 @@ class AdvertiserController extends Controller
     {
         $advertiser = User::where('role', 'advertiser')->findOrFail($id);
         $advertiser->update(['status' => 'suspended']);
+        app(AdvertiserNotificationManager::class)->deliver(
+            $advertiser->fresh('profile'),
+            'user_block',
+            'User Blocked',
+            'Your advertiser account has been blocked by admin.',
+            route('signin'),
+            Auth::id(),
+            true
+        );
 
         return response()->json(['success' => true, 'message' => 'Advertiser blocked.']);
     }
@@ -220,6 +230,15 @@ class AdvertiserController extends Controller
     {
         $advertiser = User::where('role', 'advertiser')->findOrFail($id);
         $advertiser->update(['status' => 'active']);
+        app(AdvertiserNotificationManager::class)->deliver(
+            $advertiser->fresh('profile'),
+            'user_unblock',
+            'User Unblocked',
+            'Your advertiser account has been unblocked by admin.',
+            route('signin'),
+            Auth::id(),
+            true
+        );
 
         return response()->json(['success' => true, 'message' => 'Advertiser unblocked.']);
     }

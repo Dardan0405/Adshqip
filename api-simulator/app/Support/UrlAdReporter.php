@@ -29,6 +29,7 @@ class UrlAdReporter
             'zone_id' => $this->zoneIdFromRequest($request),
             'event_type' => $eventType,
             'request_url' => $request->fullUrl(),
+            'referrer_url' => $this->referrerUrl($request),
             'tracking_url' => $trackingUrl,
             'destination_url' => $destinationUrl,
             'device_type' => $this->detectDeviceType($request),
@@ -53,6 +54,7 @@ class UrlAdReporter
             'zone_id' => $this->zoneIdFromRequest($request),
             'event_type' => $eventType,
             'request_url' => $request->fullUrl(),
+            'referrer_url' => $this->referrerUrl($request),
             'tracking_url' => $trackingUrl,
             'destination_url' => $destinationUrl,
             'device_type' => $this->detectDeviceType($request),
@@ -82,6 +84,14 @@ class UrlAdReporter
         $zoneId = $request->query('zone_id');
 
         return is_numeric($zoneId) ? (int) $zoneId : null;
+    }
+
+    private function referrerUrl(Request $request): ?string
+    {
+        $referrer = (string) ($request->query('referrer') ?: $request->headers->get('referer', ''));
+        $referrer = trim($referrer);
+
+        return $referrer !== '' ? substr($referrer, 0, 2000) : null;
     }
 
     private function detectDeviceType(Request $request): string

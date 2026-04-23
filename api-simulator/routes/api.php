@@ -1,12 +1,16 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\TelegramWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::get('/me', [AuthController::class, 'me']);
+
+Route::post('/payments/stripe/webhook', [PaymentWebhookController::class, 'stripe'])->name('api.payments.stripe.webhook');
+Route::post('/payments/bitpay/webhook', [PaymentWebhookController::class, 'bitpay'])->name('api.payments.bitpay.webhook');
 
 // Telegram Integration API
 Route::prefix('telegram')->group(function () {

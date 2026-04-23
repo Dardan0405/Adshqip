@@ -18,6 +18,7 @@ class UrlAdReport extends Model
         'zone_id',
         'event_type',
         'request_url',
+        'referrer_url',
         'tracking_url',
         'destination_url',
         'device_type',

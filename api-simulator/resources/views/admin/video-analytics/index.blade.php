@@ -65,7 +65,7 @@
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div class="px-4 py-3 border-b border-gray-100">
             <h2 class="text-sm font-semibold text-gray-900">Video Event Performance</h2>
-            <p class="text-xs text-gray-500 mt-1">{{ $rows->total() }} tracked video ads</p>
+            <p class="text-xs text-gray-500 mt-1">{{ $rows->total() }} video ads</p>
         </div>
 
         <div class="overflow-x-auto">

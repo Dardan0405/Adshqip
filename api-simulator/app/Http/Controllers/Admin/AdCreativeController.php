@@ -10,6 +10,7 @@ use App\Models\PlatformSetting;
 use App\Models\StatDaily;
 use App\Support\AdDeliveryOptions;
 use App\Support\AntiFraudClickGuard;
+use App\Support\AdvertiserNotificationManager;
 use App\Support\GeoCpmResolver;
 use App\Support\UrlAdReporter;
 use Illuminate\Http\Request;
@@ -18,6 +19,27 @@ use Illuminate\Support\Str;
 
 class AdCreativeController extends Controller
 {
+    private const VIEW_THRESHOLDS = [1, 10, 100, 1000];
+    private const CONVERSION_THRESHOLDS = [1, 5, 10, 50];
+
+    private const VIDEO_AD_TYPES = ['video', 'vast', 'clip'];
+
+    private const VIDEO_FILE_TYPES = ['video'];
+
+    private const VIDEO_TRACKING_EVENTS = [
+        'start',
+        'firstQuartile',
+        'midpoint',
+        'thirdQuartile',
+        'complete',
+        'skip',
+        'pause',
+        'resume',
+        'fullscreen',
+        'unmute',
+        'mute',
+    ];
+
     /**
      * Display the ad formats / creatives listing page.
      */
@@ -42,7 +64,11 @@ class AdCreativeController extends Controller
         // Ad type filter
         $typeFilter = $request->query('type', 'all');
         if ($typeFilter !== 'all') {
-            $query->where('ad_type', $typeFilter);
+            if ($typeFilter === 'video') {
+                $this->applyVideoCreativeFilter($query);
+            } else {
+                $query->where('ad_type', $typeFilter);
+            }
         }
 
         // Status filter
@@ -78,14 +104,19 @@ class AdCreativeController extends Controller
         // Transform ads for the view
         $ads = $allAds->map(function ($ad) {
             $creative = $ad->primaryCreative;
+            $isVideoCreative = $this->isVideoCreative($ad);
+            $displayAdType = $isVideoCreative && $ad->ad_type !== 'vast' ? 'video' : $ad->ad_type;
+            $displayFileType = $isVideoCreative ? 'video' : ($creative ? $creative->file_type : '—');
+
             return [
                 'id' => $ad->id,
                 'name' => $ad->name,
                 'campaign_name' => $ad->campaign ? $ad->campaign->name : '—',
                 'campaign_id' => $ad->campaign_id,
-                'ad_type' => $ad->ad_type,
+                'ad_type' => $displayAdType,
+                'raw_ad_type' => $ad->ad_type,
                 'status' => $ad->status,
-                'file_type' => $creative ? $creative->file_type : '—',
+                'file_type' => $displayFileType,
                 'size' => $creative ? ($creative->width && $creative->height ? $creative->width . 'x' . $creative->height : '—') : '—',
                 'file_size_kb' => $creative ? ($creative->file_size_bytes ? number_format($creative->file_size_bytes / 1024, 1) : '—') : '—',
                 'weight' => $ad->weight ?? 5,
@@ -888,6 +919,139 @@ class AdCreativeController extends Controller
                 // No session available (e.g., API context)
             }
         }
+
+        $this->notifyTrackingEvents($ad, $row, $type, $isUnique);
+        $this->syncCampaignBudgetAndNotifications($ad);
+    }
+
+    private function notifyTrackingEvents(Ad $ad, StatDaily $row, string $type, bool $isUnique): void
+    {
+        $campaign = $ad->campaign;
+        $advertiser = $campaign?->advertiser;
+
+        if (! $campaign || ! $advertiser) {
+            return;
+        }
+
+        $notifier = app(AdvertiserNotificationManager::class);
+        $campaignUrl = route('advertiser.campaigns.show', $campaign->id);
+
+        if ($type === 'impression' && $isUnique) {
+            $notifier->notifyTrackingStat(
+                $advertiser,
+                'impression',
+                'Impression Recorded',
+                'Campaign "' . $campaign->name . '" received a new impression.',
+                $campaignUrl
+            );
+        }
+
+        if ($type === 'conversion') {
+            $notifier->notifyTrackingStat(
+                $advertiser,
+                'conversion',
+                'Conversion Recorded',
+                'Campaign "' . $campaign->name . '" recorded a conversion.',
+                $campaignUrl
+            );
+
+            if (in_array((int) $row->conversions, self::CONVERSION_THRESHOLDS, true)) {
+                $notifier->notifyTrackingStat(
+                    $advertiser,
+                    'conversion_tracking_threshold',
+                    'Conversion Threshold Reached',
+                    'Campaign "' . $campaign->name . '" reached ' . (int) $row->conversions . ' conversions.',
+                    $campaignUrl
+                );
+            }
+        }
+
+        if ($type === 'view' && in_array((int) $row->viewable_impressions, self::VIEW_THRESHOLDS, true)) {
+            $notifier->notifyTrackingStat(
+                $advertiser,
+                'view_threshold',
+                'View Threshold Reached',
+                'Campaign "' . $campaign->name . '" reached ' . (int) $row->viewable_impressions . ' tracked views.',
+                $campaignUrl
+            );
+        }
+    }
+
+    private function syncCampaignBudgetAndNotifications(Ad $ad): void
+    {
+        $campaign = $ad->campaign;
+        $advertiser = $campaign?->advertiser;
+
+        if (! $campaign || ! $advertiser || (float) ($campaign->total_budget ?? 0) <= 0) {
+            return;
+        }
+
+        $totalSpend = (float) StatDaily::query()
+            ->where('campaign_id', $campaign->id)
+            ->sum('revenue');
+
+        $remainingBudget = max(0, round((float) $campaign->total_budget - $totalSpend, 4));
+        $updates = [];
+
+        if ((float) $campaign->remaining_budget !== $remainingBudget) {
+            $updates['remaining_budget'] = $remainingBudget;
+        }
+
+        if ($remainingBudget <= 0 && $campaign->status !== 'completed') {
+            $updates['status'] = 'completed';
+        }
+
+        if ($updates !== []) {
+            $campaign->forceFill($updates)->save();
+        }
+
+        $campaignUrl = route('advertiser.campaigns.show', $campaign->id);
+        $notifier = app(AdvertiserNotificationManager::class);
+
+        if ($remainingBudget <= 0) {
+            $notifier->notifyTrackingStat(
+                $advertiser,
+                'budget_completed',
+                'Budget Completed',
+                'Campaign "' . $campaign->name . '" has exhausted its budget.',
+                $campaignUrl
+            );
+            $notifier->notifyTrackingStat(
+                $advertiser,
+                'campaign_stopped_total_budget_limit',
+                'Campaign Stopped',
+                'Campaign "' . $campaign->name . '" stopped because it reached the total budget limit.',
+                $campaignUrl
+            );
+            $notifier->notifyTrackingStat(
+                $advertiser,
+                'campaign_completed',
+                'Campaign Completed',
+                'Campaign "' . $campaign->name . '" is now completed.',
+                $campaignUrl
+            );
+        }
+
+        $profile = $advertiser->profile;
+        $balance = (float) ($profile?->balance ?? 0);
+
+        if ($balance <= 0) {
+            $notifier->notifyTrackingStat(
+                $advertiser,
+                'balance_zero',
+                'Balance Is Zero',
+                'Your advertiser balance is currently $0.',
+                route('advertiser.payments.add-funds')
+            );
+        } elseif ($balance < 10) {
+            $notifier->notifyTrackingStat(
+                $advertiser,
+                'balance_below_threshold',
+                'Balance Below Threshold',
+                'Your advertiser balance has dropped below the threshold.',
+                route('advertiser.payments.add-funds')
+            );
+        }
     }
 
     /**
@@ -1010,6 +1174,13 @@ SCRIPT;
 
             // 3. Budget check
             if ($campaign->total_budget > 0 && $campaign->remaining_budget <= 0) {
+                if ($campaign->advertiser) {
+                    $notifier = app(AdvertiserNotificationManager::class);
+                    $campaignUrl = route('advertiser.campaigns.show', $campaign->id);
+                    $notifier->notifyTrackingStat($campaign->advertiser, 'budget_completed', 'Budget Completed', 'Campaign "' . $campaign->name . '" has exhausted its budget.', $campaignUrl);
+                    $notifier->notifyTrackingStat($campaign->advertiser, 'campaign_stopped_total_budget_limit', 'Campaign Stopped', 'Campaign "' . $campaign->name . '" stopped because it reached the total budget limit.', $campaignUrl);
+                    $notifier->notifyTrackingStat($campaign->advertiser, 'campaign_completed', 'Campaign Completed', 'Campaign "' . $campaign->name . '" is now completed.', $campaignUrl);
+                }
                 if ($debug) return $this->adResponse('<pre>BLOCKED: budget exhausted. Total: ' . $campaign->total_budget . ', Remaining: ' . $campaign->remaining_budget . '</pre>');
                 return $this->adResponse('<!-- budget exhausted -->', 204);
             }
@@ -1612,6 +1783,7 @@ vid.addEventListener('seeking',function(){
     }
 });
 </script>
+{$this->videoTrackingScript($ad)}
 {$tracking}
 </body></html>
 HTML;
@@ -1693,6 +1865,7 @@ document.querySelector('.video-container').addEventListener('click',function(e){
     }
 });
 </script>
+{$this->videoTrackingScript($ad)}
 {$tracking}
 </body></html>
 HTML;
@@ -1772,6 +1945,7 @@ document.querySelector('.video-container').addEventListener('click', function(e)
 });
 </script>
 {$this->jwPlayerBootstrapScript('aq-jw-player-slot', 'aq-video-fallback', $videoSrc, $creative?->thumbnail_path ? asset($creative->thumbnail_path) : null)}
+{$this->videoTrackingScript($ad, '#aq-video-fallback')}
 {$tracking}
 </body></html>
 HTML;
@@ -1955,6 +2129,120 @@ HTML;
     /**
      * Get the specific ad format (e.g., 'popunder', 'interstitial', 'instream') from campaign ad_formats metadata.
      */
+    private function applyVideoCreativeFilter($query): void
+    {
+        $query->where(function ($q) {
+            $q->whereIn('ad_type', self::VIDEO_AD_TYPES)
+                ->orWhereHas('primaryCreative', function ($creativeQuery) {
+                    $creativeQuery
+                        ->whereIn('file_type', self::VIDEO_FILE_TYPES)
+                        ->orWhere('mime_type', 'like', 'video/%')
+                        ->orWhere(function ($videoUrlQuery) {
+                            $videoUrlQuery
+                                ->whereNotNull('video_url')
+                                ->where('video_url', '<>', '');
+                        });
+                });
+        });
+    }
+
+    private function isVideoCreative(Ad $ad): bool
+    {
+        $creative = $ad->primaryCreative;
+
+        return in_array($ad->ad_type, self::VIDEO_AD_TYPES, true)
+            || ($creative && in_array($creative->file_type, self::VIDEO_FILE_TYPES, true))
+            || ($creative && is_string($creative->mime_type) && str_starts_with($creative->mime_type, 'video/'))
+            || ($creative && !empty($creative->video_url));
+    }
+
+    private function videoTrackingScript(Ad $ad, string $videoSelector = 'video'): string
+    {
+        $trackingUrl = json_encode(route('ad.video-event', $ad->id));
+        $videoSelector = json_encode($videoSelector);
+
+        return <<<SCRIPT
+<script>
+(function () {
+    var video = document.querySelector({$videoSelector});
+    if (!video) {
+        return;
+    }
+
+    var endpoint = {$trackingUrl};
+    var fired = {};
+    var viewerKey = 'aq_video_viewer_id';
+    var viewerId = '';
+
+    try {
+        viewerId = localStorage.getItem(viewerKey) || '';
+        if (!viewerId) {
+            viewerId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
+            localStorage.setItem(viewerKey, viewerId);
+        }
+    } catch (error) {
+        viewerId = String(Date.now()) + Math.random().toString(16).slice(2);
+    }
+
+    function progress() {
+        if (!video.duration || !isFinite(video.duration)) {
+            return 0;
+        }
+        return Math.max(0, Math.min(100, Math.round((video.currentTime / video.duration) * 100)));
+    }
+
+    function send(eventName, progressValue, once) {
+        if (once && fired[eventName]) {
+            return;
+        }
+        fired[eventName] = true;
+
+        var url = endpoint
+            + '?event=' + encodeURIComponent(eventName)
+            + '&progress=' + encodeURIComponent(progressValue == null ? progress() : progressValue)
+            + '&viewer_id=' + encodeURIComponent(viewerId)
+            + '&_=' + Date.now();
+
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(url);
+            return;
+        }
+
+        new Image().src = url;
+    }
+
+    video.addEventListener('play', function () { send('start', progress(), true); });
+    video.addEventListener('pause', function () {
+        if (!video.ended) {
+            send('pause', progress(), false);
+        }
+    });
+    video.addEventListener('playing', function () {
+        if (fired.pause && !video.ended) {
+            send('resume', progress(), false);
+        }
+    });
+    video.addEventListener('volumechange', function () {
+        send(video.muted || video.volume === 0 ? 'mute' : 'unmute', progress(), false);
+    });
+    video.addEventListener('ended', function () { send('complete', 100, true); });
+    video.addEventListener('timeupdate', function () {
+        var currentProgress = progress();
+        if (currentProgress >= 25) send('firstQuartile', 25, true);
+        if (currentProgress >= 50) send('midpoint', 50, true);
+        if (currentProgress >= 75) send('thirdQuartile', 75, true);
+    });
+
+    document.addEventListener('fullscreenchange', function () {
+        if (document.fullscreenElement === video || document.fullscreenElement === video.parentElement) {
+            send('fullscreen', progress(), true);
+        }
+    });
+})();
+</script>
+SCRIPT;
+    }
+
     private function getAdFormat(Ad $ad): ?string
     {
         $campaign = $ad->campaign;
@@ -2037,6 +2325,49 @@ HTML;
         }
 
         return $this->pixelResponse();
+    }
+
+    public function videoEvent(Request $request, int $id)
+    {
+        $ad = Ad::with('primaryCreative')->find($id);
+
+        if (!$ad || $ad->is_deleted || !$this->isVideoCreative($ad)) {
+            return $this->pixelResponse();
+        }
+
+        $eventName = (string) $request->query('event', '');
+        if (!in_array($eventName, self::VIDEO_TRACKING_EVENTS, true)) {
+            return $this->pixelResponse();
+        }
+
+        $eventId = DB::table('aq_vast_events')->where('event_name', $eventName)->value('id');
+        if (!$eventId) {
+            $eventId = DB::table('aq_vast_events')->insertGetId([
+                'event_name' => $eventName,
+                'description' => Str::headline($eventName),
+                'is_trackable' => true,
+                'created_at' => now(),
+            ]);
+        }
+
+        $viewerId = (string) $request->query('viewer_id', '');
+        if ($viewerId === '' || strlen($viewerId) > 64) {
+            $viewerId = (string) $request->cookie('aq_video_viewer_id', Str::uuid()->toString());
+        }
+
+        $progress = $request->query('progress');
+        $progress = is_numeric($progress) ? max(0, min(100, (int) $progress)) : null;
+
+        DB::table('aq_video_tracking')->insert([
+            'ad_id' => $ad->id,
+            'impression_id' => is_numeric($request->query('impression_id')) ? (int) $request->query('impression_id') : null,
+            'event_id' => $eventId,
+            'viewer_id' => $viewerId,
+            'progress_percent' => $progress,
+            'created_at' => now(),
+        ]);
+
+        return $this->pixelResponse()->cookie('aq_video_viewer_id', $viewerId, 60 * 24 * 365);
     }
 
     /**

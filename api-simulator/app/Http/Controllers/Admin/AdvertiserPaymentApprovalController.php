@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdvertiserDeposit;
 use App\Models\Payout;
 use App\Models\User;
+use App\Support\AdvertiserNotificationManager;
 use Illuminate\Http\Request;
 
 class AdvertiserPaymentApprovalController extends Controller
@@ -36,6 +38,16 @@ class AdvertiserPaymentApprovalController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $pendingDeposits = AdvertiserDeposit::query()
+            ->deposits()
+            ->forAdvertisers()
+            ->where('aq_transactions.status', 'pending')
+            ->whereIn('aq_transactions.payment_gateway', ['wire_transfer', 'manual'])
+            ->with(['user.userProfile'])
+            ->orderByDesc('aq_transactions.created_at')
+            ->select('aq_transactions.*')
+            ->get();
+
         $users = User::where('role', 'advertiser')
             ->where('is_deleted', false)
             ->with('userProfile')
@@ -59,6 +71,7 @@ class AdvertiserPaymentApprovalController extends Controller
 
         return view('admin.advertiser-payment-approvals.index', compact(
             'payouts',
+            'pendingDeposits',
             'users',
             'paymentMethods',
             'statuses',
@@ -95,7 +108,7 @@ class AdvertiserPaymentApprovalController extends Controller
         ]);
     }
 
-    public function approve($id)
+    public function approve(Request $request, $id)
     {
         $payout = Payout::where('status', 'pending')
             ->whereHas('user', fn($q) => $q->where('role', 'advertiser'))
@@ -106,10 +119,20 @@ class AdvertiserPaymentApprovalController extends Controller
             'processed_at' => now(),
         ]);
 
+        app(AdvertiserNotificationManager::class)->deliver(
+            $payout->user->fresh('profile'),
+            'payment_approved',
+            'Payment Approved',
+            'Your advertiser payment request #' . $payout->id . ' has been approved.',
+            route('advertiser.payments.history'),
+            $request->user()?->id,
+            true
+        );
+
         return response()->json(['success' => true, 'message' => 'Advertiser payment approved and marked as completed.']);
     }
 
-    public function reject($id)
+    public function reject(Request $request, $id)
     {
         $payout = Payout::where('status', 'pending')
             ->whereHas('user', fn($q) => $q->where('role', 'advertiser'))
@@ -119,6 +142,16 @@ class AdvertiserPaymentApprovalController extends Controller
             'status' => 'cancelled',
             'processed_at' => now(),
         ]);
+
+        app(AdvertiserNotificationManager::class)->deliver(
+            $payout->user->fresh('profile'),
+            'payment_rejected',
+            'Payment Rejected',
+            'Your advertiser payment request #' . $payout->id . ' has been rejected.',
+            route('advertiser.payments.history'),
+            $request->user()?->id,
+            true
+        );
 
         return response()->json(['success' => true, 'message' => 'Advertiser payment rejected.']);
     }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TwoFactorBackupCode;
 use App\Models\User;
 use App\Support\ActivityLogger;
+use App\Support\AdvertiserNotificationManager;
 use App\Support\SessionTracker;
 use App\Support\TwoFactorAuth;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Log;
 
 class WebLoginController extends Controller
 {
-    public function login(Request $request, TwoFactorAuth $twoFactorAuth, ActivityLogger $activityLogger, SessionTracker $sessionTracker)
+    public function login(Request $request, TwoFactorAuth $twoFactorAuth, ActivityLogger $activityLogger, SessionTracker $sessionTracker, AdvertiserNotificationManager $notifier)
     {
         $request->validate([
             'email' => 'required|email',
@@ -28,10 +29,16 @@ class WebLoginController extends Controller
             ->first();
 
         if (! $user || ! Hash::check($request->password, $user->password_hash)) {
+            if ($user && $user->role === 'advertiser') {
+                $notifier->notifyInvalidPassword($user);
+            }
             return response()->json(['success' => false, 'message' => 'Invalid email or password.'], 401);
         }
 
         if ($user->status !== 'active') {
+            if ($user->role === 'advertiser') {
+                $notifier->notifyBlockedUser($user);
+            }
             $message = $this->inactiveAccountMessageFor($user);
 
             return response()->json(['success' => false, 'message' => $message], 403);

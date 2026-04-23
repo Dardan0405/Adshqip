@@ -7,6 +7,16 @@
 <style>
     .leaflet-popup-content-wrapper { border-radius: 12px; }
     .leaflet-popup-content { margin: 12px 16px; }
+    #map { height: 420px; min-height: 420px; width: 100%; }
+    .leaflet-container { height: 100%; width: 100%; }
+    .leaflet-container img,
+    .leaflet-container .leaflet-tile {
+        max-width: none !important;
+        max-height: none !important;
+    }
+    @media (max-width: 640px) {
+        #map { height: 340px; min-height: 340px; }
+    }
 </style>
 @endpush
 
@@ -79,7 +89,7 @@
             <h2 class="text-sm font-semibold text-gray-900">Geographic Distribution</h2>
             <p class="text-xs text-gray-500 mt-1">Click on markers to view country statistics</p>
         </div>
-        <div id="map" class="w-full h-[400px] bg-gray-100"></div>
+        <div id="map" class="w-full bg-gray-100"></div>
     </div>
 
     <div class="bg-white rounded-xl border border-gray-200">
@@ -143,10 +153,16 @@
     const mapData = @json($mapData);
 
     document.addEventListener('DOMContentLoaded', function() {
-        const map = L.map('map', {
+        const mapElement = document.getElementById('map');
+        if (!mapElement || typeof L === 'undefined') {
+            return;
+        }
+
+        const map = L.map(mapElement, {
             center: [30, 10],
             zoom: 2,
             scrollWheelZoom: true,
+            worldCopyJump: true,
         });
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -189,6 +205,11 @@
                 marker.bindPopup(popupContent);
             }
         });
+
+        const refreshMapSize = () => map.invalidateSize({ pan: false });
+        setTimeout(refreshMapSize, 100);
+        setTimeout(refreshMapSize, 500);
+        window.addEventListener('resize', refreshMapSize);
     });
 
     function copyTable() {
