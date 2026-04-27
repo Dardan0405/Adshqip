@@ -141,4 +141,9 @@ class Campaign extends Model
     {
         return $this->hasMany(StatDaily::class, 'campaign_id');
     }
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'aq_campaign_category', 'campaign_id', 'category_id');
+    }
 }

@@ -13,6 +13,7 @@ class TelegramMiniApp extends Model
 
     protected $fillable = [
         'user_id',
+        'application_type',
         'app_name',
         'app_short_name',
         'bot_username',

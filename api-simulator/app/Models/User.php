@@ -40,6 +40,8 @@ class User extends Authenticatable
         'two_factor_trusted_os',
         'two_factor_trusted_user_agent_hash',
         'referral_code',
+        'referred_by',
+        'referred_at',
         'last_login_at',
         'last_login_ip',
         'is_deleted',
@@ -152,6 +154,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'referred_at' => 'datetime',
             'last_login_at' => 'datetime',
             'two_factor_enabled' => 'boolean',
             'two_factor_verification_options' => 'array',

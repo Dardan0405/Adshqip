@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\PlatformSetting;
+use App\Models\ReferralConversion;
+use App\Models\ReferralLink;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Support\AdminEventNotifier;
@@ -47,21 +49,34 @@ class RegisterController extends Controller
             'company_name' => 'nullable|string|max:255',
             'website_url'  => 'nullable|url|max:500',
             'country_code' => 'nullable|string|size:2',
+            'ref_code'     => 'nullable|string|max:32',
             'terms'        => 'accepted',
         ]);
 
-        $user = DB::transaction(function () use ($request) {
+        $refCode = strtoupper(trim((string) ($request->input('ref_code') ?? '')));
+        $referralLink = $refCode !== ''
+            ? ReferralLink::where('code', $refCode)
+                ->where('status', 'active')
+                ->where('is_deleted', false)
+                ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+                ->where(fn ($q) => $q->where('target_role', $request->role)->orWhere('target_role', 'any'))
+                ->first()
+            : null;
+
+        $user = DB::transaction(function () use ($request, $referralLink) {
             $approvalType = $this->approvalTypeForRole($request->role);
             $requiresEmailVerification = $approvalType === PlatformSetting::ADVERTISER_APPROVAL_EMAIL_VERIFICATION;
             $requiresAdminApproval = $approvalType === PlatformSetting::ADVERTISER_APPROVAL_ADMIN;
 
             $user = User::create([
-                'email'         => $request->email,
-                'password_hash' => Hash::make($request->password),
-                'role'          => $request->role,
-                'status'        => $requiresAdminApproval ? 'pending_verification' : ($requiresEmailVerification ? 'inactive' : 'active'),
+                'email'          => $request->email,
+                'password_hash'  => Hash::make($request->password),
+                'role'           => $request->role,
+                'status'         => $requiresAdminApproval ? 'pending_verification' : ($requiresEmailVerification ? 'inactive' : 'active'),
                 'email_verified_at' => $requiresEmailVerification ? null : now(),
-                'referral_code' => strtoupper(Str::random(8)),
+                'referral_code'  => strtoupper(Str::random(8)),
+                'referred_by'    => $referralLink?->referrer_id,
+                'referred_at'    => $referralLink ? now() : null,
             ]);
 
             UserProfile::create([
@@ -72,6 +87,22 @@ class RegisterController extends Controller
                 'website_url'  => $request->website_url,
                 'country_code' => $request->country_code ?? 'AL',
             ]);
+
+            if ($referralLink) {
+                ReferralConversion::create([
+                    'link_id'          => $referralLink->id,
+                    'referrer_id'      => $referralLink->referrer_id,
+                    'referred_user_id' => $user->id,
+                    'referred_role'    => $user->role,
+                    'signup_ip'        => request()->ip(),
+                    'commission_ends_at' => $referralLink->commission_duration_days
+                        ? now()->addDays($referralLink->commission_duration_days)
+                        : null,
+                    'status' => 'pending',
+                ]);
+
+                $referralLink->increment('total_signups');
+            }
 
             return $user;
         });

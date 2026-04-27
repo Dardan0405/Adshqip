@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use App\Models\Payout;
+use App\Models\StatDaily;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,63 +12,147 @@ class PublisherController extends Controller
 {
     public function dashboard()
     {
-        $user = Auth::user();
+        $userId = Auth::id();
+        $today  = now()->toDateString();
 
-        // Earnings cards (top row)
+        // ── Period boundaries ────────────────────────────────────────────────
+        $thisMonthStart = now()->startOfMonth()->toDateString();
+        $lastMonthStart = now()->subMonthNoOverflow()->startOfMonth()->toDateString();
+        $lastMonthEnd   = now()->subMonthNoOverflow()->endOfMonth()->toDateString();
+        $thisWeekStart  = now()->startOfWeek()->toDateString();
+        $cur30Start     = now()->subDays(29)->toDateString();
+        $prev30Start    = now()->subDays(59)->toDateString();
+        $prev30End      = now()->subDays(30)->toDateString();
+
+        // ── Earnings cards ───────────────────────────────────────────────────
+        $earnToday     = (float) StatDaily::where('publisher_id', $userId)->where('date', $today)->sum('publisher_earnings');
+        $earnWeek      = (float) StatDaily::where('publisher_id', $userId)->whereBetween('date', [$thisWeekStart, $today])->sum('publisher_earnings');
+        $earnThisMonth = (float) StatDaily::where('publisher_id', $userId)->whereBetween('date', [$thisMonthStart, $today])->sum('publisher_earnings');
+        $earnLastMonth = (float) StatDaily::where('publisher_id', $userId)->whereBetween('date', [$lastMonthStart, $lastMonthEnd])->sum('publisher_earnings');
+
+        $daysElapsed = max(1, now()->day);
+        $forecast    = round(($earnThisMonth / $daysElapsed) * now()->daysInMonth, 2);
+        $forecastPct = $earnLastMonth > 0 ? round((($forecast - $earnLastMonth) / $earnLastMonth) * 100, 1) : 0;
+
         $earnings = [
-            'today' => 191.88,
-            'this_week' => 1443.93,
-            'this_month' => 2283.64,
-            'last_month' => 5328.73,
-            'forecast' => 5983.14,
-            'forecast_pct' => 12,
+            'today'        => $earnToday,
+            'this_week'    => $earnWeek,
+            'this_month'   => $earnThisMonth,
+            'last_month'   => $earnLastMonth,
+            'forecast'     => $forecast,
+            'forecast_pct' => $forecastPct,
         ];
 
-        // Impressions / Clicks / Revenue
+        // ── Metrics: last 30 days vs previous 30 days ────────────────────────
+        $cur  = StatDaily::where('publisher_id', $userId)
+            ->whereBetween('date', [$cur30Start, $today])
+            ->selectRaw('SUM(impressions) as imp, SUM(clicks) as clk, SUM(publisher_earnings) as earn')
+            ->first();
+
+        $prev = StatDaily::where('publisher_id', $userId)
+            ->whereBetween('date', [$prev30Start, $prev30End])
+            ->selectRaw('SUM(impressions) as imp, SUM(clicks) as clk, SUM(publisher_earnings) as earn')
+            ->first();
+
+        $curImp   = (int)   ($cur->imp   ?? 0);
+        $prevImp  = (int)   ($prev->imp  ?? 0);
+        $curClk   = (int)   ($cur->clk   ?? 0);
+        $prevClk  = (int)   ($prev->clk  ?? 0);
+        $curEarn  = (float) ($cur->earn  ?? 0);
+        $prevEarn = (float) ($prev->earn ?? 0);
+
         $metrics = [
-            'impressions' => 714532,
-            'impressions_change' => 5.78,
-            'impressions_diff' => 39147,
-            'clicks' => 625635,
-            'clicks_change' => -13,
-            'clicks_diff' => 96170,
-            'revenue' => 167433.82,
-            'revenue_change' => -1.96,
-            'revenue_diff' => 3346.21,
+            'impressions'       => $curImp,
+            'impressions_change' => $prevImp  > 0 ? round((($curImp  - $prevImp)  / $prevImp)  * 100, 2) : 0,
+            'impressions_diff'  => abs($curImp  - $prevImp),
+            'clicks'            => $curClk,
+            'clicks_change'     => $prevClk  > 0 ? round((($curClk  - $prevClk)  / $prevClk)  * 100, 2) : 0,
+            'clicks_diff'       => abs($curClk  - $prevClk),
+            'revenue'           => $curEarn,
+            'revenue_change'    => $prevEarn > 0 ? round((($curEarn - $prevEarn) / $prevEarn) * 100, 2) : 0,
+            'revenue_diff'      => abs($curEarn - $prevEarn),
         ];
 
-        // Chart data — 16 days
-        $days = ['D1','D3','D5','D7','D9','D11','D13','D15','D17','D19','D21','D23','D25','D27','D29','D30'];
+        // ── Chart data: last 30 days by date ─────────────────────────────────
+        $chartRows = StatDaily::where('publisher_id', $userId)
+            ->whereBetween('date', [$cur30Start, $today])
+            ->selectRaw('date, SUM(impressions) as imp, SUM(publisher_earnings) as earn')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->keyBy(fn($r) => \Carbon\Carbon::parse($r->date)->toDateString());
+
+        $maxImpDay  = max(1, $chartRows->max('imp'));
+        $maxEarnDay = max(1, $chartRows->max('earn'));
+
         $chartData = [];
-        foreach ($days as $day) {
-            $impPct = rand(40, 98);
-            $profitPct = rand(8, min(45, $impPct - 10));
+        for ($i = 29; $i >= 0; $i--) {
+            $d   = now()->subDays($i)->toDateString();
+            $row = $chartRows[$d] ?? null;
             $chartData[] = [
-                'label' => $day,
-                'impressions_pct' => $impPct,
-                'profit_pct' => $profitPct,
+                'label'           => now()->subDays($i)->format('d'),
+                'impressions_pct' => $row ? min(88, (int) round(((int) $row->imp  / $maxImpDay)  * 88)) : 0,
+                'profit_pct'      => $row ? min(40, (int) round(((float) $row->earn / $maxEarnDay) * 40)) : 0,
             ];
         }
 
-        // Revenue - Ad Zones table
-        $adZones = [
-            ['name' => 'example zone 1', 'revenue' => 6014.03, 'change' => 5.77],
-            ['name' => 'example zone 2', 'revenue' => 6014.03, 'change' => -4.05],
-            ['name' => 'example zone 3', 'revenue' => 6014.03, 'change' => 1.91],
-            ['name' => 'example zone 4', 'revenue' => 6014.03, 'change' => -8.75],
-            ['name' => 'example zone 5', 'revenue' => 5424.03, 'change' => 3.28],
-        ];
+        // ── Revenue by Ad Zone (top 5, last 30 days) ─────────────────────────
+        $zoneRevCur = StatDaily::where('aq_stats_daily.publisher_id', $userId)
+            ->whereBetween('aq_stats_daily.date', [$cur30Start, $today])
+            ->whereNotNull('aq_stats_daily.zone_id')
+            ->join('aq_zones', 'aq_stats_daily.zone_id', '=', 'aq_zones.id')
+            ->selectRaw('aq_stats_daily.zone_id, aq_zones.name, SUM(aq_stats_daily.publisher_earnings) as revenue')
+            ->groupBy('aq_stats_daily.zone_id', 'aq_zones.name')
+            ->orderByDesc('revenue')
+            ->limit(5)
+            ->get();
 
-        // CPC - Device Type table
-        $deviceCpc = [
-            ['type' => 'Desktop', 'cpc' => 0.53, 'change' => 1.78],
-            ['type' => 'Mobile', 'cpc' => 0.31, 'change' => -1.62],
-            ['type' => 'Tablet', 'cpc' => 0.15, 'change' => 2.94],
-            ['type' => 'Smart TV', 'cpc' => 0.15, 'change' => 0],
-            ['type' => 'Console', 'cpc' => 0.03, 'change' => 0],
-        ];
+        $zoneRevPrev = StatDaily::where('publisher_id', $userId)
+            ->whereBetween('date', [$prev30Start, $prev30End])
+            ->whereNotNull('zone_id')
+            ->selectRaw('zone_id, SUM(publisher_earnings) as revenue')
+            ->groupBy('zone_id')
+            ->get()
+            ->keyBy('zone_id');
 
-        $balance = 17491.53;
+        $adZones = $zoneRevCur->map(function ($z) use ($zoneRevPrev) {
+            $cur    = (float) $z->revenue;
+            $prev   = (float) ($zoneRevPrev[$z->zone_id]->revenue ?? 0);
+            $change = $prev > 0 ? round((($cur - $prev) / $prev) * 100, 2) : 0;
+            return ['name' => $z->name ?: 'Zone #' . $z->zone_id, 'revenue' => $cur, 'change' => $change];
+        })->toArray();
+
+        // ── CPC by Device Type ────────────────────────────────────────────────
+        $devCur = StatDaily::where('publisher_id', $userId)
+            ->whereBetween('date', [$cur30Start, $today])
+            ->whereNotNull('device_type')
+            ->selectRaw('device_type, SUM(publisher_earnings) as earnings, SUM(clicks) as clicks')
+            ->groupBy('device_type')
+            ->get()
+            ->keyBy('device_type');
+
+        $devPrev = StatDaily::where('publisher_id', $userId)
+            ->whereBetween('date', [$prev30Start, $prev30End])
+            ->whereNotNull('device_type')
+            ->selectRaw('device_type, SUM(publisher_earnings) as earnings, SUM(clicks) as clicks')
+            ->groupBy('device_type')
+            ->get()
+            ->keyBy('device_type');
+
+        $deviceCpc = [];
+        foreach (['desktop' => 'Desktop', 'mobile' => 'Mobile', 'tablet' => 'Tablet'] as $key => $label) {
+            $c      = $devCur[$key]  ?? null;
+            $p      = $devPrev[$key] ?? null;
+            $curCpc  = ($c && (int) $c->clicks  > 0) ? round((float) $c->earnings  / (int) $c->clicks,  4) : 0;
+            $prevCpc = ($p && (int) $p->clicks  > 0) ? round((float) $p->earnings  / (int) $p->clicks,  4) : 0;
+            $change  = $prevCpc > 0 ? round((($curCpc - $prevCpc) / $prevCpc) * 100, 2) : 0;
+            $deviceCpc[] = ['type' => $label, 'cpc' => $curCpc, 'change' => $change];
+        }
+
+        // ── Balance (header widget) ───────────────────────────────────────────
+        $totalEarned  = (float) StatDaily::where('publisher_id', $userId)->sum('publisher_earnings');
+        $totalPaidOut = (float) Payout::where('user_id', $userId)->where('status', 'completed')->sum('amount');
+        $balance      = max(0.0, $totalEarned - $totalPaidOut);
 
         return view('publisher.dashboard', compact(
             'earnings', 'metrics', 'chartData', 'adZones', 'deviceCpc', 'balance'
@@ -98,5 +184,16 @@ class PublisherController extends Controller
             ->update(['is_read' => true, 'read_at' => now()]);
 
         return response()->json(['success' => true]);
+    }
+
+    public function messages()
+    {
+        $messages = Notification::where('user_id', Auth::id())
+            ->whereIn('type', ['info', 'system'])
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get();
+
+        return response()->json($messages);
     }
 }

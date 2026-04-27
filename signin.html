@@ -214,7 +214,7 @@
           <span id="successMsg">Login successful! Redirecting...</span>
         </div>
 
-        <!-- Form -->
+        <!-- Step 1: Email + Password -->
         <form id="loginForm" class="space-y-5">
           <!-- Email -->
           <div>
@@ -278,6 +278,36 @@
             </svg>
           </button>
         </form>
+
+        <!-- Step 2: Security Question (shown when needed) -->
+        <div id="securityQuestionStep" class="hidden space-y-5">
+          <div class="flex items-center gap-3 p-3 rounded-xl border border-brand-200 bg-brand-50">
+            <svg class="w-5 h-5 text-brand-600 flex-shrink-0" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <p class="text-xs text-brand-700">Security verification required. Please answer your security question to continue.</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2 text-zinc-700">Security Question</label>
+            <p id="securityQuestionText" class="text-sm font-semibold text-zinc-900 p-3 rounded-xl bg-zinc-100 border border-zinc-200"></p>
+          </div>
+          <div>
+            <label for="securityAnswer" class="block text-sm font-medium mb-1.5">Your Answer</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                <svg class="w-5 h-5 text-zinc-400" viewBox="0 0 24 24" fill="none"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </div>
+              <input type="text" id="securityAnswer" autocomplete="off" placeholder="Type your answer…"
+                class="w-full pl-11 pr-4 py-3 rounded-xl border border-zinc-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 text-sm transition-all placeholder-zinc-400" />
+            </div>
+            <p class="mt-1 text-[11px] text-zinc-400">Answer is case-insensitive.</p>
+          </div>
+          <button type="button" id="securitySubmitBtn"
+            class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-brand-600 text-white font-semibold hover:bg-brand-700 shadow-glow transition-all duration-300 hover:-translate-y-0.5 hover:shadow-glow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
+            <span id="secBtnText">Verify Answer</span>
+            <span id="secBtnLoading" class="hidden loading-dots text-white"><span></span><span></span><span></span></span>
+            <svg id="secBtnArrow" class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M5 12h14m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" id="backToLoginBtn" class="w-full text-xs text-zinc-500 hover:text-zinc-700 underline underline-offset-2">← Back to sign in</button>
+        </div>
 
         <!-- Divider -->
         <div class="mt-6 flex items-center gap-3">
@@ -454,6 +484,31 @@
       $('#email').focus();
     }
 
+    function showError(msg) { $('#errorMsg').textContent = msg; $('#errorBox').classList.remove('hidden'); $('#successBox').classList.add('hidden'); }
+    function showSuccess(msg) { $('#successMsg').textContent = msg; $('#successBox').classList.remove('hidden'); $('#errorBox').classList.add('hidden'); }
+    function clearAlerts() { $('#errorBox').classList.add('hidden'); $('#successBox').classList.add('hidden'); }
+
+    function resetStep1Btn() {
+      const btn = $('#submitBtn');
+      btn.disabled = false; $('#btnText').textContent = 'Sign in'; $('#btnArrow').classList.remove('hidden'); $('#btnLoading').classList.add('hidden');
+    }
+
+    function showSecurityQuestion(question) {
+      $('#loginForm').classList.add('hidden');
+      $('#securityQuestionText').textContent = question;
+      $('#securityQuestionStep').classList.remove('hidden');
+      $('#securityAnswer').value = '';
+      $('#securityAnswer').focus();
+      clearAlerts();
+    }
+
+    $('#backToLoginBtn').addEventListener('click', () => {
+      $('#securityQuestionStep').classList.add('hidden');
+      $('#loginForm').classList.remove('hidden');
+      clearAlerts();
+      resetStep1Btn();
+    });
+
     // --------------- LOGIN ---------------
     $('#loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -463,59 +518,92 @@
 
       if (!email || !password) return;
 
-      // UI: loading state
       const btn = $('#submitBtn');
       btn.disabled = true;
       $('#btnText').textContent = 'Signing in...';
       $('#btnArrow').classList.add('hidden');
       $('#btnLoading').classList.remove('hidden');
-      $('#errorBox').classList.add('hidden');
-      $('#successBox').classList.add('hidden');
+      clearAlerts();
 
       try {
-        // Use the stateless API login (no CORS cookie issues)
         const res = await fetch(`${APP_URL}/api/login`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({ email, password }),
         });
 
         const data = await res.json();
 
         if (!res.ok || !data.success) {
-          $('#errorMsg').textContent = data.message || 'Login failed. Please try again.';
-          $('#errorBox').classList.remove('hidden');
-          btn.disabled = false;
-          $('#btnText').textContent = 'Sign in';
-          $('#btnArrow').classList.remove('hidden');
-          $('#btnLoading').classList.add('hidden');
+          showError(data.message || 'Login failed. Please try again.');
+          resetStep1Btn();
           return;
         }
 
-        // Store user info
+        // Security question required — switch to the session-based blade for verification
+        if (data.needs_security_question) {
+          resetStep1Btn();
+          showSecurityQuestion(data.question);
+          // Store credentials so the security question answer can complete via blade's web-login
+          window._sqEmail = email;
+          window._sqPassword = password;
+          return;
+        }
+
         localStorage.setItem('adshqip-user', JSON.stringify(data.user));
-
-        $('#successMsg').textContent = `Welcome, ${data.user.email}! Redirecting to ${data.redirect}...`;
-        $('#successBox').classList.remove('hidden');
+        showSuccess(`Welcome! Redirecting…`);
         $('#btnText').textContent = 'Redirecting...';
-
-        // Redirect to Laravel's auto-login URL which creates a session and redirects to dashboard
         setTimeout(() => {
           window.location.href = `${APP_URL}/auto-login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
-        }, 1200);
+        }, 1000);
 
       } catch (err) {
-        $('#errorMsg').textContent = 'Cannot connect to server. Make sure Laravel is running at ' + APP_URL;
-        $('#errorBox').classList.remove('hidden');
-        btn.disabled = false;
-        $('#btnText').textContent = 'Sign in';
-        $('#btnArrow').classList.remove('hidden');
-        $('#btnLoading').classList.add('hidden');
+        showError('Cannot connect to server. Make sure Laravel is running at ' + APP_URL);
+        resetStep1Btn();
       }
     });
+
+    // --------------- SECURITY QUESTION ---------------
+    async function submitSecurityAnswer() {
+      const answer = $('#securityAnswer').value.trim();
+      if (!answer) { $('#securityAnswer').focus(); return; }
+
+      const btn = $('#securitySubmitBtn');
+      btn.disabled = true;
+      $('#secBtnText').textContent = 'Verifying...';
+      $('#secBtnArrow').classList.add('hidden');
+      $('#secBtnLoading').classList.remove('hidden');
+      clearAlerts();
+
+      try {
+        // Stateless API verification — no session cookies needed
+        const res = await fetch(`${APP_URL}/api/verify-security-question`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ email: window._sqEmail, answer }),
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          showError(data.message || 'Incorrect answer. Please try again.');
+          btn.disabled = false; $('#secBtnText').textContent = 'Verify Answer'; $('#secBtnArrow').classList.remove('hidden'); $('#secBtnLoading').classList.add('hidden');
+          return;
+        }
+
+        // Answer correct — complete login via auto-login bridge (creates the real session)
+        showSuccess('Verified! Redirecting…');
+        setTimeout(() => {
+          window.location.href = `${APP_URL}/auto-login?email=${encodeURIComponent(window._sqEmail)}&password=${encodeURIComponent(window._sqPassword)}`;
+        }, 900);
+
+      } catch (err) {
+        showError('Cannot connect to server.');
+        btn.disabled = false; $('#secBtnText').textContent = 'Verify Answer'; $('#secBtnArrow').classList.remove('hidden'); $('#secBtnLoading').classList.add('hidden');
+      }
+    }
+
+    $('#securitySubmitBtn').addEventListener('click', submitSecurityAnswer);
+    $('#securityAnswer').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submitSecurityAnswer(); } });
   </script>
 </body>
 

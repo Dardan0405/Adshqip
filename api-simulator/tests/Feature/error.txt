@@ -1,0 +1,217 @@
+admarket:842 AdMarket API error 500 
+{
+    "message": "Call to undefined relationship [categories] on model [App\\Models\\Campaign].",
+    "exception": "Illuminate\\Database\\Eloquent\\RelationNotFoundException",
+    "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\RelationNotFoundException.php",
+    "line": 35,
+    "trace": [
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Builder.php",
+            "line": 969,
+            "function": "make",
+            "class": "Illuminate\\Database\\Eloquent\\RelationNotFoundException",
+            "type": "::"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Relations\\Relation.php",
+            "line": 119,
+            "function": "Illuminate\\Database\\Eloquent\\{closure}",
+            "class": "Illuminate\\Database\\Eloquent\\Builder",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Builder.php",
+            "line": 965,
+            "function": "noConstraints",
+            "class": "Illuminate\\Database\\Eloquent\\Relations\\Relation",
+            "type": "::"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Builder.php",
+            "line": 939,
+            "function": "getRelation",
+            "class": "Illuminate\\Database\\Eloquent\\Builder",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Builder.php",
+            "line": 919,
+            "function": "eagerLoadRelation",
+            "class": "Illuminate\\Database\\Eloquent\\Builder",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Builder.php",
+            "line": 885,
+            "function": "eagerLoadRelations",
+            "class": "Illuminate\\Database\\Eloquent\\Builder",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Builder.php",
+            "line": 1125,
+            "function": "get",
+            "class": "Illuminate\\Database\\Eloquent\\Builder",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\app\\Http\\Controllers\\PublisherAdMarketController.php",
+            "line": 124,
+            "function": "paginate",
+            "class": "Illuminate\\Database\\Eloquent\\Builder",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\ControllerDispatcher.php",
+            "line": 46,
+            "function": "campaigns",
+            "class": "App\\Http\\Controllers\\PublisherAdMarketController",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php",
+            "line": 265,
+            "function": "dispatch",
+            "class": "Illuminate\\Routing\\ControllerDispatcher",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php",
+            "line": 211,
+            "function": "runController",
+            "class": "Illuminate\\Routing\\Route",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php",
+            "line": 822,
+            "function": "run",
+            "class": "Illuminate\\Routing\\Route",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php",
+            "line": 180,
+            "function": "Illuminate\\Routing\\{closure}",
+            "class": "Illuminate\\Routing\\Router",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\app\\Http\\Middleware\\
+pixels-script.bundle.js:1 Pixels script injected
+admarket:842 AdMarket API error 500 
+{
+    "message": "Call to undefined relationship [categories] on model [App\\Models\\Campaign].",
+    "exception": "Illuminate\\Database\\Eloquent\\RelationNotFoundException",
+    "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\RelationNotFoundException.php",
+    "line": 35,
+    "trace": [
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Builder.php",
+            "line": 969,
+            "function": "make",
+            "class": "Illuminate\\Database\\Eloquent\\RelationNotFoundException",
+            "type": "::"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Relations\\Relation.php",
+            "line": 119,
+            "function": "Illuminate\\Database\\Eloquent\\{closure}",
+            "class": "Illuminate\\Database\\Eloquent\\Builder",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Builder.php",
+            "line": 965,
+            "function": "noConstraints",
+            "class": "Illuminate\\Database\\Eloquent\\Relations\\Relation",
+            "type": "::"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Builder.php",
+            "line": 939,
+            "function": "getRelation",
+            "class": "Illuminate\\Database\\Eloquent\\Builder",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Builder.php",
+            "line": 919,
+            "function": "eagerLoadRelation",
+            "class": "Illuminate\\Database\\Eloquent\\Builder",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Builder.php",
+            "line": 885,
+            "function": "eagerLoadRelations",
+            "class": "Illuminate\\Database\\Eloquent\\Builder",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Builder.php",
+            "line": 1125,
+            "function": "get",
+            "class": "Illuminate\\Database\\Eloquent\\Builder",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\app\\Http\\Controllers\\PublisherAdMarketController.php",
+            "line": 124,
+            "function": "paginate",
+            "class": "Illuminate\\Database\\Eloquent\\Builder",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\ControllerDispatcher.php",
+            "line": 46,
+            "function": "campaigns",
+            "class": "App\\Http\\Controllers\\PublisherAdMarketController",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php",
+            "line": 265,
+            "function": "dispatch",
+            "class": "Illuminate\\Routing\\ControllerDispatcher",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php",
+            "line": 211,
+            "function": "runController",
+            "class": "Illuminate\\Routing\\Route",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php",
+            "line": 822,
+            "function": "run",
+            "class": "Illuminate\\Routing\\Route",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php",
+            "line": 180,
+            "function": "Illuminate\\Routing\\{closure}",
+            "class": "Illuminate\\Routing\\Router",
+            "type": "->"
+        },
+        {
+            "file": "C:\\Users\\darda\\OneDrive\\Desktop\\Projektet\\Adshqip\\api-simulator\\app\\Http\\Middleware\\
+loadCampaigns	@	admarket:842
+await in loadCampaigns		
+init	@	admarket:816
+[Alpine] init()	@	VM1283:3
+(anonymous)	@	cdn.min.js:5
+ar	@	cdn.min.js:1
+T	@	cdn.min.js:5
+(anonymous)	@	cdn.min.js:5
+(anonymous)	@	cdn.min.js:5
+r	@	cdn.min.js:5
+n	@	cdn.min.js:5
+br	@	cdn.min.js:5
+S	@	cdn.min.js:5
+(anonymous)	@	cdn.min.js:5
+Or	@	cdn.min.js:5
+(anonymous)	@	cdn.min.js:5

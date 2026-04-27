@@ -16,13 +16,25 @@ class Zone extends Model
 
     protected $fillable = [
         'site_id',
+        'choose_type',
+        'mobile_app_id',
         'name',
         'format_id',
         'format_key',
         'size_id',
         'size_key',
+        'zone_type',
         'placement',
         'floor_price',
+        'passback',
+        'image_width',
+        'image_height',
+        'html_template',
+        'custom_css',
+        'bg_color',
+        'sponsored_prefix',
+        'css_path',
+        'inline_video',
         'status',
         'ad_code',
         'is_deleted',
@@ -37,6 +49,13 @@ class Zone extends Model
         'frequency_views',
         'auto_reload',
         'reload_time',
+        'content_width_px',
+        'content_height_px',
+        'top_offset_px',
+        'right_offset_px',
+        'z_index_value',
+        'is_fixed',
+        'hide_side',
         'target_countries',
         'target_devices',
     ];
@@ -44,6 +63,8 @@ class Zone extends Model
     protected $casts = [
         'is_deleted' => 'boolean',
         'auto_reload' => 'boolean',
+        'inline_video' => 'boolean',
+        'is_fixed' => 'boolean',
         'floor_price' => 'decimal:4',
         'target_countries' => 'array',
         'target_devices' => 'array',
@@ -59,6 +80,11 @@ class Zone extends Model
     public function format()
     {
         return $this->belongsTo(AdFormat::class, 'format_id');
+    }
+
+    public function mobileApp()
+    {
+        return $this->belongsTo(TelegramMiniApp::class, 'mobile_app_id');
     }
 
     public function size()

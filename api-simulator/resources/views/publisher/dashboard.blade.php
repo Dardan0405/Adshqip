@@ -7,24 +7,24 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <div class="bg-white rounded-xl border border-gray-200 p-5">
             <div class="text-[10px] text-gray-400 uppercase tracking-wide">Today</div>
-            <div class="text-2xl font-bold text-gray-900 mt-1">${{ number_format($earnings['today'], 2) }}</div>
+            <div class="text-2xl font-bold text-gray-900 mt-1">€{{ number_format($earnings['today'], 2) }}</div>
         </div>
         <div class="bg-white rounded-xl border border-gray-200 p-5">
             <div class="text-[10px] text-gray-400 uppercase tracking-wide">This week</div>
-            <div class="text-2xl font-bold text-gray-900 mt-1">${{ number_format($earnings['this_week'], 2) }}</div>
+            <div class="text-2xl font-bold text-gray-900 mt-1">€{{ number_format($earnings['this_week'], 2) }}</div>
         </div>
         <div class="bg-white rounded-xl border border-gray-200 p-5">
             <div class="text-[10px] text-gray-400 uppercase tracking-wide">This month</div>
-            <div class="text-2xl font-bold text-gray-900 mt-1">${{ number_format($earnings['this_month'], 2) }}</div>
+            <div class="text-2xl font-bold text-gray-900 mt-1">€{{ number_format($earnings['this_month'], 2) }}</div>
         </div>
         <div class="bg-white rounded-xl border border-gray-200 p-5">
             <div class="text-[10px] text-gray-400 uppercase tracking-wide">Last month</div>
-            <div class="text-2xl font-bold text-gray-900 mt-1">${{ number_format($earnings['last_month'], 2) }}</div>
+            <div class="text-2xl font-bold text-gray-900 mt-1">€{{ number_format($earnings['last_month'], 2) }}</div>
         </div>
         <div class="bg-white rounded-xl border border-gray-200 p-5">
             <div class="text-[10px] text-gray-400 uppercase tracking-wide">This month forecast</div>
             <div class="flex items-center gap-2">
-                <span class="text-2xl font-bold text-gray-900">${{ number_format($earnings['forecast'], 2) }}</span>
+                <span class="text-2xl font-bold text-gray-900">€{{ number_format($earnings['forecast'], 2) }}</span>
                 <span class="text-xs font-semibold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">↑ {{ $earnings['forecast_pct'] }}%</span>
             </div>
         </div>
@@ -85,11 +85,11 @@
         <div class="bg-white rounded-xl border border-gray-200 p-5">
             <div>
                 <div class="text-[10px] text-gray-400 uppercase tracking-wide">Revenue</div>
-                <div class="text-3xl font-bold text-brand-600 mt-1">${{ number_format($metrics['revenue'], 2) }}</div>
+                <div class="text-3xl font-bold text-brand-600 mt-1">€{{ number_format($metrics['revenue'], 2) }}</div>
                 <span class="text-[10px] text-gray-400">Last 30 days</span>
             </div>
             <div class="flex items-center gap-2 mt-2">
-                <span class="text-xs font-medium {{ $metrics['revenue_change'] >= 0 ? 'text-brand-600' : 'text-red-500' }}">{{ $metrics['revenue_change'] >= 0 ? '↑' : '↓' }} {{ abs($metrics['revenue_change']) }}% (${{ number_format(abs($metrics['revenue_diff']), 2) }})</span>
+                <span class="text-xs font-medium {{ $metrics['revenue_change'] >= 0 ? 'text-brand-600' : 'text-red-500' }}">{{ $metrics['revenue_change'] >= 0 ? '↑' : '↓' }} {{ abs($metrics['revenue_change']) }}% (€{{ number_format(abs($metrics['revenue_diff']), 2) }})</span>
                 <span class="text-[10px] text-gray-400">from previous 30 days</span>
             </div>
         </div>
@@ -138,7 +138,7 @@
                 <span>400,000</span><span>350,000</span><span>300,000</span><span>250,000</span><span>200,000</span><span>150,000</span><span>100,000</span><span>50,000</span><span>0</span>
             </div>
             <div class="absolute right-0 top-0 bottom-6 flex flex-col justify-between text-[9px] text-gray-400 -mr-1">
-                <span>$300,000</span><span></span><span>$200,000</span><span></span><span>$100,000</span><span></span><span>$50,000</span><span></span><span>$0</span>
+                <span>€300k</span><span></span><span>€200k</span><span></span><span>€100k</span><span></span><span>€50k</span><span></span><span>€0</span>
             </div>
         </div>
         <div class="flex items-center justify-center gap-6 mt-3">
@@ -167,7 +167,7 @@
                         @foreach($adZones as $zone)
                             <tr class="hover:bg-gray-50/50">
                                 <td class="px-6 py-3 text-gray-600">{{ $zone['name'] }}</td>
-                                <td class="px-4 py-3 font-medium text-gray-900">${{ number_format($zone['revenue'], 2) }}</td>
+                                <td class="px-4 py-3 font-medium text-gray-900">€{{ number_format($zone['revenue'], 2) }}</td>
                                 <td class="px-4 py-3">
                                     <span class="text-xs font-medium {{ $zone['change'] >= 0 ? 'text-brand-600' : 'text-red-500' }}">
                                         {{ $zone['change'] >= 0 ? '↑' : '↓' }} {{ abs($zone['change']) }}%
@@ -198,7 +198,7 @@
                         @foreach($deviceCpc as $device)
                             <tr class="hover:bg-gray-50/50">
                                 <td class="px-6 py-3 text-gray-600">{{ $device['type'] }}</td>
-                                <td class="px-4 py-3 font-medium text-gray-900">${{ number_format($device['cpc'], 2) }}</td>
+                                <td class="px-4 py-3 font-medium text-gray-900">€{{ number_format($device['cpc'], 2) }}</td>
                                 <td class="px-4 py-3">
                                     <span class="text-xs font-medium {{ $device['change'] >= 0 ? 'text-brand-600' : 'text-red-500' }}">
                                         {{ $device['change'] >= 0 ? '↑' : '↓' }} {{ abs($device['change']) }}%

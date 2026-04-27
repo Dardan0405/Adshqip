@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\TelegramWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/verify-security-question', [AuthController::class, 'verifySecurityQuestion']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::get('/me', [AuthController::class, 'me']);
 

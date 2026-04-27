@@ -238,6 +238,24 @@ class ZoneServeController extends Controller
         }
 
         $zoneId = $zone->id;
+
+        // Check for campaign ID override via ?cid= parameter (from AdMarket tags)
+        $cidParam = request()->query('cid');
+        if ($cidParam && is_numeric($cidParam)) {
+            $campaign = Campaign::where('id', (int) $cidParam)
+                ->where('is_deleted', false)
+                ->whereIn('status', ['active', 'paused', 'pending_review'])
+                ->first();
+
+            if ($campaign) {
+                $campaignHtml = $this->buildRegularCampaignHtml($campaign, $zone, $width, $height);
+                if ($campaignHtml !== null) {
+                    return $campaignHtml;
+                }
+            }
+        }
+
+        // Fallback: find campaign linked to this zone
         $campaign = Campaign::where('zone_id', $zone->id)
             ->where('is_deleted', false)
             ->where('status', 'active')

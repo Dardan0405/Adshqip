@@ -46,4 +46,9 @@ class Site extends Model
     {
         return $this->hasMany(Zone::class, 'site_id')->where('status', 'active')->where('is_deleted', false);
     }
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'aq_site_categories', 'site_id', 'category_id');
+    }
 }

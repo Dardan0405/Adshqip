@@ -123,6 +123,7 @@ Route::get('/auto-login', function (\Illuminate\Http\Request $request) {
 
 // Web-based login (POST from signin.html or form)
 Route::post('/web-login', [WebLoginController::class, 'login'])->name('web.login');
+Route::post('/web-login-security-question', [WebLoginController::class, 'verifySecurityQuestion'])->name('web.login.security-question');
 Route::get('/two-factor-challenge', [WebLoginController::class, 'showChallenge'])->name('two-factor.challenge');
 Route::post('/two-factor-challenge', [WebLoginController::class, 'verifyChallenge'])->name('two-factor.verify');
 Route::post('/two-factor-challenge/cancel', [WebLoginController::class, 'cancelChallenge'])->name('two-factor.cancel');
@@ -290,9 +291,69 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/publisher', [\App\Http\Controllers\PublisherController::class, 'dashboard'])->middleware('role:publisher')->name('publisher.dashboard');
     Route::get('/publisher/earnings', [\App\Http\Controllers\PublisherEarningsController::class, 'index'])->middleware('role:publisher')->name('publisher.earnings');
+    Route::get('/publisher/sites', [\App\Http\Controllers\PublisherSiteController::class, 'index'])->middleware('role:publisher')->name('publisher.sites');
+    Route::post('/publisher/sites', [\App\Http\Controllers\PublisherSiteController::class, 'store'])->middleware('role:publisher')->name('publisher.sites.store');
+    Route::get('/publisher/sites/{id}', [\App\Http\Controllers\PublisherSiteController::class, 'show'])->middleware('role:publisher')->name('publisher.sites.show');
+    Route::put('/publisher/sites/{id}', [\App\Http\Controllers\PublisherSiteController::class, 'update'])->middleware('role:publisher')->name('publisher.sites.update');
+    Route::delete('/publisher/sites/{id}', [\App\Http\Controllers\PublisherSiteController::class, 'destroy'])->middleware('role:publisher')->name('publisher.sites.destroy');
+    Route::get('/publisher/apps', [\App\Http\Controllers\PublisherApplicationController::class, 'index'])->middleware('role:publisher')->name('publisher.apps');
+    Route::post('/publisher/apps', [\App\Http\Controllers\PublisherApplicationController::class, 'store'])->middleware('role:publisher')->name('publisher.apps.store');
+    Route::get('/publisher/apps/{id}', [\App\Http\Controllers\PublisherApplicationController::class, 'show'])->middleware('role:publisher')->name('publisher.apps.show');
+    Route::put('/publisher/apps/{id}', [\App\Http\Controllers\PublisherApplicationController::class, 'update'])->middleware('role:publisher')->name('publisher.apps.update');
+    Route::delete('/publisher/apps/{id}', [\App\Http\Controllers\PublisherApplicationController::class, 'destroy'])->middleware('role:publisher')->name('publisher.apps.destroy');
+    Route::post('/publisher/apps/{id}/adblocks', [\App\Http\Controllers\PublisherAppAdBlockController::class, 'store'])->middleware('role:publisher')->name('publisher.apps.adblocks.store');
+    Route::get('/publisher/adblocks', [\App\Http\Controllers\PublisherAdBlockController::class, 'index'])->middleware('role:publisher')->name('publisher.adblocks');
+    Route::post('/publisher/adblocks', [\App\Http\Controllers\PublisherAdBlockController::class, 'store'])->middleware('role:publisher')->name('publisher.adblocks.store');
+    Route::get('/publisher/adblocks/{id}', [\App\Http\Controllers\PublisherAdBlockController::class, 'show'])->middleware('role:publisher')->name('publisher.adblocks.show');
+    Route::put('/publisher/adblocks/{id}', [\App\Http\Controllers\PublisherAdBlockController::class, 'update'])->middleware('role:publisher')->name('publisher.adblocks.update');
+    Route::delete('/publisher/adblocks/{id}', [\App\Http\Controllers\PublisherAdBlockController::class, 'destroy'])->middleware('role:publisher')->name('publisher.adblocks.destroy');
+    Route::get('/publisher/adblocks/{id}/tag', [\App\Http\Controllers\PublisherAdBlockController::class, 'getTag'])->middleware('role:publisher')->name('publisher.adblocks.tag');
     Route::get('/publisher/notifications', [\App\Http\Controllers\PublisherController::class, 'notifications'])->middleware('role:publisher')->name('publisher.notifications');
     Route::post('/publisher/notifications/{id}/read', [\App\Http\Controllers\PublisherController::class, 'markNotificationRead'])->middleware('role:publisher')->name('publisher.notifications.read');
     Route::post('/publisher/notifications/read-all', [\App\Http\Controllers\PublisherController::class, 'markAllNotificationsRead'])->middleware('role:publisher')->name('publisher.notifications.readAll');
+    Route::get('/publisher/referrals', [\App\Http\Controllers\PublisherReferralController::class, 'index'])->middleware('role:publisher')->name('publisher.referrals');
+    Route::get('/publisher/admarket', [\App\Http\Controllers\PublisherAdMarketController::class, 'index'])->middleware('role:publisher')->name('publisher.admarket');
+    Route::get('/publisher/admarket/campaigns', [\App\Http\Controllers\PublisherAdMarketController::class, 'campaigns'])->middleware('role:publisher')->name('publisher.admarket.campaigns');
+    Route::get('/publisher/admarket/campaign/{id}', [\App\Http\Controllers\PublisherAdMarketController::class, 'getCampaignDetail'])->middleware('role:publisher')->name('publisher.admarket.campaign.detail');
+    Route::get('/publisher/admarket/zones', [\App\Http\Controllers\PublisherAdMarketController::class, 'getPublisherZones'])->middleware('role:publisher')->name('publisher.admarket.zones');
+    Route::post('/publisher/admarket/{id}/favorite', [\App\Http\Controllers\PublisherAdMarketController::class, 'toggleFavorite'])->middleware('role:publisher')->name('publisher.admarket.favorite');
+    Route::post('/publisher/admarket/generate-tag', [\App\Http\Controllers\PublisherAdMarketController::class, 'generateCampaignTag'])->middleware('role:publisher')->name('publisher.admarket.generate-tag');
+    Route::post('/publisher/admarket/generate-rotator', [\App\Http\Controllers\PublisherAdMarketController::class, 'generateRotator'])->middleware('role:publisher')->name('publisher.admarket.generate-rotator');
+    Route::get('/publisher/reports/overview', [\App\Http\Controllers\PublisherOverviewReportController::class, 'index'])->middleware('role:publisher')->name('publisher.reports.overview');
+    Route::get('/publisher/reports/overview/export', [\App\Http\Controllers\PublisherOverviewReportController::class, 'export'])->middleware('role:publisher')->name('publisher.reports.overview.export');
+    Route::get('/publisher/reports/geo', [\App\Http\Controllers\PublisherGeoReportController::class, 'index'])->middleware('role:publisher')->name('publisher.reports.geo');
+    Route::get('/publisher/reports/geo/export', [\App\Http\Controllers\PublisherGeoReportController::class, 'export'])->middleware('role:publisher')->name('publisher.reports.geo.export');
+    Route::get('/publisher/reports/sites', [\App\Http\Controllers\PublisherSiteReportController::class, 'index'])->middleware('role:publisher')->name('publisher.reports.sites');
+    Route::get('/publisher/reports/sites/export', [\App\Http\Controllers\PublisherSiteReportController::class, 'export'])->middleware('role:publisher')->name('publisher.reports.sites.export');
+    Route::get('/publisher/reports/apps', [\App\Http\Controllers\PublisherAppReportController::class, 'index'])->middleware('role:publisher')->name('publisher.reports.apps');
+    Route::get('/publisher/reports/apps/export', [\App\Http\Controllers\PublisherAppReportController::class, 'export'])->middleware('role:publisher')->name('publisher.reports.apps.export');
+    Route::get('/publisher/reports/adblocks', [\App\Http\Controllers\PublisherAdBlockReportController::class, 'index'])->middleware('role:publisher')->name('publisher.reports.adblocks');
+    Route::get('/publisher/reports/adblocks/export', [\App\Http\Controllers\PublisherAdBlockReportController::class, 'export'])->middleware('role:publisher')->name('publisher.reports.adblocks.export');
+    Route::get('/publisher/reports/requests', [\App\Http\Controllers\PublisherRequestReportController::class, 'index'])->middleware('role:publisher')->name('publisher.reports.requests');
+    Route::get('/publisher/reports/requests/export', [\App\Http\Controllers\PublisherRequestReportController::class, 'export'])->middleware('role:publisher')->name('publisher.reports.requests.export');
+    Route::get('/publisher/reports/groups', [\App\Http\Controllers\PublisherGroupReportController::class, 'index'])->middleware('role:publisher')->name('publisher.reports.groups');
+    Route::get('/publisher/reports/groups/export', [\App\Http\Controllers\PublisherGroupReportController::class, 'export'])->middleware('role:publisher')->name('publisher.reports.groups.export');
+    Route::get('/publisher/personal-information', [\App\Http\Controllers\Publisher\PersonalInformationController::class, 'show'])->middleware('role:publisher')->name('publisher.personal-information');
+    Route::put('/publisher/personal-information', [\App\Http\Controllers\Publisher\PersonalInformationController::class, 'update'])->middleware('role:publisher')->name('publisher.personal-information.update');
+    Route::get('/publisher/company-information', [\App\Http\Controllers\Publisher\CompanyInformationController::class, 'show'])->middleware('role:publisher')->name('publisher.company-information');
+    Route::put('/publisher/company-information', [\App\Http\Controllers\Publisher\CompanyInformationController::class, 'update'])->middleware('role:publisher')->name('publisher.company-information.update');
+    Route::get('/publisher/payment-settings', [\App\Http\Controllers\Publisher\PaymentSettingsController::class, 'show'])->middleware('role:publisher')->name('publisher.payment-settings');
+    Route::put('/publisher/payment-settings', [\App\Http\Controllers\Publisher\PaymentSettingsController::class, 'update'])->middleware('role:publisher')->name('publisher.payment-settings.update');
+    Route::get('/publisher/payouts', [\App\Http\Controllers\PublisherPayoutController::class, 'index'])->middleware('role:publisher')->name('publisher.payouts');
+    Route::post('/publisher/payouts', [\App\Http\Controllers\PublisherPayoutController::class, 'store'])->middleware('role:publisher')->name('publisher.payouts.store');
+    Route::get('/publisher/payouts/{id}', [\App\Http\Controllers\PublisherPayoutController::class, 'show'])->middleware('role:publisher')->name('publisher.payouts.show');
+    Route::get('/publisher/payment-history', [\App\Http\Controllers\PublisherPaymentHistoryController::class, 'index'])->middleware('role:publisher')->name('publisher.payment-history');
+    Route::get('/publisher/payment-history/{year}/{month}', [\App\Http\Controllers\PublisherPaymentHistoryController::class, 'show'])->middleware('role:publisher')->name('publisher.payment-history.show');
+    Route::get('/publisher/account-settings', [\App\Http\Controllers\Publisher\AccountSettingsController::class, 'show'])->middleware('role:publisher')->name('publisher.account-settings');
+    Route::put('/publisher/account-settings', [\App\Http\Controllers\Publisher\AccountSettingsController::class, 'update'])->middleware('role:publisher')->name('publisher.account-settings.update');
+    Route::get('/publisher/two-factor-authentication', [\App\Http\Controllers\Publisher\TwoFactorAuthenticationController::class, 'show'])->middleware('role:publisher')->name('publisher.two-factor-authentication');
+    Route::put('/publisher/two-factor-authentication', [\App\Http\Controllers\Publisher\TwoFactorAuthenticationController::class, 'update'])->middleware('role:publisher')->name('publisher.two-factor-authentication.update');
+    Route::get('/publisher/notification-settings', [\App\Http\Controllers\Publisher\NotificationSettingsController::class, 'show'])->middleware('role:publisher')->name('publisher.notification-settings');
+    Route::put('/publisher/notification-settings', [\App\Http\Controllers\Publisher\NotificationSettingsController::class, 'update'])->middleware('role:publisher')->name('publisher.notification-settings.update');
+    Route::get('/publisher/messages', [\App\Http\Controllers\PublisherController::class, 'messages'])->middleware('role:publisher')->name('publisher.messages');
+    Route::get('/publisher/activity-log', [\App\Http\Controllers\PublisherActivityLogController::class, 'index'])->middleware('role:publisher')->name('publisher.activity-log');
+    Route::delete('/publisher/activity-log/{id}', [\App\Http\Controllers\PublisherActivityLogController::class, 'destroy'])->middleware('role:publisher')->name('publisher.activity-log.destroy');
+    Route::delete('/publisher/activity-log', [\App\Http\Controllers\PublisherActivityLogController::class, 'destroyAll'])->middleware('role:publisher')->name('publisher.activity-log.destroyAll');
     Route::get('/admin', [\App\Http\Controllers\AdminController::class, 'dashboard'])->middleware('role:admin,manager,operational')->name('admin.dashboard');
 
     // Admin sub-pages

@@ -44,6 +44,8 @@ class UserProfile extends Model
         'currency',
         'payment_method',
         'payment_details',
+        'payout_method',
+        'payout_details',
         'notification_settings',
         'balance',
     ];
@@ -51,6 +53,7 @@ class UserProfile extends Model
     protected $casts = [
         'date_of_birth' => 'date',
         'payment_details' => 'array',
+        'payout_details' => 'array',
         'notification_settings' => 'array',
     ];
 

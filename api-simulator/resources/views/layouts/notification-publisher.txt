@@ -1,0 +1,27 @@
+I wish to receive newsletter from AdShqip for below actions,
+AdShqip News
+Send me mail by:
+E-mail, AdShqip Message, E-mail & AdShqip Message
+Send me mail during:
+Site:
+Site Add,
+Site Edit,
+Site Delete,
+Adblock:
+Adblock Add/Update,
+Adblock Delete
+Payment Settings:
+Payout Request,
+Payment Settings
+Settings Information:
+Account Settings,
+Company Information,
+Personal Information,
+Forget Password,
+Block/Unblock Account
+Login Security:
+Security Disable,
+Password Incorrect,
+Blocked User.
+newsletter for campaigns:
+Only Member, Only Favorite, Member and Favorite

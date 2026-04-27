@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\PlatformSetting;
+use App\Models\ReferralConversion;
+use App\Models\ReferralLink;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Support\TwoFactorAuth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +48,18 @@ class AuthController extends Controller
             ], 403);
         }
 
+        // Security question challenge (for users who have set a backup question without full 2FA)
+        if (! $user->two_factor_enabled && filled($user->two_factor_backup_question) && filled($user->two_factor_backup_answer_hash)) {
+            $tokenTypes = is_array($user->two_factor_token_types) ? $user->two_factor_token_types : [];
+            if (in_array(TwoFactorAuth::METHOD_BACKUP, $tokenTypes, true)) {
+                return response()->json([
+                    'success'                 => true,
+                    'needs_security_question' => true,
+                    'question'                => $user->two_factor_backup_question,
+                ]);
+            }
+        }
+
         // Update last login info
         $user->update([
             'last_login_at' => now(),
@@ -76,6 +91,37 @@ class AuthController extends Controller
     }
 
     /**
+     * Stateless security-question verification (used by static HTML signin).
+     * Does NOT log the user in — caller must then hit /auto-login to get a session.
+     */
+    public function verifySecurityQuestion(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email'  => 'required|email',
+            'answer' => 'required|string|max:500',
+        ]);
+
+        $user = User::where('email', $request->email)
+            ->where('is_deleted', false)
+            ->where('status', 'active')
+            ->first();
+
+        if (! $user) {
+            return response()->json(['success' => false, 'message' => 'Account not found.'], 404);
+        }
+
+        if (! filled($user->two_factor_backup_answer_hash)) {
+            return response()->json(['success' => false, 'message' => 'No security question configured.'], 422);
+        }
+
+        if (! Hash::check(strtolower(trim((string) $request->input('answer'))), $user->two_factor_backup_answer_hash)) {
+            return response()->json(['success' => false, 'message' => 'Incorrect answer. Please try again.'], 422);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * Get the currently authenticated user (placeholder).
      */
     public function me(Request $request): JsonResponse
@@ -101,6 +147,7 @@ class AuthController extends Controller
                 'company_name' => 'nullable|string|max:255',
                 'website_url'  => 'nullable|url|max:500',
                 'country_code' => 'nullable|string|size:2',
+                'ref_code'     => 'nullable|string|max:32',
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -110,18 +157,30 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $user = DB::transaction(function () use ($request) {
+        $refCode = strtoupper(trim((string) ($request->input('ref_code') ?? '')));
+        $referralLink = $refCode !== ''
+            ? ReferralLink::where('code', $refCode)
+                ->where('status', 'active')
+                ->where('is_deleted', false)
+                ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+                ->where(fn ($q) => $q->where('target_role', $request->role)->orWhere('target_role', 'any'))
+                ->first()
+            : null;
+
+        $user = DB::transaction(function () use ($request, $referralLink) {
             $approvalType = $this->approvalTypeForRole($request->role);
             $requiresEmailVerification = $approvalType === PlatformSetting::ADVERTISER_APPROVAL_EMAIL_VERIFICATION;
             $requiresAdminApproval = $approvalType === PlatformSetting::ADVERTISER_APPROVAL_ADMIN;
 
             $user = User::create([
-                'email'         => $request->email,
-                'password_hash' => Hash::make($request->password),
-                'role'          => $request->role,
-                'status'        => $requiresAdminApproval ? 'pending_verification' : ($requiresEmailVerification ? 'inactive' : 'active'),
+                'email'          => $request->email,
+                'password_hash'  => Hash::make($request->password),
+                'role'           => $request->role,
+                'status'         => $requiresAdminApproval ? 'pending_verification' : ($requiresEmailVerification ? 'inactive' : 'active'),
                 'email_verified_at' => $requiresEmailVerification ? null : now(),
-                'referral_code' => strtoupper(Str::random(8)),
+                'referral_code'  => strtoupper(Str::random(8)),
+                'referred_by'    => $referralLink?->referrer_id,
+                'referred_at'    => $referralLink ? now() : null,
             ]);
 
             UserProfile::create([
@@ -132,6 +191,22 @@ class AuthController extends Controller
                 'website_url'  => $request->website_url,
                 'country_code' => $request->country_code ?? 'AL',
             ]);
+
+            if ($referralLink) {
+                ReferralConversion::create([
+                    'link_id'          => $referralLink->id,
+                    'referrer_id'      => $referralLink->referrer_id,
+                    'referred_user_id' => $user->id,
+                    'referred_role'    => $user->role,
+                    'signup_ip'        => request()->ip(),
+                    'commission_ends_at' => $referralLink->commission_duration_days
+                        ? now()->addDays($referralLink->commission_duration_days)
+                        : null,
+                    'status' => 'pending',
+                ]);
+
+                $referralLink->increment('total_signups');
+            }
 
             return $user;
         });

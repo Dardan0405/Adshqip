@@ -71,6 +71,24 @@ class WebLoginController extends Controller
             }
         }
 
+        // Security question challenge for users who have set a backup question (without full 2FA)
+        if (! $user->two_factor_enabled && filled($user->two_factor_backup_question) && filled($user->two_factor_backup_answer_hash)) {
+            $tokenTypes = is_array($user->two_factor_token_types) ? $user->two_factor_token_types : [];
+            if (in_array(TwoFactorAuth::METHOD_BACKUP, $tokenTypes, true)) {
+                $request->session()->put('security_question_login', [
+                    'user_id'    => $user->id,
+                    'remember'   => $request->boolean('remember'),
+                    'started_at' => now()->toDateTimeString(),
+                ]);
+
+                return response()->json([
+                    'success'                => true,
+                    'needs_security_question' => true,
+                    'question'               => $user->two_factor_backup_question,
+                ]);
+            }
+        }
+
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
         $sessionTracker->trackLogin($request, $user);
@@ -259,6 +277,52 @@ class WebLoginController extends Controller
         $request->session()->forget('two_factor_login');
 
         return redirect()->route('signin');
+    }
+
+    public function verifySecurityQuestion(Request $request, ActivityLogger $activityLogger, SessionTracker $sessionTracker)
+    {
+        $pending = $request->session()->get('security_question_login');
+
+        if (! $pending || empty($pending['user_id'])) {
+            return response()->json(['success' => false, 'message' => 'Session expired. Please sign in again.'], 422);
+        }
+
+        $request->validate(['answer' => 'required|string|max:500']);
+
+        $user = User::find($pending['user_id']);
+
+        if (! $user) {
+            $request->session()->forget('security_question_login');
+
+            return response()->json(['success' => false, 'message' => 'Account not found.'], 404);
+        }
+
+        if (! Hash::check(strtolower(trim((string) $request->input('answer'))), $user->two_factor_backup_answer_hash)) {
+            return response()->json(['success' => false, 'message' => 'Incorrect answer. Please try again.'], 422);
+        }
+
+        Auth::login($user, (bool) ($pending['remember'] ?? false));
+        $request->session()->forget('security_question_login');
+        $request->session()->regenerate();
+        $sessionTracker->trackLogin($request, $user);
+        $user->update(['last_login_at' => now(), 'last_login_ip' => $request->ip()]);
+        $activityLogger->logRequest($request, 200, [
+            'action'      => 'auth_security_question_verified',
+            'description' => 'Security question verified at login',
+            'entity_type' => 'user',
+            'entity_id'   => $user->id,
+        ]);
+
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Login successful.',
+            'redirect' => $this->redirectFor($user),
+            'user'     => [
+                'id'    => $user->id,
+                'email' => $user->email,
+                'role'  => $user->role,
+            ],
+        ]);
     }
 
     private function redirectFor(User $user): string

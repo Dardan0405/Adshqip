@@ -19,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\HandleCors::class,
             \App\Http\Middleware\ApplyAdminCurrencyDisplay::class,
         ]);
+        $middleware->web(append: [
+            \App\Http\Middleware\LogPublisherActivity::class,
+        ]);
         $middleware->validateCsrfTokens(except: [
             'web-login',
             'serve/*',
@@ -28,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
             'audit.admin' => \App\Http\Middleware\LogAdminActivity::class,
             'audit.advertiser' => \App\Http\Middleware\LogAdvertiserActivity::class,
+            'audit.publisher' => \App\Http\Middleware\LogPublisherActivity::class,
             'admin.permission' => \App\Http\Middleware\EnsureAdminPermission::class,
         ]);
     })

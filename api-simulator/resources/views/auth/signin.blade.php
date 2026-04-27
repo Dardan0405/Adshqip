@@ -105,6 +105,7 @@
                     <span id="successMsg"></span>
                 </div>
 
+                {{-- Step 1: Email + Password --}}
                 <form id="loginForm" class="space-y-5">
                     @csrf
                     <div>
@@ -145,24 +146,40 @@
                     </button>
                 </form>
 
+                {{-- Step 2: Security Question --}}
+                <div id="securityQuestionStep" class="hidden space-y-5">
+                    <div class="flex items-center gap-3 p-3 rounded-xl border border-brand-200 dark:border-brand-800 bg-brand-50/60 dark:bg-brand-900/20">
+                        <svg class="w-5 h-5 text-brand-600 flex-shrink-0" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        <p class="text-xs text-brand-700 dark:text-brand-300">Security verification required. Please answer your security question to continue.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2 text-zinc-700 dark:text-zinc-300">Security Question</label>
+                        <p id="securityQuestionText" class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700"></p>
+                    </div>
+                    <div>
+                        <label for="securityAnswer" class="block text-sm font-medium mb-1.5">Your Answer</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                                <svg class="w-5 h-5 text-zinc-400" viewBox="0 0 24 24" fill="none"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            </div>
+                            <input type="text" id="securityAnswer" autocomplete="off" placeholder="Type your answer…" class="w-full pl-11 pr-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 text-sm transition-all placeholder-zinc-400">
+                        </div>
+                        <p class="mt-1 text-[11px] text-zinc-400">Answer is case-insensitive.</p>
+                    </div>
+                    <button type="button" id="securitySubmitBtn" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-brand-600 text-white font-semibold hover:bg-brand-700 shadow-glow transition-all duration-300 hover:-translate-y-0.5 hover:shadow-glow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
+                        <span id="secBtnText">Verify Answer</span>
+                        <span id="secBtnLoading" class="hidden loading-dots text-white"><span></span><span></span><span></span></span>
+                        <svg id="secBtnArrow" class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M5 12h14m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    </button>
+                    <button type="button" id="backToLoginBtn" class="w-full text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 underline underline-offset-2">← Back to sign in</button>
+                </div>
+
                 <div class="mt-6 flex items-center gap-3"><div class="flex-1 h-px bg-zinc-200 dark:bg-zinc-800"></div><span class="text-xs text-zinc-400">or</span><div class="flex-1 h-px bg-zinc-200 dark:bg-zinc-800"></div></div>
                 <p class="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">Don't have an account? <a href="{{ route('register') }}" class="font-semibold text-brand-600 hover:text-brand-700">Create one for free</a></p>
             </div>
 
             {{-- Demo credentials --}}
-            <div class="mt-6 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
-                <div class="flex items-center gap-2 mb-2">
-                    <svg class="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    <span class="text-xs font-semibold text-amber-600 dark:text-amber-400">Demo Accounts</span>
-                </div>
-                <div class="space-y-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-                    <div class="flex items-center justify-between"><span><strong class="text-zinc-700 dark:text-zinc-300">Admin:</strong> admin@adshqip.com</span><button onclick="fillDemo('admin@adshqip.com')" class="text-brand-600 hover:underline">Use</button></div>
-                    <div class="flex items-center justify-between"><span><strong class="text-zinc-700 dark:text-zinc-300">Advertiser:</strong> advertiser@adshqip.com</span><button onclick="fillDemo('advertiser@adshqip.com')" class="text-brand-600 hover:underline">Use</button></div>
-                    <div class="flex items-center justify-between"><span><strong class="text-zinc-700 dark:text-zinc-300">Publisher:</strong> publisher@adshqip.com</span><button onclick="fillDemo('publisher@adshqip.com')" class="text-brand-600 hover:underline">Use</button></div>
-                    <div class="flex items-center justify-between"><span><strong class="text-zinc-700 dark:text-zinc-300">Manager:</strong> manager@adshqip.com</span><button onclick="fillDemo('manager@adshqip.com')" class="text-brand-600 hover:underline">Use</button></div>
-                    <p class="mt-1 text-[11px] text-zinc-400">Password for all: <code class="px-1 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">password123</code></p>
-                </div>
-            </div>
+           
         </div>
     </main>
 
@@ -228,6 +245,37 @@
 
         function fillDemo(email){$('#email').value=email;$('#password').value='password123';$('#email').focus();}
 
+        const csrf=()=>document.querySelector('meta[name="csrf-token"]').content;
+
+        function showError(msg){$('#errorMsg').textContent=msg;$('#errorBox').classList.remove('hidden');$('#successBox').classList.add('hidden');}
+        function showSuccess(msg){$('#successMsg').textContent=msg;$('#successBox').classList.remove('hidden');$('#errorBox').classList.add('hidden');}
+        function clearAlerts(){$('#errorBox').classList.add('hidden');$('#successBox').classList.add('hidden');}
+
+        function finishLogin(data){
+            if(data.user)localStorage.setItem('adshqip-user',JSON.stringify(data.user));
+            showSuccess(`Welcome! Redirecting…`);
+            setTimeout(()=>{window.location.href=data.redirect;},900);
+        }
+
+        function showSecurityQuestion(question){
+            $('#loginForm').classList.add('hidden');
+            $('#securityQuestionText').textContent=question;
+            $('#securityQuestionStep').classList.remove('hidden');
+            $('#securityAnswer').value='';
+            $('#securityAnswer').focus();
+            clearAlerts();
+        }
+
+        function resetToStep1(){
+            $('#securityQuestionStep').classList.add('hidden');
+            $('#loginForm').classList.remove('hidden');
+            clearAlerts();
+            const btn=$('#submitBtn');
+            btn.disabled=false;$('#btnText').textContent='Sign in';$('#btnArrow').classList.remove('hidden');$('#btnLoading').classList.add('hidden');
+        }
+
+        $('#backToLoginBtn').addEventListener('click',resetToStep1);
+
         $('#loginForm').addEventListener('submit',async e=>{
             e.preventDefault();
             const email=$('#email').value.trim();
@@ -239,33 +287,67 @@
             $('#btnText').textContent='Signing in...';
             $('#btnArrow').classList.add('hidden');
             $('#btnLoading').classList.remove('hidden');
-            $('#errorBox').classList.add('hidden');
-            $('#successBox').classList.add('hidden');
+            clearAlerts();
 
             try{
                 const res=await fetch('/web-login',{
                     method:'POST',
-                    headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content},
+                    headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':csrf()},
                     body:JSON.stringify({email,password,remember:$('#remember').checked})
                 });
                 const data=await res.json();
                 if(!res.ok||!data.success){
-                    $('#errorMsg').textContent=data.message||'Login failed.';
-                    $('#errorBox').classList.remove('hidden');
+                    showError(data.message||'Login failed.');
                     btn.disabled=false;$('#btnText').textContent='Sign in';$('#btnArrow').classList.remove('hidden');$('#btnLoading').classList.add('hidden');
                     return;
                 }
-                localStorage.setItem('adshqip-user',JSON.stringify(data.user));
-                $('#successMsg').textContent=`Welcome! Redirecting to ${data.redirect}...`;
-                $('#successBox').classList.remove('hidden');
-                $('#btnText').textContent='Redirecting...';
-                setTimeout(()=>{window.location.href=data.redirect;},1000);
+                if(data.needs_security_question){
+                    btn.disabled=false;$('#btnText').textContent='Sign in';$('#btnArrow').classList.remove('hidden');$('#btnLoading').classList.add('hidden');
+                    showSecurityQuestion(data.question);
+                    return;
+                }
+                if(data.requires_two_factor){
+                    window.location.href=data.redirect;
+                    return;
+                }
+                finishLogin(data);
             }catch(err){
-                $('#errorMsg').textContent='Cannot connect to server.';
-                $('#errorBox').classList.remove('hidden');
+                showError('Cannot connect to server.');
                 btn.disabled=false;$('#btnText').textContent='Sign in';$('#btnArrow').classList.remove('hidden');$('#btnLoading').classList.add('hidden');
             }
         });
+
+        $('#securitySubmitBtn').addEventListener('click',async()=>{
+            const answer=$('#securityAnswer').value.trim();
+            if(!answer){$('#securityAnswer').focus();return;}
+
+            const btn=$('#securitySubmitBtn');
+            btn.disabled=true;
+            $('#secBtnText').textContent='Verifying...';
+            $('#secBtnArrow').classList.add('hidden');
+            $('#secBtnLoading').classList.remove('hidden');
+            clearAlerts();
+
+            try{
+                const res=await fetch('/web-login-security-question',{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':csrf()},
+                    body:JSON.stringify({answer})
+                });
+                const data=await res.json();
+                if(!res.ok||!data.success){
+                    showError(data.message||'Incorrect answer. Please try again.');
+                    btn.disabled=false;$('#secBtnText').textContent='Verify Answer';$('#secBtnArrow').classList.remove('hidden');$('#secBtnLoading').classList.add('hidden');
+                    return;
+                }
+                finishLogin(data);
+            }catch(err){
+                showError('Cannot connect to server.');
+                btn.disabled=false;$('#secBtnText').textContent='Verify Answer';$('#secBtnArrow').classList.remove('hidden');$('#secBtnLoading').classList.add('hidden');
+            }
+        });
+
+        $('#securityAnswer').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#securitySubmitBtn').click();}});
     </script>
 </body>
 </html>

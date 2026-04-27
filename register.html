@@ -198,7 +198,7 @@
           <div>
             <label class="block text-sm font-medium mb-2">I want to</label>
             <div class="grid grid-cols-2 gap-3">
-              <label class="relative cursor-pointer">
+              <label id="roleAdvertiser" class="relative cursor-pointer" onclick="scheduleRefBlockUpdate()">
                 <input type="radio" name="role" value="advertiser" class="peer sr-only" checked>
                 <div class="flex items-center gap-3 p-3.5 rounded-xl border-2 border-zinc-200 dark:border-zinc-700 peer-checked:border-brand-500 peer-checked:bg-brand-500/5 transition-all">
                   <div class="w-10 h-10 rounded-lg bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center">
@@ -210,7 +210,7 @@
                   </div>
                 </div>
               </label>
-              <label class="relative cursor-pointer">
+              <label id="rolePublisher" class="relative cursor-pointer" onclick="scheduleRefBlockUpdate()">
                 <input type="radio" name="role" value="publisher" class="peer sr-only">
                 <div class="flex items-center gap-3 p-3.5 rounded-xl border-2 border-zinc-200 dark:border-zinc-700 peer-checked:border-brand-500 peer-checked:bg-brand-500/5 transition-all">
                   <div class="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
@@ -320,6 +320,24 @@
               <option value="US">🇺🇸 United States</option>
               <option value="GB">🇬🇧 United Kingdom</option>
             </select>
+          </div>
+
+          <!-- Referral code (optional, auto-filled from URL ?ref=...) — shown only for Publisher -->
+          <div id="refBlock" class="hidden">
+            <label for="ref_code" class="block text-sm font-medium mb-1.5">
+              Referral code <span class="text-zinc-400 font-normal">(optional)</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                <svg class="w-5 h-5 text-zinc-400" viewBox="0 0 24 24" fill="none"><path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </div>
+              <input type="text" id="ref_code" name="ref_code" autocomplete="off" placeholder="e.g. ABCD1234"
+                class="w-full pl-11 pr-10 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 text-sm transition-all placeholder-zinc-400 uppercase" />
+              <button type="button" id="clearRef" class="hidden absolute inset-y-0 right-0 flex items-center pr-3.5 text-zinc-400 hover:text-zinc-600" title="Clear">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+            <p id="refNotice" class="hidden mt-1 text-[11px] text-brand-600">Referral code applied from your invite link.</p>
           </div>
 
           <!-- Terms -->
@@ -454,6 +472,74 @@
       $('#eyeOn').classList.toggle('hidden', isPassword);
     });
 
+    // --------------- REFERRAL BLOCK VISIBILITY ---------------
+    function updateRefBlockVisibility() {
+      const checked = document.querySelector('input[name="role"]:checked');
+      const isPublisher = checked !== null && checked.value === 'publisher';
+      const block = document.getElementById('refBlock');
+      if (!block) return;
+
+      if (isPublisher) {
+        block.classList.remove('hidden');
+      } else {
+        block.classList.add('hidden');
+        const refInput = document.getElementById('ref_code');
+        if (refInput) refInput.value = '';
+        const clearBtn = document.getElementById('clearRef');
+        if (clearBtn) clearBtn.classList.add('hidden');
+        const notice = document.getElementById('refNotice');
+        if (notice) notice.classList.add('hidden');
+      }
+    }
+
+    // scheduleRefBlockUpdate: defer by one tick so the browser finalises the
+    // radio checked state before we read it (needed for sr-only radio + label).
+    function scheduleRefBlockUpdate() {
+      setTimeout(updateRefBlockVisibility, 0);
+    }
+
+    // Also wire change events as a fallback
+    $$('input[name="role"]').forEach(function(radio) {
+      radio.addEventListener('change', updateRefBlockVisibility);
+    });
+
+    // --------------- URL PARAMS (ref + role) ---------------
+    (function applyUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      const ref  = params.get('ref') || params.get('ref_code') || '';
+      const role = params.get('role') || '';
+
+      if (role === 'advertiser' || role === 'publisher') {
+        const radio = document.querySelector('input[name="role"][value="' + role + '"]');
+        if (radio) radio.checked = true;
+      }
+
+      updateRefBlockVisibility();
+
+      if (ref) {
+        const checked = document.querySelector('input[name="role"]:checked');
+        if (checked && checked.value === 'publisher') {
+          const refInput = document.getElementById('ref_code');
+          if (refInput) refInput.value = ref.toUpperCase();
+          const notice = document.getElementById('refNotice');
+          if (notice) notice.classList.remove('hidden');
+          const clearBtn = document.getElementById('clearRef');
+          if (clearBtn) clearBtn.classList.remove('hidden');
+        }
+      }
+    })();
+
+    // Referral code clear button
+    $('#ref_code').addEventListener('input', () => {
+      $('#clearRef').classList.toggle('hidden', !$('#ref_code').value);
+      $('#refNotice').classList.add('hidden');
+    });
+    $('#clearRef').addEventListener('click', () => {
+      $('#ref_code').value = '';
+      $('#clearRef').classList.add('hidden');
+      $('#refNotice').classList.add('hidden');
+    });
+
     // --------------- REGISTER ---------------
     $('#registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -467,6 +553,7 @@
       const company_name = $('#company_name').value.trim() || null;
       const website_url = $('#website_url').value.trim() || null;
       const country_code = $('#country_code').value;
+      const ref_code = $('#ref_code').value.trim().toUpperCase() || null;
       const terms = $('#terms').checked;
 
       // Client-side validation
@@ -520,6 +607,7 @@
             company_name,
             website_url,
             country_code,
+            ref_code,
           }),
         });
 
