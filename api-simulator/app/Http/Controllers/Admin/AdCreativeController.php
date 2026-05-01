@@ -10,6 +10,7 @@ use App\Models\PlatformSetting;
 use App\Models\StatDaily;
 use App\Support\AdDeliveryOptions;
 use App\Support\AntiFraudClickGuard;
+use App\Support\AudienceTargetingMatcher;
 use App\Support\AdvertiserNotificationManager;
 use App\Support\GeoCpmResolver;
 use App\Support\UrlAdReporter;
@@ -922,6 +923,44 @@ class AdCreativeController extends Controller
 
         $this->notifyTrackingEvents($ad, $row, $type, $isUnique);
         $this->syncCampaignBudgetAndNotifications($ad);
+
+        app(\App\Support\AdServingLogger::class)->log($request, [
+            'delivery_type' => 'network',
+            'event_type' => $type,
+            'status' => $type === 'impression' ? 'served' : 'tracked',
+            'campaign_id' => $ad->campaign_id,
+            'ad_id' => $ad->id,
+            'zone_id' => $zoneId,
+            'site_id' => $siteId,
+            'publisher_id' => $publisherId,
+            'advertiser_id' => $campaign?->advertiser_id,
+            'country_code' => $countryCode,
+            'device_type' => $deviceType,
+            'pricing_model' => $pricingModel,
+            'bid_amount' => $bidAmount,
+            'revenue' => $this->eventRevenue($pricingModel, $type, $bidAmount),
+            'publisher_earnings' => 0,
+            'destination_url' => $ad->destination_url,
+            'meta' => [
+                'is_unique' => $isUnique,
+                'stat_daily_id' => $row->id,
+            ],
+        ]);
+    }
+
+    private function eventRevenue(string $pricingModel, string $eventType, float $bidAmount): float
+    {
+        if ($bidAmount <= 0) {
+            return 0.0;
+        }
+
+        return match (true) {
+            $pricingModel === 'cpm' && $eventType === 'impression' => round($bidAmount / 1000, 4),
+            $pricingModel === 'cpc' && $eventType === 'click' => $bidAmount,
+            in_array($pricingModel, ['cpv', 'cpv_ctw'], true) && $eventType === 'view' => $bidAmount,
+            $pricingModel === 'cpa' && $eventType === 'conversion' => $bidAmount,
+            default => 0.0,
+        };
     }
 
     private function notifyTrackingEvents(Ad $ad, StatDaily $row, string $type, bool $isUnique): void
@@ -1183,6 +1222,15 @@ SCRIPT;
                 }
                 if ($debug) return $this->adResponse('<pre>BLOCKED: budget exhausted. Total: ' . $campaign->total_budget . ', Remaining: ' . $campaign->remaining_budget . '</pre>');
                 return $this->adResponse('<!-- budget exhausted -->', 204);
+            }
+
+            $audienceResult = app(AudienceTargetingMatcher::class)->evaluate($campaign, $request);
+            if (! $audienceResult['passes']) {
+                if ($debug) {
+                    return $this->adResponse('<pre>BLOCKED: audience targeting failed. Reason: ' . e($audienceResult['reason']) . ', Matched: ' . e(json_encode($audienceResult['matched'])) . '</pre>');
+                }
+
+                return $this->adResponse('<!-- audience targeting failed -->', 204);
             }
 
             // 4. Device targeting

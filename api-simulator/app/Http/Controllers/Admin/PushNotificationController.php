@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use App\Models\PushSubscription;
 use App\Models\User;
+use App\Support\SystemProviderRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -16,8 +17,10 @@ class PushNotificationController extends Controller
      */
     public function getVapidKey()
     {
+        $provider = app(SystemProviderRegistry::class)->webPush();
+
         return response()->json([
-            'publicKey' => config('services.webpush.public_key', env('VAPID_PUBLIC_KEY')),
+            'publicKey' => $provider?->api_key ?: config('services.webpush.public_key', env('VAPID_PUBLIC_KEY')),
         ]);
     }
 
@@ -283,9 +286,10 @@ class PushNotificationController extends Controller
      */
     private function sendWebPush(PushSubscription $subscription, string $payload): void
     {
-        $vapidPublicKey = config('services.webpush.public_key', env('VAPID_PUBLIC_KEY'));
-        $vapidPrivateKey = config('services.webpush.private_key', env('VAPID_PRIVATE_KEY'));
-        $vapidSubject = config('services.webpush.subject', env('VAPID_SUBJECT', 'mailto:admin@adshqip.com'));
+        $provider = app(SystemProviderRegistry::class)->webPush();
+        $vapidPublicKey = $provider?->api_key ?: config('services.webpush.public_key', env('VAPID_PUBLIC_KEY'));
+        $vapidPrivateKey = $provider?->api_secret ?: config('services.webpush.private_key', env('VAPID_PRIVATE_KEY'));
+        $vapidSubject = $provider?->configValue('subject') ?: config('services.webpush.subject', env('VAPID_SUBJECT', 'mailto:admin@adshqip.com'));
 
         if (empty($vapidPublicKey) || empty($vapidPrivateKey)) {
             // Fallback: just log that push would be sent (for development without VAPID keys)
@@ -302,7 +306,11 @@ class PushNotificationController extends Controller
             'user_id' => $subscription->user_id,
             'endpoint' => substr($subscription->endpoint, 0, 50) . '...',
             'payload_length' => strlen($payload),
+            'provider' => $provider?->slug,
+            'subject' => $vapidSubject,
         ]);
+
+        $provider?->markUsed();
     }
 
     /**

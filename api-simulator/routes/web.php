@@ -31,7 +31,15 @@ Route::get('/signin', function () {
 Route::get('/register', [RegisterController::class, 'showForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register'])->name('register.submit');
 Route::get('/verify-email/{id}/{hash}', [RegisterController::class, 'verifyEmail'])->name('account.email.verify');
+Route::get('/ref/{code}', \App\Http\Controllers\ReferralRedirectController::class)->name('referrals.redirect');
+Route::get('/team-invitations/{token}', [\App\Http\Controllers\Advertiser\TeamInvitationController::class, 'accept'])->name('advertiser.team-invitations.accept');
 Route::get('/pricing-plans-feed', [\App\Http\Controllers\PricingPlanFeedController::class, 'index'])->name('pricing-plans.feed');
+Route::options('/api-docs-feed', [\App\Http\Controllers\ApiDocFeedController::class, 'options'])->name('api-docs.feed.options');
+Route::get('/api-docs-feed', [\App\Http\Controllers\ApiDocFeedController::class, 'index'])->name('api-docs.feed');
+Route::options('/case-studies-feed', [\App\Http\Controllers\CaseStudyFeedController::class, 'options'])->name('case-studies.feed.options');
+Route::get('/case-studies-feed', [\App\Http\Controllers\CaseStudyFeedController::class, 'index'])->name('case-studies.feed');
+Route::options('/case-studies-feed/{slug}', [\App\Http\Controllers\CaseStudyFeedController::class, 'options'])->name('case-studies.feed.show.options');
+Route::get('/case-studies-feed/{slug}', [\App\Http\Controllers\CaseStudyFeedController::class, 'show'])->name('case-studies.feed.show');
 Route::options('/faq-feed', [\App\Http\Controllers\FaqFeedController::class, 'options'])->name('faq.feed.options');
 Route::get('/faq-feed', [\App\Http\Controllers\FaqFeedController::class, 'index'])->name('faq.feed');
 Route::options('/testimonials-feed', [\App\Http\Controllers\TestimonialFeedController::class, 'options'])->name('testimonials.feed.options');
@@ -210,6 +218,80 @@ Route::middleware('auth')->group(function () {
         Route::post('/campaigns/groups', [\App\Http\Controllers\Advertiser\CampaignController::class, 'storeGroup'])->name('advertiser.campaigns.groups.store');
         Route::post('/campaigns/pixels', [\App\Http\Controllers\Advertiser\CampaignController::class, 'storePixel'])->name('advertiser.campaigns.pixels.store');
 
+        Route::get('/tracking/conversions', [\App\Http\Controllers\Advertiser\ConversionTrackingController::class, 'index'])->name('advertiser.tracking.conversions');
+        Route::post('/tracking/conversions', [\App\Http\Controllers\Advertiser\ConversionTrackingController::class, 'store'])->name('advertiser.tracking.conversions.store');
+        Route::put('/tracking/conversions/{id}', [\App\Http\Controllers\Advertiser\ConversionTrackingController::class, 'update'])->name('advertiser.tracking.conversions.update');
+        Route::get('/tracking/conversions/{id}/code', [\App\Http\Controllers\Advertiser\ConversionTrackingController::class, 'code'])->name('advertiser.tracking.conversions.code');
+        Route::post('/tracking/conversions/{id}/link', [\App\Http\Controllers\Advertiser\ConversionTrackingController::class, 'link'])->name('advertiser.tracking.conversions.link');
+        Route::delete('/tracking/conversions/{id}', [\App\Http\Controllers\Advertiser\ConversionTrackingController::class, 'destroy'])->name('advertiser.tracking.conversions.destroy');
+        Route::get('/tracking/goals', [\App\Http\Controllers\Advertiser\GoalController::class, 'index'])->name('advertiser.tracking.goals');
+        Route::post('/tracking/goals', [\App\Http\Controllers\Advertiser\GoalController::class, 'store'])->name('advertiser.tracking.goals.store');
+        Route::put('/tracking/goals/{id}', [\App\Http\Controllers\Advertiser\GoalController::class, 'update'])->name('advertiser.tracking.goals.update');
+        Route::get('/tracking/goals/{id}/code', [\App\Http\Controllers\Advertiser\GoalController::class, 'code'])->name('advertiser.tracking.goals.code');
+        Route::delete('/tracking/goals/{id}', [\App\Http\Controllers\Advertiser\GoalController::class, 'destroy'])->name('advertiser.tracking.goals.destroy');
+        Route::get('/tracking/event-log', [\App\Http\Controllers\Advertiser\EventLogController::class, 'index'])->name('advertiser.tracking.event-log');
+        Route::get('/tracking/event-log/export', [\App\Http\Controllers\Advertiser\EventLogController::class, 'export'])->name('advertiser.tracking.event-log.export');
+
+        Route::get('/direct-campaigns', [\App\Http\Controllers\Advertiser\DirectCampaignController::class, 'index'])->name('advertiser.direct-campaigns');
+        Route::get('/direct-campaigns/create', [\App\Http\Controllers\Advertiser\DirectCampaignController::class, 'create'])->name('advertiser.direct-campaigns.create');
+        Route::post('/direct-campaigns', [\App\Http\Controllers\Advertiser\DirectCampaignController::class, 'store'])->name('advertiser.direct-campaigns.store');
+        Route::patch('/direct-campaigns/{id}/status', [\App\Http\Controllers\Advertiser\DirectCampaignController::class, 'updateStatus'])->name('advertiser.direct-campaigns.updateStatus');
+        Route::delete('/direct-campaigns/{id}', [\App\Http\Controllers\Advertiser\DirectCampaignController::class, 'destroy'])->name('advertiser.direct-campaigns.destroy');
+        Route::post('/direct-campaigns/{id}/duplicate', [\App\Http\Controllers\Advertiser\DirectCampaignController::class, 'duplicate'])->name('advertiser.direct-campaigns.duplicate');
+        Route::get('/direct-campaigns/export', [\App\Http\Controllers\Advertiser\DirectCampaignController::class, 'export'])->name('advertiser.direct-campaigns.export');
+        Route::get('/direct-campaigns/{id}', [\App\Http\Controllers\Advertiser\DirectCampaignController::class, 'show'])->name('advertiser.direct-campaigns.show');
+        Route::get('/direct-campaigns/{id}/edit', [\App\Http\Controllers\Advertiser\DirectCampaignController::class, 'edit'])->name('advertiser.direct-campaigns.edit');
+        Route::put('/direct-campaigns/{id}', [\App\Http\Controllers\Advertiser\DirectCampaignController::class, 'update'])->name('advertiser.direct-campaigns.update');
+
+        Route::get('/audiences', [\App\Http\Controllers\Advertiser\AudienceController::class, 'index'])->name('advertiser.audiences');
+        Route::post('/audiences', [\App\Http\Controllers\Advertiser\AudienceController::class, 'store'])->name('advertiser.audiences.store');
+        Route::put('/audiences/{audience}', [\App\Http\Controllers\Advertiser\AudienceController::class, 'update'])->name('advertiser.audiences.update');
+        Route::post('/audiences/attach', [\App\Http\Controllers\Advertiser\AudienceController::class, 'attach'])->name('advertiser.audiences.attach');
+        Route::delete('/audiences/{campaign}/{audience}/detach', [\App\Http\Controllers\Advertiser\AudienceController::class, 'detach'])->name('advertiser.audiences.detach');
+        Route::delete('/audiences/{audience}', [\App\Http\Controllers\Advertiser\AudienceController::class, 'destroy'])->name('advertiser.audiences.destroy');
+
+        Route::get('/campaign-admarket', [\App\Http\Controllers\Advertiser\CampaignAdMarketController::class, 'index'])->name('advertiser.campaign-admarket');
+        Route::patch('/campaign-admarket/{campaign}/publish', [\App\Http\Controllers\Advertiser\CampaignAdMarketController::class, 'publish'])->name('advertiser.campaign-admarket.publish');
+        Route::patch('/campaign-admarket/{campaign}/unpublish', [\App\Http\Controllers\Advertiser\CampaignAdMarketController::class, 'unpublish'])->name('advertiser.campaign-admarket.unpublish');
+        Route::put('/campaign-admarket/{campaign}/settings', [\App\Http\Controllers\Advertiser\CampaignAdMarketController::class, 'updateSettings'])->name('advertiser.campaign-admarket.settings');
+
+        Route::get('/referrals', [\App\Http\Controllers\Advertiser\ReferralProgramController::class, 'index'])->name('advertiser.referrals');
+        Route::post('/referrals', [\App\Http\Controllers\Advertiser\ReferralProgramController::class, 'store'])->name('advertiser.referrals.store');
+        Route::get('/referrals/export', [\App\Http\Controllers\Advertiser\ReferralProgramController::class, 'export'])->name('advertiser.referrals.export');
+        Route::patch('/referrals/{referralLink}/status', [\App\Http\Controllers\Advertiser\ReferralProgramController::class, 'updateStatus'])->name('advertiser.referrals.status');
+        Route::delete('/referrals/{referralLink}', [\App\Http\Controllers\Advertiser\ReferralProgramController::class, 'destroy'])->name('advertiser.referrals.destroy');
+
+        Route::get('/teams', [\App\Http\Controllers\Advertiser\TeamController::class, 'index'])->name('advertiser.teams');
+        Route::post('/teams/invitations', [\App\Http\Controllers\Advertiser\TeamController::class, 'invite'])->name('advertiser.teams.invite');
+        Route::patch('/teams/invitations/{invitation}/revoke', [\App\Http\Controllers\Advertiser\TeamController::class, 'revokeInvitation'])->name('advertiser.teams.invitations.revoke');
+        Route::put('/teams/members/{member}', [\App\Http\Controllers\Advertiser\TeamController::class, 'updateMember'])->name('advertiser.teams.members.update');
+        Route::patch('/teams/members/{member}/status', [\App\Http\Controllers\Advertiser\TeamController::class, 'updateStatus'])->name('advertiser.teams.members.status');
+        Route::delete('/teams/members/{member}', [\App\Http\Controllers\Advertiser\TeamController::class, 'destroyMember'])->name('advertiser.teams.members.destroy');
+
+        Route::get('/help-center', [\App\Http\Controllers\Advertiser\HelpCenterController::class, 'index'])->name('advertiser.help-center');
+        Route::post('/help-center/tickets', [\App\Http\Controllers\Advertiser\HelpCenterController::class, 'store'])->name('advertiser.help-center.tickets.store');
+        Route::get('/help-center/tickets/{ticket}', [\App\Http\Controllers\Advertiser\HelpCenterController::class, 'show'])->name('advertiser.help-center.tickets.show');
+        Route::post('/help-center/tickets/{ticket}/reply', [\App\Http\Controllers\Advertiser\HelpCenterController::class, 'reply'])->name('advertiser.help-center.tickets.reply');
+        Route::patch('/help-center/tickets/{ticket}/close', [\App\Http\Controllers\Advertiser\HelpCenterController::class, 'close'])->name('advertiser.help-center.tickets.close');
+        Route::get('/support-tickets', [\App\Http\Controllers\Advertiser\SupportTicketController::class, 'index'])->name('advertiser.support-tickets');
+        Route::post('/support-tickets', [\App\Http\Controllers\Advertiser\SupportTicketController::class, 'store'])->name('advertiser.support-tickets.store');
+        Route::get('/support-tickets/export', [\App\Http\Controllers\Advertiser\SupportTicketController::class, 'export'])->name('advertiser.support-tickets.export');
+        Route::get('/support-tickets/{ticket}', [\App\Http\Controllers\Advertiser\SupportTicketController::class, 'show'])->name('advertiser.support-tickets.show');
+        Route::post('/support-tickets/{ticket}/reply', [\App\Http\Controllers\Advertiser\SupportTicketController::class, 'reply'])->name('advertiser.support-tickets.reply');
+        Route::patch('/support-tickets/{ticket}/close', [\App\Http\Controllers\Advertiser\SupportTicketController::class, 'close'])->name('advertiser.support-tickets.close');
+        Route::get('/feedback', [\App\Http\Controllers\Advertiser\FeedbackController::class, 'index'])->name('advertiser.feedback');
+        Route::post('/feedback', [\App\Http\Controllers\Advertiser\FeedbackController::class, 'store'])->name('advertiser.feedback.store');
+        Route::get('/feedback/export', [\App\Http\Controllers\Advertiser\FeedbackController::class, 'export'])->name('advertiser.feedback.export');
+        Route::get('/feedback/{feedback}', [\App\Http\Controllers\Advertiser\FeedbackController::class, 'show'])->name('advertiser.feedback.show');
+        Route::put('/feedback/{feedback}', [\App\Http\Controllers\Advertiser\FeedbackController::class, 'update'])->name('advertiser.feedback.update');
+        Route::patch('/feedback/{feedback}/close', [\App\Http\Controllers\Advertiser\FeedbackController::class, 'close'])->name('advertiser.feedback.close');
+        Route::get('/contacts', [\App\Http\Controllers\Advertiser\ContactController::class, 'index'])->name('advertiser.contacts');
+        Route::post('/contacts', [\App\Http\Controllers\Advertiser\ContactController::class, 'store'])->name('advertiser.contacts.store');
+        Route::get('/contacts/export', [\App\Http\Controllers\Advertiser\ContactController::class, 'export'])->name('advertiser.contacts.export');
+        Route::put('/contacts/{contact}', [\App\Http\Controllers\Advertiser\ContactController::class, 'update'])->name('advertiser.contacts.update');
+        Route::patch('/contacts/{contact}/touch', [\App\Http\Controllers\Advertiser\ContactController::class, 'touch'])->name('advertiser.contacts.touch');
+        Route::delete('/contacts/{contact}', [\App\Http\Controllers\Advertiser\ContactController::class, 'destroy'])->name('advertiser.contacts.destroy');
+
         Route::get('/ad-formats', [\App\Http\Controllers\Advertiser\AdCreativeController::class, 'index'])->name('advertiser.adformats');
         Route::get('/ad-formats/export', [\App\Http\Controllers\Advertiser\AdCreativeController::class, 'export'])->name('advertiser.adformats.export');
         Route::get('/ad-formats/{id}/edit', [\App\Http\Controllers\Advertiser\AdCreativeController::class, 'edit'])->name('advertiser.adformats.edit');
@@ -234,6 +316,13 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/payments/history', [\App\Http\Controllers\Advertiser\PaymentHistoryController::class, 'index'])->name('advertiser.payments.history');
         Route::get('/payments/deposit-history', [\App\Http\Controllers\Advertiser\DepositHistoryController::class, 'index'])->name('advertiser.payments.deposit-history');
+        Route::get('/payments/invoices', [\App\Http\Controllers\Advertiser\InvoiceHistoryController::class, 'index'])->name('advertiser.payments.invoices');
+        Route::get('/payments/invoices/export', [\App\Http\Controllers\Advertiser\InvoiceHistoryController::class, 'export'])->name('advertiser.payments.invoices.export');
+        Route::post('/payments/invoices/generate', [\App\Http\Controllers\Advertiser\InvoiceHistoryController::class, 'generateMissing'])->name('advertiser.payments.invoices.generate');
+        Route::get('/payments/invoices/{id}/download', [\App\Http\Controllers\Advertiser\InvoiceHistoryController::class, 'download'])->name('advertiser.payments.invoices.download');
+        Route::get('/payments/subscription-plan', [\App\Http\Controllers\Advertiser\SubscriptionPlanController::class, 'index'])->name('advertiser.payments.subscription-plan');
+        Route::post('/payments/subscription-plan/{plan}', [\App\Http\Controllers\Advertiser\SubscriptionPlanController::class, 'subscribe'])->name('advertiser.payments.subscription-plan.subscribe');
+        Route::patch('/payments/subscription-plan/subscriptions/{subscription}/cancel', [\App\Http\Controllers\Advertiser\SubscriptionPlanController::class, 'cancel'])->name('advertiser.payments.subscription-plan.cancel');
         Route::get('/payments/add-funds', [\App\Http\Controllers\Advertiser\AddFundsController::class, 'create'])->name('advertiser.payments.add-funds');
         Route::post('/payments/add-funds', [\App\Http\Controllers\Advertiser\AddFundsController::class, 'store'])->name('advertiser.payments.add-funds.store');
         Route::get('/payments/add-funds/{transaction}', [\App\Http\Controllers\Advertiser\AddFundsController::class, 'confirm'])->name('advertiser.payments.add-funds.confirm');
@@ -411,6 +500,26 @@ Route::middleware('auth')->group(function () {
         Route::post('/api-keys', [\App\Http\Controllers\Admin\ApiKeyController::class, 'store'])->name('admin.api-keys.store');
         Route::patch('/api-keys/{apiKey}/revoke', [\App\Http\Controllers\Admin\ApiKeyController::class, 'revoke'])->name('admin.api-keys.revoke');
         Route::patch('/api-keys/{apiKey}/activate', [\App\Http\Controllers\Admin\ApiKeyController::class, 'activate'])->name('admin.api-keys.activate');
+        Route::get('/api-docs', [\App\Http\Controllers\Admin\ApiDocController::class, 'index'])->name('admin.api-docs');
+        Route::post('/api-docs', [\App\Http\Controllers\Admin\ApiDocController::class, 'store'])->name('admin.api-docs.store');
+        Route::put('/api-docs/{apiDoc}', [\App\Http\Controllers\Admin\ApiDocController::class, 'update'])->name('admin.api-docs.update');
+        Route::patch('/api-docs/{apiDoc}/publish', [\App\Http\Controllers\Admin\ApiDocController::class, 'publish'])->name('admin.api-docs.publish');
+        Route::patch('/api-docs/{apiDoc}/unpublish', [\App\Http\Controllers\Admin\ApiDocController::class, 'unpublish'])->name('admin.api-docs.unpublish');
+        Route::delete('/api-docs/{apiDoc}', [\App\Http\Controllers\Admin\ApiDocController::class, 'destroy'])->name('admin.api-docs.destroy');
+        Route::get('/system-providers', [\App\Http\Controllers\Admin\SystemProviderController::class, 'index'])->name('admin.system-providers');
+        Route::post('/system-providers', [\App\Http\Controllers\Admin\SystemProviderController::class, 'store'])->name('admin.system-providers.store');
+        Route::post('/system-providers/sync', [\App\Http\Controllers\Admin\SystemProviderController::class, 'sync'])->name('admin.system-providers.sync');
+        Route::put('/system-providers/{systemProvider}', [\App\Http\Controllers\Admin\SystemProviderController::class, 'update'])->name('admin.system-providers.update');
+        Route::patch('/system-providers/{systemProvider}/test', [\App\Http\Controllers\Admin\SystemProviderController::class, 'test'])->name('admin.system-providers.test');
+        Route::patch('/system-providers/{systemProvider}/activate', [\App\Http\Controllers\Admin\SystemProviderController::class, 'activate'])->name('admin.system-providers.activate');
+        Route::patch('/system-providers/{systemProvider}/deactivate', [\App\Http\Controllers\Admin\SystemProviderController::class, 'deactivate'])->name('admin.system-providers.deactivate');
+        Route::delete('/system-providers/{systemProvider}', [\App\Http\Controllers\Admin\SystemProviderController::class, 'destroy'])->name('admin.system-providers.destroy');
+        Route::get('/data-export-jobs', [\App\Http\Controllers\Admin\DataExportJobController::class, 'index'])->name('admin.data-export-jobs');
+        Route::post('/data-export-jobs', [\App\Http\Controllers\Admin\DataExportJobController::class, 'store'])->name('admin.data-export-jobs.store');
+        Route::post('/data-export-jobs/{dataExportJob}/retry', [\App\Http\Controllers\Admin\DataExportJobController::class, 'retry'])->name('admin.data-export-jobs.retry');
+        Route::get('/data-export-jobs/{dataExportJob}/download', [\App\Http\Controllers\Admin\DataExportJobController::class, 'download'])->name('admin.data-export-jobs.download');
+        Route::delete('/data-export-jobs/clear-expired', [\App\Http\Controllers\Admin\DataExportJobController::class, 'clearExpired'])->name('admin.data-export-jobs.clear-expired');
+        Route::delete('/data-export-jobs/{dataExportJob}', [\App\Http\Controllers\Admin\DataExportJobController::class, 'destroy'])->name('admin.data-export-jobs.destroy');
         Route::get('/sessions-security', [\App\Http\Controllers\Admin\SessionSecurityController::class, 'index'])->name('admin.sessions-security');
         Route::delete('/sessions-security/{adminSession}', [\App\Http\Controllers\Admin\SessionSecurityController::class, 'revoke'])->name('admin.sessions-security.revoke');
         Route::post('/sessions-security/clear-expired', [\App\Http\Controllers\Admin\SessionSecurityController::class, 'clearExpired'])->name('admin.sessions-security.clear-expired');
@@ -647,6 +756,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/requests/{requestReport}/download', [\App\Http\Controllers\Admin\RequestReportController::class, 'download'])->name('admin.reports.requests.download');
         Route::patch('/reports/requests/{requestReport}/status', [\App\Http\Controllers\Admin\RequestReportController::class, 'updateStatus'])->name('admin.reports.requests.status');
         Route::delete('/reports/requests/{requestReport}', [\App\Http\Controllers\Admin\RequestReportController::class, 'destroy'])->name('admin.reports.requests.destroy');
+        Route::get('/ad-serving-logs', [\App\Http\Controllers\Admin\AdServingLogController::class, 'index'])->name('admin.ad-serving-logs');
+        Route::get('/ad-serving-logs/export', [\App\Http\Controllers\Admin\AdServingLogController::class, 'export'])->name('admin.ad-serving-logs.export');
+        Route::delete('/ad-serving-logs/clear', [\App\Http\Controllers\Admin\AdServingLogController::class, 'clear'])->name('admin.ad-serving-logs.clear');
+        Route::delete('/ad-serving-logs/{adServingLog}', [\App\Http\Controllers\Admin\AdServingLogController::class, 'destroy'])->name('admin.ad-serving-logs.destroy');
 
         // Graphical Reports (Geographic)
         Route::get('/reports/graphical', [\App\Http\Controllers\Admin\GraphicalReportController::class, 'index'])->name('admin.reports.graphical');
@@ -675,6 +788,17 @@ Route::middleware('auth')->group(function () {
         // Anti-fraud Clicks
         Route::get('/anti-fraud', [\App\Http\Controllers\Admin\AntiFraudController::class, 'index'])->name('admin.anti-fraud');
         Route::get('/anti-fraud/export', [\App\Http\Controllers\Admin\AntiFraudController::class, 'export'])->name('admin.anti-fraud.export');
+        Route::get('/fraud-rules', [\App\Http\Controllers\Admin\FraudRuleController::class, 'index'])->name('admin.fraud-rules');
+        Route::post('/fraud-rules', [\App\Http\Controllers\Admin\FraudRuleController::class, 'store'])->name('admin.fraud-rules.store');
+        Route::put('/fraud-rules/{fraudRule}', [\App\Http\Controllers\Admin\FraudRuleController::class, 'update'])->name('admin.fraud-rules.update');
+        Route::patch('/fraud-rules/{fraudRule}/activate', [\App\Http\Controllers\Admin\FraudRuleController::class, 'activate'])->name('admin.fraud-rules.activate');
+        Route::patch('/fraud-rules/{fraudRule}/deactivate', [\App\Http\Controllers\Admin\FraudRuleController::class, 'deactivate'])->name('admin.fraud-rules.deactivate');
+        Route::delete('/fraud-rules/{fraudRule}', [\App\Http\Controllers\Admin\FraudRuleController::class, 'destroy'])->name('admin.fraud-rules.destroy');
+        Route::get('/fraud-events', [\App\Http\Controllers\Admin\FraudEventController::class, 'index'])->name('admin.fraud-events');
+        Route::get('/fraud-events/export', [\App\Http\Controllers\Admin\FraudEventController::class, 'export'])->name('admin.fraud-events.export');
+        Route::delete('/fraud-events/clear', [\App\Http\Controllers\Admin\FraudEventController::class, 'clear'])->name('admin.fraud-events.clear');
+        Route::patch('/fraud-events/records/{publisherFraudRecord}/resolve', [\App\Http\Controllers\Admin\FraudEventController::class, 'resolvePublisherRecord'])->name('admin.fraud-events.records.resolve');
+        Route::delete('/fraud-events/{fraudEvent}', [\App\Http\Controllers\Admin\FraudEventController::class, 'destroy'])->name('admin.fraud-events.destroy');
 
         // Advertiser Payment History
         Route::get('/advertiser-payment-history', [\App\Http\Controllers\Admin\PaymentHistoryController::class, 'index'])->name('admin.advertiser-payment-history');
@@ -721,6 +845,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/support-tickets/{supportTicket}', [\App\Http\Controllers\Admin\SupportTicketController::class, 'show'])->name('admin.support-tickets.show');
         Route::put('/support-tickets/{supportTicket}', [\App\Http\Controllers\Admin\SupportTicketController::class, 'update'])->name('admin.support-tickets.update');
         Route::post('/support-tickets/{supportTicket}/reply', [\App\Http\Controllers\Admin\SupportTicketController::class, 'reply'])->name('admin.support-tickets.reply');
+        Route::get('/feedback', [\App\Http\Controllers\Admin\AdvertiserFeedbackController::class, 'index'])->name('admin.feedback');
+        Route::get('/feedback/export', [\App\Http\Controllers\Admin\AdvertiserFeedbackController::class, 'export'])->name('admin.feedback.export');
+        Route::get('/feedback/{feedback}', [\App\Http\Controllers\Admin\AdvertiserFeedbackController::class, 'show'])->name('admin.feedback.show');
+        Route::put('/feedback/{feedback}', [\App\Http\Controllers\Admin\AdvertiserFeedbackController::class, 'update'])->name('admin.feedback.update');
+        Route::post('/feedback/{feedback}/testimonial', [\App\Http\Controllers\Admin\AdvertiserFeedbackController::class, 'createTestimonial'])->name('admin.feedback.testimonial');
+        Route::get('/contacts', [\App\Http\Controllers\Admin\AdvertiserContactController::class, 'index'])->name('admin.contacts');
+        Route::get('/contacts/export', [\App\Http\Controllers\Admin\AdvertiserContactController::class, 'export'])->name('admin.contacts.export');
         Route::get('/notifications', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'index'])->name('admin.notifications');
         Route::post('/notifications', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'store'])->name('admin.notifications.store');
         Route::patch('/notifications/{notification}/read', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'markRead'])->name('admin.notifications.read');
@@ -874,5 +1005,23 @@ Route::middleware('auth')->group(function () {
         Route::patch('/testimonials/{id}/unpublish', [\App\Http\Controllers\Admin\TestimonialController::class, 'unpublish'])->name('admin.testimonials.unpublish');
         Route::patch('/testimonials/{id}/toggle-featured', [\App\Http\Controllers\Admin\TestimonialController::class, 'toggleFeatured'])->name('admin.testimonials.toggle-featured');
         Route::delete('/testimonials/{id}', [\App\Http\Controllers\Admin\TestimonialController::class, 'destroy'])->name('admin.testimonials.destroy');
+
+        // Platform Announcements Management
+        Route::get('/platform-announcements', [\App\Http\Controllers\Admin\PlatformAnnouncementController::class, 'index'])->name('admin.platform-announcements');
+        Route::post('/platform-announcements', [\App\Http\Controllers\Admin\PlatformAnnouncementController::class, 'store'])->name('admin.platform-announcements.store');
+        Route::put('/platform-announcements/{announcement}', [\App\Http\Controllers\Admin\PlatformAnnouncementController::class, 'update'])->name('admin.platform-announcements.update');
+        Route::patch('/platform-announcements/{announcement}/publish', [\App\Http\Controllers\Admin\PlatformAnnouncementController::class, 'publish'])->name('admin.platform-announcements.publish');
+        Route::patch('/platform-announcements/{announcement}/unpublish', [\App\Http\Controllers\Admin\PlatformAnnouncementController::class, 'unpublish'])->name('admin.platform-announcements.unpublish');
+        Route::patch('/platform-announcements/{announcement}/archive', [\App\Http\Controllers\Admin\PlatformAnnouncementController::class, 'archive'])->name('admin.platform-announcements.archive');
+        Route::post('/platform-announcements/{announcement}/notify', [\App\Http\Controllers\Admin\PlatformAnnouncementController::class, 'notify'])->name('admin.platform-announcements.notify');
+        Route::delete('/platform-announcements/{announcement}', [\App\Http\Controllers\Admin\PlatformAnnouncementController::class, 'destroy'])->name('admin.platform-announcements.destroy');
+
+        // Case Studies Management
+        Route::get('/case-studies', [\App\Http\Controllers\Admin\CaseStudyController::class, 'index'])->name('admin.case-studies');
+        Route::post('/case-studies', [\App\Http\Controllers\Admin\CaseStudyController::class, 'store'])->name('admin.case-studies.store');
+        Route::put('/case-studies/{caseStudy}', [\App\Http\Controllers\Admin\CaseStudyController::class, 'update'])->name('admin.case-studies.update');
+        Route::patch('/case-studies/{caseStudy}/publish', [\App\Http\Controllers\Admin\CaseStudyController::class, 'publish'])->name('admin.case-studies.publish');
+        Route::patch('/case-studies/{caseStudy}/unpublish', [\App\Http\Controllers\Admin\CaseStudyController::class, 'unpublish'])->name('admin.case-studies.unpublish');
+        Route::delete('/case-studies/{caseStudy}', [\App\Http\Controllers\Admin\CaseStudyController::class, 'destroy'])->name('admin.case-studies.destroy');
     });
 });

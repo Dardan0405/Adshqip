@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PlatformSetting;
+use App\Support\SystemProviderRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -171,6 +172,12 @@ class PaymentSettingsController extends Controller
             'json',
             'advertiser_payments',
             'Saved admin payment method details for bank wire, PayPal, Bitcoin, Stripe, and Authorize.net',
+            $request->user()?->id,
+        );
+
+        app(SystemProviderRegistry::class)->syncPaymentProvider(
+            $validated['payment_type'],
+            $details[$validated['payment_type']],
             $request->user()?->id,
         );
 

@@ -526,6 +526,42 @@ class DirectCampaignServeController extends Controller
                 // No session available
             }
         }
+
+        app(\App\Support\AdServingLogger::class)->log($request, [
+            'delivery_type' => 'direct',
+            'event_type' => $type,
+            'status' => $type === 'impression' ? 'served' : 'tracked',
+            'direct_campaign_id' => $campaign->id,
+            'direct_creative_id' => $creativeId,
+            'zone_id' => $zoneId,
+            'advertiser_id' => $campaign->advertiser_id,
+            'country_code' => $countryCode,
+            'device_type' => $deviceType,
+            'pricing_model' => $pricingModel,
+            'bid_amount' => $bidAmount,
+            'revenue' => $this->eventRevenue($pricingModel, $type, $bidAmount),
+            'publisher_earnings' => 0,
+            'destination_url' => $campaign->destination_url,
+            'meta' => [
+                'is_unique' => $isUnique,
+                'direct_campaign_stat_id' => $row->id,
+            ],
+        ]);
+    }
+
+    private function eventRevenue(string $pricingModel, string $eventType, float $bidAmount): float
+    {
+        if ($bidAmount <= 0) {
+            return 0.0;
+        }
+
+        return match (true) {
+            $pricingModel === 'cpm' && $eventType === 'impression' => round($bidAmount / 1000, 4),
+            $pricingModel === 'cpc' && $eventType === 'click' => $bidAmount,
+            in_array($pricingModel, ['cpv', 'cpv_ctw'], true) && $eventType === 'view' => $bidAmount,
+            $pricingModel === 'cpa' && $eventType === 'conversion' => $bidAmount,
+            default => 0.0,
+        };
     }
 
     /**

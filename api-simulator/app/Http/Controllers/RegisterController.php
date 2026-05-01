@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PlatformSetting;
 use App\Models\ReferralConversion;
 use App\Models\ReferralLink;
+use App\Models\AdvertiserTeamInvitation;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Support\AdminEventNotifier;
@@ -50,6 +51,7 @@ class RegisterController extends Controller
             'website_url'  => 'nullable|url|max:500',
             'country_code' => 'nullable|string|size:2',
             'ref_code'     => 'nullable|string|max:32',
+            'team_invite'   => 'nullable|string|max:80',
             'terms'        => 'accepted',
         ]);
 
@@ -63,7 +65,23 @@ class RegisterController extends Controller
                 ->first()
             : null;
 
-        $user = DB::transaction(function () use ($request, $referralLink) {
+        $teamInvitation = $request->filled('team_invite')
+            ? AdvertiserTeamInvitation::query()
+                ->with('member')
+                ->where('token', $request->input('team_invite'))
+                ->where('email', strtolower($request->email))
+                ->first()
+            : null;
+
+        if ($teamInvitation && ! $teamInvitation->isAcceptable()) {
+            return back()->withErrors(['email' => 'This team invitation is no longer valid.'])->withInput();
+        }
+
+        if ($teamInvitation && $request->role !== 'advertiser') {
+            return back()->withErrors(['role' => 'Team invitations require an advertiser account.'])->withInput();
+        }
+
+        $user = DB::transaction(function () use ($request, $referralLink, $teamInvitation) {
             $approvalType = $this->approvalTypeForRole($request->role);
             $requiresEmailVerification = $approvalType === PlatformSetting::ADVERTISER_APPROVAL_EMAIL_VERIFICATION;
             $requiresAdminApproval = $approvalType === PlatformSetting::ADVERTISER_APPROVAL_ADMIN;
@@ -102,6 +120,19 @@ class RegisterController extends Controller
                 ]);
 
                 $referralLink->increment('total_signups');
+            }
+
+            if ($teamInvitation && $user->role === 'advertiser') {
+                $teamInvitation->member?->update([
+                    'user_id' => $user->id,
+                    'status' => 'active',
+                    'accepted_at' => now(),
+                ]);
+
+                $teamInvitation->update([
+                    'status' => 'accepted',
+                    'accepted_at' => now(),
+                ]);
             }
 
             return $user;

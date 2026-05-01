@@ -19,13 +19,15 @@ class ManageAdMarketCampaignController extends Controller
             ->where('role', 'advertiser')
             ->where('is_deleted', false)
             ->whereHas('campaigns', function ($campaignQuery) {
-                $campaignQuery->where('is_deleted', false);
+                $campaignQuery->where('is_deleted', false)->where('admarket_enabled', true)->where('admarket_status', 'listed');
             })
             ->with([
                 'profile',
                 'campaigns' => function ($campaignQuery) {
                     $campaignQuery
                         ->where('is_deleted', false)
+                        ->where('admarket_enabled', true)
+                        ->where('admarket_status', 'listed')
                         ->orderByDesc('created_at');
                 },
             ]);
@@ -44,6 +46,8 @@ class ManageAdMarketCampaignController extends Controller
                     ->orWhereHas('campaigns', function ($campaignQuery) use ($search) {
                         $campaignQuery
                             ->where('is_deleted', false)
+                            ->where('admarket_enabled', true)
+                            ->where('admarket_status', 'listed')
                             ->where('name', 'like', '%' . $search . '%');
                     });
             });
@@ -58,7 +62,7 @@ class ManageAdMarketCampaignController extends Controller
             ->where('role', 'advertiser')
             ->where('is_deleted', false)
             ->whereHas('campaigns', function ($campaignQuery) {
-                $campaignQuery->where('is_deleted', false);
+                $campaignQuery->where('is_deleted', false)->where('admarket_enabled', true)->where('admarket_status', 'listed');
             })
             ->pluck('id');
 
@@ -70,10 +74,14 @@ class ManageAdMarketCampaignController extends Controller
         $totalCampaigns = Campaign::query()
             ->whereIn('advertiser_id', $advertiserIds)
             ->where('is_deleted', false)
+            ->where('admarket_enabled', true)
+            ->where('admarket_status', 'listed')
             ->count();
         $pausedCampaigns = Campaign::query()
             ->whereIn('advertiser_id', $advertiserIds)
             ->where('is_deleted', false)
+            ->where('admarket_enabled', true)
+            ->where('admarket_status', 'listed')
             ->where('status', 'paused')
             ->count();
 
@@ -92,7 +100,7 @@ class ManageAdMarketCampaignController extends Controller
             ->where('role', 'advertiser')
             ->where('is_deleted', false)
             ->whereHas('campaigns', function ($campaignQuery) {
-                $campaignQuery->where('is_deleted', false);
+                $campaignQuery->where('is_deleted', false)->where('admarket_enabled', true)->where('admarket_status', 'listed');
             })
             ->findOrFail($id);
 
@@ -103,8 +111,11 @@ class ManageAdMarketCampaignController extends Controller
         Campaign::query()
             ->where('advertiser_id', $advertiser->id)
             ->where('is_deleted', false)
+            ->where('admarket_enabled', true)
+            ->where('admarket_status', 'listed')
             ->update([
                 'status' => 'paused',
+                'admarket_status' => 'suspended',
             ]);
 
         return response()->json([
@@ -121,6 +132,7 @@ class ManageAdMarketCampaignController extends Controller
 
         $campaign->update([
             'status' => 'paused',
+            'admarket_status' => 'suspended',
         ]);
 
         return response()->json([

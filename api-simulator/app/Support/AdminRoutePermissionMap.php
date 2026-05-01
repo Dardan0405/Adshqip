@@ -56,8 +56,11 @@ class AdminRoutePermissionMap
             str_starts_with($routeName, 'admin.reports.ssp') => 'reports.permissions.your_revneue_related_statistics',
             str_starts_with($routeName, 'admin.video-analytics') => 'reports.permissions.your_revneue_related_statistics',
             str_starts_with($routeName, 'admin.network-kit') => 'reports.permissions.your_revneue_related_statistics',
+            str_starts_with($routeName, 'admin.ad-serving-logs') => 'reports.permissions.your_revneue_related_statistics',
 
             str_starts_with($routeName, 'admin.anti-fraud') => 'analystics.permissions.view_ant_fraud_clicks',
+            str_starts_with($routeName, 'admin.fraud-rules') => 'analystics.permissions.view_ant_fraud_clicks',
+            str_starts_with($routeName, 'admin.fraud-events') => 'analystics.permissions.view_ant_fraud_clicks',
 
             str_starts_with($routeName, 'admin.parent-categories') => 'targetting.permissions.category',
             str_starts_with($routeName, 'admin.categories') => 'targetting.permissions.category',
@@ -74,11 +77,16 @@ class AdminRoutePermissionMap
             // Content management - accessible to all admin users
             str_starts_with($routeName, 'admin.faqs') => null,
             str_starts_with($routeName, 'admin.testimonials') => null,
+            str_starts_with($routeName, 'admin.platform-announcements') => null,
+            str_starts_with($routeName, 'admin.case-studies') => null,
             str_starts_with($routeName, 'admin.newsletters') => null,
             str_starts_with($routeName, 'admin.support-tickets') => null,
             str_starts_with($routeName, 'admin.notifications') => null,
             str_starts_with($routeName, 'admin.referral-codes') => null,
             str_starts_with($routeName, 'admin.api-keys') => null,
+            str_starts_with($routeName, 'admin.api-docs') => null,
+            str_starts_with($routeName, 'admin.system-providers') => null,
+            str_starts_with($routeName, 'admin.data-export-jobs') => null,
             str_starts_with($routeName, 'admin.sessions-security') => null,
             str_starts_with($routeName, 'admin.telegram-integration') => null,
             str_starts_with($routeName, 'admin.account-managers') => null,

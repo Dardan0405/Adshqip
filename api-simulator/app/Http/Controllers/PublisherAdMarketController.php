@@ -37,7 +37,11 @@ class PublisherAdMarketController extends Controller
             ->orderBy('app_name')
             ->get(['id', 'app_name', 'app_url']);
 
-        $base = Campaign::query()->where('is_deleted', false)->whereIn('status', self::VISIBLE_STATUSES);
+        $base = Campaign::query()
+            ->where('is_deleted', false)
+            ->where('admarket_enabled', true)
+            ->where('admarket_status', 'listed')
+            ->whereIn('status', self::VISIBLE_STATUSES);
 
         $countries = (clone $base)
             ->whereNotNull('targeting_geo')
@@ -134,6 +138,8 @@ class PublisherAdMarketController extends Controller
                 'categories:id,name',
             ])
             ->where('is_deleted', false)
+            ->where('admarket_enabled', true)
+            ->where('admarket_status', 'listed')
             ->whereIn('status', self::VISIBLE_STATUSES);
 
         if ($filter === 'favorite') {
@@ -237,6 +243,8 @@ class PublisherAdMarketController extends Controller
 
         $campaign = Campaign::query()
             ->where('is_deleted', false)
+            ->where('admarket_enabled', true)
+            ->where('admarket_status', 'listed')
             ->whereIn('status', self::VISIBLE_STATUSES)
             ->findOrFail($id);
 
@@ -298,6 +306,8 @@ class PublisherAdMarketController extends Controller
             ->join('aq_campaigns as c', 'c.id', '=', 'f.campaign_id')
             ->where('f.publisher_id', $publisherId)
             ->where('c.is_deleted', false)
+            ->where('c.admarket_enabled', true)
+            ->where('c.admarket_status', 'listed')
             ->select('c.id', 'c.name', 'c.bid_amount', 'c.campaign_type')
             ->orderByDesc('f.created_at')
             ->get()
@@ -323,6 +333,8 @@ class PublisherAdMarketController extends Controller
                 'categories:id,name',
             ])
             ->where('is_deleted', false)
+            ->where('admarket_enabled', true)
+            ->where('admarket_status', 'listed')
             ->whereIn('status', self::VISIBLE_STATUSES)
             ->findOrFail($id);
 
@@ -409,6 +421,8 @@ class PublisherAdMarketController extends Controller
         // Verify campaign exists and is visible
         $campaign = Campaign::query()
             ->where('is_deleted', false)
+            ->where('admarket_enabled', true)
+            ->where('admarket_status', 'listed')
             ->whereIn('status', self::VISIBLE_STATUSES)
             ->findOrFail($validated['campaign_id']);
 
@@ -451,6 +465,8 @@ class PublisherAdMarketController extends Controller
         // Verify all campaigns exist and are visible
         $campaigns = Campaign::query()
             ->where('is_deleted', false)
+            ->where('admarket_enabled', true)
+            ->where('admarket_status', 'listed')
             ->whereIn('status', self::VISIBLE_STATUSES)
             ->whereIn('id', $validated['campaign_ids'])
             ->get();

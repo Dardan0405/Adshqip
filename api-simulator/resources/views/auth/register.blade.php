@@ -107,13 +107,15 @@
 
                 <form method="POST" action="{{ route('register.submit') }}" class="space-y-5">
                     @csrf
+                    <input type="hidden" name="ref_code" value="{{ old('ref_code', request('ref_code', request('ref', ''))) }}">
+                    <input type="hidden" name="team_invite" value="{{ old('team_invite', request('team_invite', '')) }}">
 
                     {{-- Role selection --}}
                     <div>
                         <label class="block text-sm font-medium mb-2">I want to</label>
                         <div class="grid grid-cols-2 gap-3">
                             <label class="relative cursor-pointer">
-                                <input type="radio" name="role" value="advertiser" class="peer sr-only" {{ old('role', 'advertiser') === 'advertiser' ? 'checked' : '' }}>
+                                <input type="radio" name="role" value="advertiser" class="peer sr-only" {{ old('role', request('role', 'advertiser')) === 'advertiser' ? 'checked' : '' }}>
                                 <div class="flex items-center gap-3 p-3.5 rounded-xl border-2 border-zinc-200 dark:border-zinc-700 peer-checked:border-brand-500 peer-checked:bg-brand-500/5 transition-all">
                                     <div class="w-10 h-10 rounded-lg bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center">
                                         <svg class="w-5 h-5 text-brand-600" viewBox="0 0 24 24" fill="none"><path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -125,7 +127,7 @@
                                 </div>
                             </label>
                             <label class="relative cursor-pointer">
-                                <input type="radio" name="role" value="publisher" class="peer sr-only" {{ old('role') === 'publisher' ? 'checked' : '' }}>
+                                <input type="radio" name="role" value="publisher" class="peer sr-only" {{ old('role', request('role')) === 'publisher' ? 'checked' : '' }}>
                                 <div class="flex items-center gap-3 p-3.5 rounded-xl border-2 border-zinc-200 dark:border-zinc-700 peer-checked:border-brand-500 peer-checked:bg-brand-500/5 transition-all">
                                     <div class="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
                                         <svg class="w-5 h-5 text-emerald-600" viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -163,7 +165,7 @@
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
                                 <svg class="w-5 h-5 text-zinc-400" viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4zM22 6l-10 7L2 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </div>
-                            <input type="email" id="email" name="email" required value="{{ old('email') }}" autocomplete="email" placeholder="you@example.com" class="w-full pl-11 pr-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 text-sm transition-all placeholder-zinc-400">
+                            <input type="email" id="email" name="email" required value="{{ old('email', request('email')) }}" autocomplete="email" placeholder="you@example.com" class="w-full pl-11 pr-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 text-sm transition-all placeholder-zinc-400">
                         </div>
                     </div>
 

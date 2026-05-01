@@ -58,6 +58,7 @@ class ApiKeyController extends Controller
             'name' => $validated['name'],
             'api_key' => $publicKey,
             'api_secret_hash' => hash('sha256', $plainSecret),
+            'api_secret_encrypted' => $plainSecret,
             'permissions' => array_values(array_filter($validated['permissions'] ?? [])),
             'rate_limit_per_minute' => (int) $validated['rate_limit_per_minute'],
             'allowed_ips' => $allowedIps === [] ? null : $allowedIps,

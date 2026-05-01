@@ -1409,7 +1409,7 @@
                 <div>
                   <h4 class="text-sm font-semibold text-brand-600">Documentation</h4>
                   <div class="mt-3 space-y-2">
-                    <a href="#"
+                    <a href="#api-docs"
                       class="flex items-start gap-3 p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
                       <div
                         class="mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg bg-brand-600/10 grid place-items-center text-brand-600">
@@ -3876,7 +3876,7 @@
                   Copy
                 </span>
               </button>
-              <a href="#"
+              <a href="#api-docs"
                 class="text-xs px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-950/5 dark:hover:bg-white/5 transition-colors">
                 <span class="flex items-center gap-1">
                   <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
@@ -4044,7 +4044,7 @@ https://trk.adshqip.com/postback?click_id={CLICK_ID}&payout={AMOUNT}&tx={TXID}
                 <h4 class="text-sm font-medium mb-3">Documentation</h4>
                 <ul class="space-y-2 text-sm">
                   <li>
-                    <a href="#"
+                    <a href="#api-docs"
                       class="flex items-center gap-2 text-zinc-600 dark:text-zinc-300 hover:text-brand-600 transition-colors">
                       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
                         <path
@@ -4209,6 +4209,27 @@ https://trk.adshqip.com/postback?click_id={CLICK_ID}&payout={AMOUNT}&tx={TXID}
                 </div>
               </div>
             </div>
+
+            <div id="api-docs" class="mt-6 scroll-mt-28">
+              <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h4 class="text-base font-semibold">API Reference</h4>
+                  <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Published docs from the admin API Docs page.</p>
+                </div>
+                <a href="http://127.0.0.1:8000/admin/api-docs" target="_blank"
+                  class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-xs font-medium text-zinc-700 transition-colors hover:border-brand-600/40 hover:text-brand-600 dark:border-zinc-800 dark:text-zinc-300">
+                  Manage Docs
+                  <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                    <path d="M7 17L17 7M17 7H8M17 7v9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </a>
+              </div>
+              <div id="apiDocsGrid" data-endpoint="http://127.0.0.1:8000/api-docs-feed" class="grid gap-4">
+                <div class="rounded-xl border border-zinc-200 bg-white/60 px-5 py-4 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50">
+                  Loading API docs...
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -4226,198 +4247,9 @@ https://trk.adshqip.com/postback?click_id={CLICK_ID}&payout={AMOUNT}&tx={TXID}
           measurable improvement in revenue and performance.</p>
       </div>
 
-      <div class="mt-12 grid md:grid-cols-3 gap-8">
-        <!-- Publisher case -->
-        <div
-          class="reveal-left cursor-tracker group rounded-2xl border border-zinc-200 dark:border-zinc-800 p-8 bg-white/70 dark:bg-zinc-900/50 backdrop-blur-sm hover:border-brand-600/30 hover:shadow-glow transition-all duration-500 relative overflow-hidden">
-          <div class="cursor-glow"></div>
-          <div class="text-xs text-zinc-500 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-brand-600"></span>
-            Publisher • News portal
-          </div>
-          <div
-            class="mt-3 text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-rose-500">
-            +42% eCPM</div>
-          <p class="mt-3 text-sm text-zinc-600 dark:text-zinc-300">Major Albanian news portal switched to native feeds +
-            interstitials with frequency caps. UX complaints dropped to near zero while revenue increased significantly.
-          </p>
-
-          <div class="mt-6 rounded-xl overflow-hidden">
-            <div
-              class="h-32 w-full bg-gradient-to-tr from-zinc-100 to-zinc-50 dark:from-zinc-800 dark:to-zinc-900 grid place-items-center relative">
-              <!-- Before-after comparison -->
-              <div class="absolute inset-0 flex">
-                <div
-                  class="w-1/2 border-r border-dashed border-zinc-300 dark:border-zinc-700 flex flex-col items-center justify-center text-xs">
-                  <div class="text-zinc-500">Before</div>
-                  <div class="mt-1 text-lg font-bold">$3.1</div>
-                  <div class="text-zinc-500">eCPM</div>
-                </div>
-                <div class="w-1/2 flex flex-col items-center justify-center text-xs">
-                  <div class="text-zinc-500">After</div>
-                  <div class="mt-1 text-lg font-bold text-brand-600">$4.4</div>
-                  <div class="text-zinc-500">eCPM</div>
-                </div>
-              </div>
-
-              <!-- Arrow indicator -->
-              <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-24 h-8">
-                <svg class="w-full h-full text-brand-600" viewBox="0 0 24 8" fill="none">
-                  <path d="M20 1l3 3-3 3M3 4h20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-6 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div
-                class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 grid place-items-center text-zinc-500 font-medium background">
-                <img src="./Lajmëri.png" />
-              </div>
-              <span class="text-sm font-medium">Lajmëri.al</span>
-            </div>
-            <a href="#" class="text-xs flex items-center gap-1 text-brand-600 hover:text-brand-700">
-              Read Case Study
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12h14m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-              </svg>
-            </a>
-          </div>
-        </div>
-
-        <!-- Advertiser case -->
-        <div
-          class="reveal cursor-tracker group rounded-2xl border border-zinc-200 dark:border-zinc-800 p-8 bg-white/70 dark:bg-zinc-900/50 backdrop-blur-sm hover:border-brand-600/30 hover:shadow-glow transition-all duration-500 relative overflow-hidden">
-          <div class="cursor-glow"></div>
-          <div class="text-xs text-zinc-500 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
-            Advertiser • eCommerce
-          </div>
-          <div
-            class="mt-3 text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-cyan-500 to-brand-600">
-            1.8x ROAS</div>
-          <p class="mt-3 text-sm text-zinc-600 dark:text-zinc-300">Leading Albanian eCommerce store implemented CPC
-            bidding with city-level targeting in AL + XK, creative A/B testing via API.</p>
-
-          <div class="mt-6 rounded-xl overflow-hidden">
-            <div
-              class="h-32 w-full bg-gradient-to-tr from-zinc-100 to-zinc-50 dark:from-zinc-800 dark:to-zinc-900 relative">
-              <!-- ROAS chart with animations -->
-              <svg class="w-full h-full" viewBox="0 0 300 120" preserveAspectRatio="none">
-                <!-- Grid lines -->
-                <line x1="0" y1="30" x2="300" y2="30" stroke="currentColor" stroke-width="0.5" stroke-dasharray="4 4"
-                  class="text-zinc-300 dark:text-zinc-700" />
-                <line x1="0" y1="60" x2="300" y2="60" stroke="currentColor" stroke-width="0.5" stroke-dasharray="4 4"
-                  class="text-zinc-300 dark:text-zinc-700" />
-                <line x1="0" y1="90" x2="300" y2="90" stroke="currentColor" stroke-width="0.5" stroke-dasharray="4 4"
-                  class="text-zinc-300 dark:text-zinc-700" />
-
-                <!-- Campaign performance line -->
-                <path
-                  d="M0,100 C20,95 40,90 60,85 C80,80 100,75 120,68 C140,61 160,52 180,42 C200,32 220,25 240,22 C260,19 280,20 300,25"
-                  stroke="#0ea5e9" stroke-width="2" fill="none"
-                  style="stroke-dasharray: 300; stroke-dashoffset: 300; animation: dash 2s ease-out forwards" />
-
-                <!-- Data points -->
-                <circle cx="60" cy="85" r="3" fill="#0ea5e9"
-                  style="opacity: 0; animation: fadeIn 0.2s ease-out 0.6s forwards" />
-                <circle cx="120" cy="68" r="3" fill="#0ea5e9"
-                  style="opacity: 0; animation: fadeIn 0.2s ease-out 0.8s forwards" />
-                <circle cx="180" cy="42" r="3" fill="#0ea5e9"
-                  style="opacity: 0; animation: fadeIn 0.2s ease-out 1s forwards" />
-                <circle cx="240" cy="22" r="3" fill="#0ea5e9"
-                  style="opacity: 0; animation: fadeIn 0.2s ease-out 1.2s forwards" />
-                <circle cx="300" cy="25" r="3" fill="#0ea5e9"
-                  style="opacity: 0; animation: fadeIn 0.2s ease-out 1.4s forwards" />
-              </svg>
-
-              <!-- Labels -->
-              <div class="absolute bottom-2 left-2 text-[10px] text-zinc-500">Week 1</div>
-              <div class="absolute bottom-2 right-2 text-[10px] text-zinc-500">Week 6</div>
-              <div class="absolute top-2 right-2 text-[10px] text-cyan-500 font-medium">1.8x ROAS</div>
-            </div>
-          </div>
-
-          <div class="mt-6 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div
-                class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 grid place-items-center text-zinc-500 font-medium">
-                <img src="./Shqipstore.png" />
-              </div>
-              <span class="text-sm font-medium">ShqipStore.com</span>
-            </div>
-            <a href="#" class="text-xs flex items-center gap-1 text-cyan-500 hover:text-cyan-600">
-              Read Case Study
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12h14m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-              </svg>
-            </a>
-          </div>
-        </div>
-
-        <!-- Entertainment case -->
-        <div
-          class="reveal-right cursor-tracker group rounded-2xl border border-zinc-200 dark:border-zinc-800 p-8 bg-white/70 dark:bg-zinc-900/50 backdrop-blur-sm hover:border-brand-600/30 hover:shadow-glow transition-all duration-500 relative overflow-hidden">
-          <div class="cursor-glow"></div>
-          <div class="text-xs text-zinc-500 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-            Publisher • Entertainment
-          </div>
-          <div
-            class="mt-3 text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-rose-500">
-            +28% Revenue</div>
-          <p class="mt-3 text-sm text-zinc-600 dark:text-zinc-300">Entertainment portal implemented layer interstitial
-            on navigation with smart timing and consent-aware delivery, boosting overall ad revenue.</p>
-
-          <div class="mt-6 rounded-xl overflow-hidden">
-            <div
-              class="h-32 w-full bg-gradient-to-tr from-zinc-100 to-zinc-50 dark:from-zinc-800 dark:to-zinc-900 relative">
-              <!-- Bar chart comparison -->
-              <div class="absolute inset-0 flex items-end justify-center gap-8 p-4">
-                <div class="w-16 flex flex-col items-center">
-                  <div class="w-full bg-zinc-300 dark:bg-zinc-700 rounded-t"
-                    style="height: 60px; transform: scaleY(0); transform-origin: bottom; animation: scaleIn 1s ease-out forwards">
-                  </div>
-                  <div class="mt-2 text-xs text-zinc-500">Before</div>
-                </div>
-
-                <div class="w-16 flex flex-col items-center">
-                  <div class="w-full bg-amber-500 rounded-t"
-                    style="height: 77px; transform: scaleY(0); transform-origin: bottom; animation: scaleIn 1s ease-out 0.3s forwards">
-                  </div>
-                  <div class="mt-2 text-xs text-zinc-500">After</div>
-                </div>
-              </div>
-
-              <!-- Arrow indicator -->
-              <div class="absolute top-4 right-4 flex items-center gap-1 text-xs text-amber-500 font-medium opacity-0"
-                style="animation: fadeIn 0.5s ease-out 1s forwards">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 10l7-7 7 7M5 20l7-7 7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                </svg>
-                +28%
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-6 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div
-                class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 grid place-items-center text-zinc-500 font-medium">
-                <img src="./Argëtim.png" />
-              </div>
-              <span class="text-sm font-medium">Argëtim.al</span>
-            </div>
-            <a href="#" class="text-xs flex items-center gap-1 text-amber-500 hover:text-amber-600">
-              Read Case Study
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12h14m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-              </svg>
-            </a>
-          </div>
+      <div id="caseStudiesGrid" class="mt-12 grid md:grid-cols-3 gap-8" data-endpoint="http://127.0.0.1:8000/case-studies-feed">
+        <div class="md:col-span-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/50 px-6 py-8 text-center text-sm text-zinc-500">
+          Loading case studies...
         </div>
       </div>
 
@@ -4544,368 +4376,9 @@ https://trk.adshqip.com/postback?click_id={CLICK_ID}&payout={AMOUNT}&tx={TXID}
           switch anytime. No hidden fees, no surprise charges.</p>
       </div>
 
-      <div id="pricingPlansGrid" class="mt-12 grid md:grid-cols-3 gap-8">
-        <!-- CPM Plan -->
-        <div
-          class="reveal-left rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/60 backdrop-blur-sm overflow-hidden transition-all duration-500 hover:shadow-lg group">
-          <div class="p-6">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-brand-600/10 grid place-items-center text-brand-600">
-                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
-                    <path d="M8 16l-4-4 4-4M16 8l4 4-4 4M8 12h8" stroke="currentColor" stroke-width="1.5"
-                      stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                </div>
-                <h3 class="text-xl font-bold">CPM</h3>
-              </div>
-              <div class="px-2 py-1 rounded-full text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                Popular</div>
-            </div>
-
-            <div class="mt-6">
-              <div class="text-sm text-zinc-500">Starting from</div>
-              <div class="flex items-end gap-1">
-                <div class="text-4xl font-extrabold">$0.20</div>
-                <div class="text-sm text-zinc-500 mb-1.5">/ 1000 impressions</div>
-              </div>
-            </div>
-
-            <div class="mt-6 space-y-4">
-              <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
-                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <div>
-                  <div class="font-medium">Great for reach & awareness</div>
-                  <div class="text-sm text-zinc-500">Pay per thousand impressions</div>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
-                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <div>
-                  <div class="font-medium">Native, Video, Interstitial</div>
-                  <div class="text-sm text-zinc-500">All premium formats available</div>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
-                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <div>
-                  <div class="font-medium">Brand safety controls</div>
-                  <div class="text-sm text-zinc-500">Domain & category filtering</div>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
-                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <div>
-                  <div class="font-medium">Basic reporting</div>
-                  <div class="text-sm text-zinc-500">Daily performance metrics</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="px-6 pb-6">
-            <a href="#"
-              class="inline-flex items-center justify-center w-full gap-2 px-5 py-3 mt-8 rounded-xl border border-brand-600 text-brand-600 hover:bg-brand-600 hover:text-white transition-colors">
-              Start with CPM
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12h14m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-              </svg>
-            </a>
-          </div>
-
-          <!-- Bottom price info -->
-          <div class="mt-4 border-t border-zinc-200 dark:border-zinc-800 px-6 py-4 bg-zinc-50 dark:bg-zinc-900/80">
-            <div class="text-sm font-medium mb-2">Pricing examples:</div>
-            <div class="space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
-              <div class="flex justify-between">
-                <span>Native Feeds:</span>
-                <span class="font-medium">$0.30 - $0.80</span>
-              </div>
-              <div class="flex justify-between">
-                <span>Interstitial:</span>
-                <span class="font-medium">$0.70 - $1.20</span>
-              </div>
-              <div class="flex justify-between">
-                <span>Popunder:</span>
-                <span class="font-medium">$0.20 - $0.50</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- CPC Plan -->
-        <div
-          class="reveal md:mt-12 rounded-2xl border-2 border-brand-600/40 bg-white/80 dark:bg-zinc-900/60 backdrop-blur-sm transition-all duration-500 hover:shadow-glow-lg relative z-10 group">
-          <!-- Popular badge -->
-          <div
-            class="absolute -top-3 left-1/2 transform -translate-x-1/2 px-3 py-1 rounded-full bg-brand-600 text-white text-xs font-bold">
-            Most Popular</div>
-
-          <div class="p-6 pt-8">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-brand-600/10 grid place-items-center text-brand-600">
-                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
-                      stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                </div>
-                <h3 class="text-xl font-bold">CPC</h3>
-              </div>
-              <div class="px-2 py-1 rounded-full text-xs bg-brand-600/10 text-brand-600">Recommended</div>
-            </div>
-
-            <div class="mt-6">
-              <div class="text-sm text-zinc-500">Starting from</div>
-              <div class="flex items-end gap-1">
-                <div class="text-4xl font-extrabold">$0.02</div>
-                <div class="text-sm text-zinc-500 mb-1.5">/ click</div>
-              </div>
-            </div>
-
-            <div class="mt-6 space-y-4">
-              <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
-                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <div>
-                  <div class="font-medium">Performance campaigns</div>
-                  <div class="text-sm text-zinc-500">Pay only for actual clicks</div>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
-                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <div>
-                  <div class="font-medium">Auto-optimizer</div>
-                  <div class="text-sm text-zinc-500">AI-powered bid management</div>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
-                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <div>
-                  <div class="font-medium">A/B testing</div>
-                  <div class="text-sm text-zinc-500">Multiple creative variations</div>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
-                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <div>
-                  <div class="font-medium">Advanced reporting</div>
-                  <div class="text-sm text-zinc-500">Real-time performance data</div>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
-                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <div>
-                  <div class="font-medium">Premium formats</div>
-                  <div class="text-sm text-zinc-500">All formats + Rich Media</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="px-6 pb-6">
-            <a href="#"
-              class="inline-flex items-center justify-center w-full gap-2 px-5 py-3 mt-8 rounded-xl bg-brand-600 text-white hover:bg-brand-700 shadow-glow transition-colors">
-              Start with CPC
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12h14m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-              </svg>
-            </a>
-          </div>
-
-          <!-- Bottom price info -->
-          <div
-            class="mt-4 border-t border-zinc-200 dark:border-zinc-800 px-6 py-4 bg-zinc-50 dark:bg-zinc-900/80 rounded-b-2xl">
-            <div class="text-sm font-medium mb-2">Pricing examples:</div>
-            <div class="space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
-              <div class="flex justify-between">
-                <span>Native Feeds:</span>
-                <span class="font-medium">$0.05 - $0.15</span>
-              </div>
-              <div class="flex justify-between">
-                <span>Push Notifications:</span>
-                <span class="font-medium">$0.02 - $0.08</span>
-              </div>
-              <div class="flex justify-between">
-                <span>Interstitial:</span>
-                <span class="font-medium">$0.10 - $0.25</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- CPA Plan -->
-        <div
-          class="reveal-right rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/60 backdrop-blur-sm overflow-hidden transition-all duration-500 hover:shadow-lg group">
-          <div class="p-6">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-brand-600/10 grid place-items-center text-brand-600">
-                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor"
-                      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                </div>
-                <h3 class="text-xl font-bold">CPA</h3>
-              </div>
-              <div class="px-2 py-1 rounded-full text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                Pro</div>
-            </div>
-
-            <div class="mt-6">
-              <div class="text-sm text-zinc-500">Starting from</div>
-              <div class="flex items-end gap-1">
-                <div class="text-4xl font-extrabold">Custom</div>
-              </div>
-              <div class="text-xs text-zinc-500 mt-1">Tailored to your conversion goals</div>
-            </div>
-
-            <div class="mt-6 space-y-4">
-              <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
-                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <div>
-                  <div class="font-medium">Conversion-optimized</div>
-                  <div class="text-sm text-zinc-500">Pay only for completed actions</div>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
-                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <div>
-                  <div class="font-medium">Postback & server events</div>
-                  <div class="text-sm text-zinc-500">S2S integration for accuracy</div>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
-                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <div>
-                  <div class="font-medium">Fraud protection</div>
-                  <div class="text-sm text-zinc-500">Advanced validation system</div>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
-                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <div>
-                  <div class="font-medium">Dedicated account manager</div>
-                  <div class="text-sm text-zinc-500">1-on-1 optimization help</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="px-6 pb-6">
-            <a href="#"
-              class="inline-flex items-center justify-center w-full gap-2 px-5 py-3 mt-8 rounded-xl border border-brand-600 text-brand-600 hover:bg-brand-600 hover:text-white transition-colors">
-              Contact for CPA
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-              </svg>
-            </a>
-          </div>
-
-          <!-- Bottom price info -->
-          <div class="mt-4 border-t border-zinc-200 dark:border-zinc-800 px-6 py-4 bg-zinc-50 dark:bg-zinc-900/80">
-            <div class="text-sm font-medium mb-2">Ideal for:</div>
-            <div class="space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
-              <div class="flex items-center gap-2">
-                <svg class="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                </svg>
-                Lead generation
-              </div>
-              <div class="flex items-center gap-2">
-                <svg class="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                </svg>
-                eCommerce sales
-              </div>
-              <div class="flex items-center gap-2">
-                <svg class="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                </svg>
-                App installs
-              </div>
-            </div>
-          </div>
+      <div id="pricingPlansGrid" class="mt-12 grid md:grid-cols-3 gap-8" data-endpoint="http://127.0.0.1:8000/pricing-plans-feed">
+        <div class="md:col-span-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/60 px-6 py-8 text-center text-sm text-zinc-500">
+          Loading pricing plans...
         </div>
       </div>
 
@@ -5609,7 +5082,7 @@ https://trk.adshqip.com/postback?click_id={CLICK_ID}&payout={AMOUNT}&tx={TXID}
           <div class="text-sm font-semibold mb-4">Resources</div>
           <ul class="space-y-3 text-sm text-zinc-600 dark:text-zinc-300">
             <li><a href="#" class="hover:text-brand-600 transition-colors">Documentation</a></li>
-            <li><a href="#" class="hover:text-brand-600 transition-colors">API Reference</a></li>
+            <li><a href="#api-docs" class="hover:text-brand-600 transition-colors">API Reference</a></li>
             <li><a href="#" class="hover:text-brand-600 transition-colors">WordPress Plugin</a></li>
             <li><a href="#" class="hover:text-brand-600 transition-colors">Knowledge Base</a></li>
             <li><a href="#" class="hover:text-brand-600 transition-colors">Blog</a></li>
@@ -6375,18 +5848,37 @@ https://trk.adshqip.com/postback?click_id={CLICK_ID}&payout={AMOUNT}&tx={TXID}
     // Initialize performance metrics updates
     updatePerformanceMetrics();
 
-    // Pricing plans stay static in this HTML page.
-    /*
+    async function loadPricingPlans() {
+      const grid = document.getElementById('pricingPlansGrid');
+      if (!grid) return;
+
+      const endpoint = grid.dataset.endpoint || 'http://127.0.0.1:8000/pricing-plans-feed';
+
       try {
         const response = await fetch(endpoint, {
           headers: { 'Accept': 'application/json' }
         });
 
-        if (!response.ok) return;
+        if (!response.ok) {
+          throw new Error(`Pricing feed responded with ${response.status}`);
+        }
 
         const payload = await response.json();
         const plans = Array.isArray(payload.plans) ? payload.plans : [];
-        if (!plans.length) return;
+        if (!plans.length) {
+          grid.innerHTML = `
+            <div class="md:col-span-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/60 px-6 py-8 text-center text-sm text-zinc-500">
+              No active pricing plans are available yet.
+            </div>
+          `;
+          return;
+        }
+
+        const escapeHtml = (value) => {
+          const div = document.createElement('div');
+          div.textContent = value == null ? '' : String(value);
+          return div.innerHTML;
+        };
 
         const formatPrice = (currency, value, suffix) => {
           if (value === null || value === undefined || value === '') {
@@ -6411,24 +5903,39 @@ https://trk.adshqip.com/postback?click_id={CLICK_ID}&payout={AMOUNT}&tx={TXID}
                 <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
               <div>
-                <div class="font-medium">${feature}</div>
+                <div class="font-medium">${escapeHtml(feature)}</div>
               </div>
             </div>
           `).join('');
 
-          const badge = plan.is_popular
-            ? '<div class="px-3 py-1 rounded-full text-xs font-semibold bg-brand-600 text-white shadow-sm">Most Popular</div>'
-            : (plan.is_enterprise
-              ? '<div class="px-2 py-1 rounded-full text-xs bg-purple-600/10 text-purple-600">Enterprise</div>'
-              : `<div class="px-2 py-1 rounded-full text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">${audienceLabel(plan.target_audience)}</div>`);
+          const topBadge = plan.is_enterprise
+            ? '<div class="absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-purple-600 px-3 py-1 text-xs font-bold text-white shadow-lg">Enterprise</div>'
+            : (plan.is_popular
+              ? '<div class="absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white shadow-lg">Most Popular</div>'
+              : '');
 
-          const cardClass = index === 1
-            ? 'reveal in md:mt-12 rounded-2xl border-2 border-brand-600/40 bg-white/80 dark:bg-zinc-900/60 backdrop-blur-sm transition-all duration-500 hover:shadow-glow-lg relative z-10 group'
+          const badge = `<div class="px-2 py-1 rounded-full text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">${audienceLabel(plan.target_audience)}</div>`;
+          const slugButton = (plan.is_popular || plan.is_enterprise) && plan.slug
+            ? `<a href="#contact" class="mt-4 inline-flex items-center rounded-full ${plan.is_enterprise ? 'bg-purple-600/10 text-purple-600 hover:bg-purple-600 hover:text-white' : 'bg-red-600/10 text-red-600 hover:bg-red-600 hover:text-white'} px-3 py-1 text-xs font-semibold transition-colors">${escapeHtml(plan.slug)}</a>`
+            : '';
+
+          const isFeatured = plan.is_popular || plan.is_enterprise;
+          const cardClass = isFeatured
+            ? `reveal in md:mt-12 rounded-2xl border-2 ${plan.is_enterprise ? 'border-purple-600/40' : 'border-red-600/40'} bg-white/80 dark:bg-zinc-900/60 backdrop-blur-sm transition-all duration-500 hover:shadow-glow-lg relative z-10 group`
             : 'reveal in rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/60 backdrop-blur-sm overflow-hidden transition-all duration-500 hover:shadow-lg group';
+
+          const buttonLabel = plan.is_enterprise ? 'Contact Sales' : `Choose ${escapeHtml(plan.name)}`;
+          const buttonClass = isFeatured
+            ? 'inline-flex items-center justify-center w-full gap-2 px-5 py-3 mt-8 rounded-xl font-semibold text-white shadow-lg transition-colors'
+            : 'inline-flex items-center justify-center w-full gap-2 px-5 py-3 mt-8 rounded-xl border border-brand-600 text-brand-600 hover:bg-brand-600 hover:text-white transition-colors';
+          const buttonStyle = plan.is_enterprise
+            ? 'background-color:#9333ea;border:1px solid #9333ea;color:#ffffff;'
+            : (plan.is_popular ? 'background-color:#dc2626;border:1px solid #dc2626;color:#ffffff;' : '');
 
           return `
             <div class="${cardClass}">
-              <div class="p-6 ${plan.is_popular ? 'pt-8' : ''}">
+              ${topBadge}
+              <div class="p-6 ${isFeatured ? 'pt-8' : ''}">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-lg bg-brand-600/10 grid place-items-center text-brand-600">
@@ -6436,13 +5943,14 @@ https://trk.adshqip.com/postback?click_id={CLICK_ID}&payout={AMOUNT}&tx={TXID}
                         <path d="M5 12h14m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
                       </svg>
                     </div>
-                    <h3 class="text-xl font-bold">${plan.name}</h3>
+                    <h3 class="text-xl font-bold">${escapeHtml(plan.name)}</h3>
                   </div>
                   ${badge}
                 </div>
 
                 <div class="mt-6">
-                  <div class="text-sm text-zinc-500">${plan.description || audienceLabel(plan.target_audience)}</div>
+                  <div class="text-sm text-zinc-500">${escapeHtml(plan.description || audienceLabel(plan.target_audience))}</div>
+                  ${slugButton}
                   <div class="mt-2 flex items-end gap-1">
                     ${formatPrice(plan.currency || 'USD', plan.price_monthly, '/ month')}
                   </div>
@@ -6456,8 +5964,8 @@ https://trk.adshqip.com/postback?click_id={CLICK_ID}&payout={AMOUNT}&tx={TXID}
               </div>
 
               <div class="px-6 pb-6">
-                <a href="#contact" class="inline-flex items-center justify-center w-full gap-2 px-5 py-3 mt-8 rounded-xl ${plan.is_popular ? 'bg-brand-600 text-white hover:bg-brand-700 shadow-glow' : 'border border-brand-600 text-brand-600 hover:bg-brand-600 hover:text-white'} transition-colors">
-                  Choose ${plan.name}
+                <a href="#contact" class="${buttonClass}" style="${buttonStyle}">
+                  ${buttonLabel}
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
                     <path d="M5 12h14m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
                   </svg>
@@ -6477,7 +5985,197 @@ https://trk.adshqip.com/postback?click_id={CLICK_ID}&payout={AMOUNT}&tx={TXID}
           grid.prepend(warning);
         }
       }
-    */
+    }
+
+    loadPricingPlans();
+
+    async function loadCaseStudies() {
+      const grid = document.getElementById('caseStudiesGrid');
+      if (!grid) return;
+
+      const endpoint = grid.dataset.endpoint || 'http://127.0.0.1:8000/case-studies-feed';
+      const escapeCaseHtml = (value) => {
+        const div = document.createElement('div');
+        div.textContent = value == null ? '' : String(value);
+        return div.innerHTML;
+      };
+
+      const chartMarkup = (caseStudy) => {
+        const color = caseStudy.accent_color || '#e11d48';
+        const beforeLabel = escapeCaseHtml(caseStudy.before_label || 'Before');
+        const afterLabel = escapeCaseHtml(caseStudy.after_label || 'After');
+        const beforeValue = escapeCaseHtml(caseStudy.before_value || '');
+        const afterValue = escapeCaseHtml(caseStudy.after_value || caseStudy.metric_value || '');
+
+        if (caseStudy.chart_type === 'line') {
+          return `<div class="h-32 w-full bg-gradient-to-tr from-zinc-100 to-zinc-50 dark:from-zinc-800 dark:to-zinc-900 relative">
+            <svg class="h-full w-full" viewBox="0 0 300 120" preserveAspectRatio="none">
+              <line x1="0" y1="30" x2="300" y2="30" stroke="currentColor" stroke-width="0.5" stroke-dasharray="4 4" class="text-zinc-300 dark:text-zinc-700" />
+              <line x1="0" y1="60" x2="300" y2="60" stroke="currentColor" stroke-width="0.5" stroke-dasharray="4 4" class="text-zinc-300 dark:text-zinc-700" />
+              <line x1="0" y1="90" x2="300" y2="90" stroke="currentColor" stroke-width="0.5" stroke-dasharray="4 4" class="text-zinc-300 dark:text-zinc-700" />
+              <path d="M0,100 C35,92 65,88 95,78 C130,66 150,57 180,42 C215,25 250,20 300,25" stroke="${color}" stroke-width="2" fill="none" />
+            </svg>
+            <div class="absolute bottom-2 left-2 text-[10px] text-zinc-500">${beforeLabel}</div>
+            <div class="absolute bottom-2 right-2 text-[10px] text-zinc-500">${afterLabel}</div>
+            <div class="absolute top-2 right-2 text-[10px] font-medium" style="color:${color}">${afterValue}</div>
+          </div>`;
+        }
+
+        if (caseStudy.chart_type === 'bar') {
+          return `<div class="h-32 w-full bg-gradient-to-tr from-zinc-100 to-zinc-50 dark:from-zinc-800 dark:to-zinc-900 relative">
+            <div class="absolute inset-0 flex items-end justify-center gap-8 p-4">
+              <div class="flex w-16 flex-col items-center">
+                <div class="w-full rounded-t bg-zinc-300 dark:bg-zinc-700" style="height:60px"></div>
+                <div class="mt-2 text-xs text-zinc-500">${beforeLabel}</div>
+              </div>
+              <div class="flex w-16 flex-col items-center">
+                <div class="w-full rounded-t" style="height:82px;background-color:${color}"></div>
+                <div class="mt-2 text-xs text-zinc-500">${afterLabel}</div>
+              </div>
+            </div>
+            <div class="absolute top-4 right-4 text-xs font-medium" style="color:${color}">${afterValue}</div>
+          </div>`;
+        }
+
+        return `<div class="h-32 w-full bg-gradient-to-tr from-zinc-100 to-zinc-50 dark:from-zinc-800 dark:to-zinc-900 grid place-items-center relative">
+          <div class="absolute inset-0 flex">
+            <div class="flex w-1/2 flex-col items-center justify-center border-r border-dashed border-zinc-300 text-xs dark:border-zinc-700">
+              <div class="text-zinc-500">${beforeLabel}</div>
+              <div class="mt-1 text-lg font-bold">${beforeValue}</div>
+            </div>
+            <div class="flex w-1/2 flex-col items-center justify-center text-xs">
+              <div class="text-zinc-500">${afterLabel}</div>
+              <div class="mt-1 text-lg font-bold" style="color:${color}">${afterValue}</div>
+            </div>
+          </div>
+        </div>`;
+      };
+
+      try {
+        const response = await fetch(endpoint, { headers: { 'Accept': 'application/json' } });
+        if (!response.ok) throw new Error(`Case studies feed responded with ${response.status}`);
+
+        const payload = await response.json();
+        const caseStudies = Array.isArray(payload.case_studies) ? payload.case_studies : [];
+
+        if (!caseStudies.length) {
+          grid.innerHTML = `<div class="md:col-span-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/50 px-6 py-8 text-center text-sm text-zinc-500">No case studies are published yet.</div>`;
+          return;
+        }
+
+        grid.innerHTML = caseStudies.map((caseStudy) => {
+          const color = caseStudy.accent_color || '#e11d48';
+          const label = `${escapeCaseHtml(caseStudy.audience_type || 'Both')} ${caseStudy.industry ? '&bull; ' + escapeCaseHtml(caseStudy.industry) : ''}`;
+          const logo = caseStudy.logo_url
+            ? `<img src="${escapeCaseHtml(caseStudy.logo_url)}" alt="${escapeCaseHtml(caseStudy.company_name)}" class="h-full w-full rounded-full object-cover" />`
+            : `<span>${escapeCaseHtml((caseStudy.company_name || 'CS').slice(0, 2).toUpperCase())}</span>`;
+          const url = `case-study-detail.html?slug=${encodeURIComponent(caseStudy.slug || '')}`;
+
+          return `<div class="reveal in cursor-tracker group rounded-2xl border border-zinc-200 dark:border-zinc-800 p-8 bg-white/70 dark:bg-zinc-900/50 backdrop-blur-sm hover:shadow-glow transition-all duration-500 relative overflow-hidden">
+            <div class="cursor-glow"></div>
+            <div class="text-xs text-zinc-500 flex items-center gap-2">
+              <span class="h-2 w-2 rounded-full" style="background-color:${color}"></span>
+              ${label}
+            </div>
+            <div class="mt-3 text-3xl font-extrabold" style="color:${color}">${escapeCaseHtml(caseStudy.metric_value)}</div>
+            ${caseStudy.metric_label ? `<div class="mt-1 text-xs font-medium text-zinc-500">${escapeCaseHtml(caseStudy.metric_label)}</div>` : ''}
+            <p class="mt-3 text-sm text-zinc-600 dark:text-zinc-300">${escapeCaseHtml(caseStudy.description)}</p>
+            <div class="mt-6 overflow-hidden rounded-xl">${chartMarkup(caseStudy)}</div>
+            <div class="mt-6 flex items-center justify-between gap-4">
+              <div class="flex min-w-0 items-center gap-2">
+                <div class="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-zinc-100 text-xs font-semibold text-zinc-500 dark:bg-zinc-800">${logo}</div>
+                <span class="truncate text-sm font-medium">${escapeCaseHtml(caseStudy.company_name)}</span>
+              </div>
+              <a href="${escapeCaseHtml(url)}" class="flex flex-shrink-0 items-center gap-1 text-xs hover:opacity-80" style="color:${color}">
+                Read Case Study
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h14m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+              </a>
+            </div>
+          </div>`;
+        }).join('');
+      } catch (error) {
+        console.warn('Failed to fetch case studies', error);
+        grid.innerHTML = `<div class="md:col-span-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-700">Live case studies could not be loaded. Make sure the Laravel app is running on <strong>http://127.0.0.1:8000</strong> and the <code>/case-studies-feed</code> endpoint is reachable.</div>`;
+      }
+    }
+
+    loadCaseStudies();
+
+    async function loadApiDocs() {
+      const grid = document.getElementById('apiDocsGrid');
+      if (!grid) return;
+
+      const endpoint = grid.dataset.endpoint || 'http://127.0.0.1:8000/api-docs-feed';
+      const methodClass = (method) => {
+        const normalized = String(method || 'GET').toUpperCase();
+        if (normalized === 'POST') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300';
+        if (normalized === 'PUT' || normalized === 'PATCH') return 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300';
+        if (normalized === 'DELETE') return 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300';
+        return 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300';
+      };
+      const codeBlock = (label, value) => {
+        if (!value) return '';
+        return `<div class="mt-4">
+          <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">${escapeHtml(label)}</div>
+          <pre class="max-h-64 overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs leading-relaxed text-zinc-100"><code>${escapeHtml(value)}</code></pre>
+        </div>`;
+      };
+
+      try {
+        const response = await fetch(endpoint, { headers: { 'Accept': 'application/json' } });
+        if (!response.ok) throw new Error(`API docs feed responded with ${response.status}`);
+
+        const payload = await response.json();
+        const docs = Array.isArray(payload.api_docs) ? payload.api_docs : [];
+
+        if (!docs.length) {
+          grid.innerHTML = `<div class="rounded-xl border border-zinc-200 bg-white/60 px-5 py-4 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50">No API docs are published yet.</div>`;
+          return;
+        }
+
+        grid.innerHTML = docs.map((doc, index) => {
+          const method = String(doc.http_method || 'GET').toUpperCase();
+          const authBadge = doc.auth_required
+            ? `<span class="rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">${escapeHtml(doc.required_permission || 'API key required')}</span>`
+            : '<span class="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">Public</span>';
+
+          return `<details class="group rounded-xl border border-zinc-200 bg-white/70 p-5 backdrop-blur-sm transition-colors open:border-brand-600/40 dark:border-zinc-800 dark:bg-zinc-900/50" ${index === 0 ? 'open' : ''}>
+            <summary class="cursor-pointer list-none">
+              <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div class="min-w-0">
+                  <div class="mb-2 flex flex-wrap items-center gap-2">
+                    <span class="rounded-full px-2 py-1 text-xs font-bold ${methodClass(method)}">${escapeHtml(method)}</span>
+                    <span class="rounded-full bg-brand-600/10 px-2 py-1 text-xs font-medium text-brand-600">${escapeHtml(doc.category || 'API')}</span>
+                    ${authBadge}
+                  </div>
+                  <div class="font-semibold">${escapeHtml(doc.title)}</div>
+                  <code class="mt-2 block overflow-auto rounded-lg bg-zinc-100 px-3 py-2 text-xs text-zinc-700 dark:bg-zinc-950 dark:text-zinc-200">${escapeHtml(doc.endpoint_path || '')}</code>
+                </div>
+                <span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 transition-transform group-open:rotate-180 dark:border-zinc-800">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                    <path d="M19 9l-7 7-7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </span>
+              </div>
+            </summary>
+            <div class="mt-5 border-t border-zinc-200 pt-5 dark:border-zinc-800">
+              ${doc.description ? `<p class="text-sm text-zinc-600 dark:text-zinc-300">${escapeHtml(doc.description)}</p>` : ''}
+              ${codeBlock('Headers', doc.headers_example)}
+              ${codeBlock('Request', doc.request_example)}
+              ${codeBlock('Response', doc.response_example)}
+              ${doc.notes ? `<div class="mt-4 rounded-xl border border-brand-600/20 bg-brand-600/5 px-4 py-3 text-sm text-zinc-600 dark:text-zinc-300">${escapeHtml(doc.notes)}</div>` : ''}
+            </div>
+          </details>`;
+        }).join('');
+      } catch (error) {
+        console.warn('Failed to fetch API docs', error);
+        grid.innerHTML = `<div class="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-700">Live API docs could not be loaded. Make sure the Laravel app is running on <strong>http://127.0.0.1:8000</strong> and the <code>/api-docs-feed</code> endpoint is reachable.</div>`;
+      }
+    }
+
+    loadApiDocs();
 
 
     // ─── FAQ Dynamic Loading ───

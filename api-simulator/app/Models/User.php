@@ -102,6 +102,11 @@ class User extends Authenticatable
         return $this->hasMany(SupportTicket::class, 'user_id');
     }
 
+    public function advertiserContacts()
+    {
+        return $this->hasMany(AdvertiserContact::class, 'user_id');
+    }
+
     public function assignedSupportTickets()
     {
         return $this->hasMany(SupportTicket::class, 'assigned_to');

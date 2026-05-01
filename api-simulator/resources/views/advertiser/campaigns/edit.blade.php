@@ -141,6 +141,21 @@
                 <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Description</label>
                 <textarea name="description" rows="3" placeholder="Campaign description..." class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 resize-none">{{ $campaign['description'] ?? '' }}</textarea>
             </div>
+
+            <div class="rounded-lg border border-gray-100 bg-gray-50 p-4">
+                <input type="hidden" name="show_in_admarket_present" value="1">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-800">Show in AdMarket</p>
+                        <p class="text-xs text-gray-500 mt-1">Listed campaigns can be discovered by publishers in the AdMarket.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input type="checkbox" name="show_in_admarket" value="1" class="sr-only peer" {{ !empty($campaign['admarket_enabled']) && ($campaign['admarket_status'] ?? 'unlisted') === 'listed' ? 'checked' : '' }}>
+                        <div class="w-10 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-brand-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-600"></div>
+                    </label>
+                </div>
+                <p class="text-[11px] text-gray-400 mt-2">Current market status: {{ ucfirst($campaign['admarket_status'] ?? 'unlisted') }}</p>
+            </div>
         </div>
     </div>
 

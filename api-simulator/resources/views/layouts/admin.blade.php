@@ -352,6 +352,11 @@
                     Request Report
                 </a>
 
+                <a href="{{ route('admin.ad-serving-logs') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.ad-serving-logs*') ? 'active bg-brand-50 text-brand-600' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v10H4V5zm2 14h12M9 15v4m6-4v4M8 9h8m-8 3h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Ad Serving Logs
+                </a>
+
                 <a href="{{ route('admin.reports.graphical') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.reports.graphical*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Graphical Report
@@ -385,6 +390,16 @@
                 <a href="{{ route('admin.anti-fraud') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.anti-fraud*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     Anti-fraud Clicks
+                </a>
+
+                <a href="{{ route('admin.fraud-rules') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.fraud-rules*') ? 'active bg-brand-50 text-brand-600' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 4v5c0 4-2.8 7.4-7 9-4.2-1.6-7-5-7-9V7l7-4zM9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Fraud Rules
+                </a>
+
+                <a href="{{ route('admin.fraud-events') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.fraud-events*') ? 'active bg-brand-50 text-brand-600' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Fraud Events
                 </a>
 
                 <a href="{{ route('admin.geo-analytics') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.geo-analytics*') ? 'active' : '' }}">
@@ -424,7 +439,12 @@
                     Testimonials
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('admin.platform-announcements') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.platform-announcements*') ? 'active bg-brand-50 text-brand-600' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M10 5a2 2 0 114 0v1h1a5 5 0 015 5v2a5 5 0 01-5 5H9l-4 3v-3a5 5 0 01-3-4.584V11a5 5 0 015-5h3V5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 11h8M8 14h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Platform Announcements
+                </a>
+
+                <a href="{{ route('admin.case-studies') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.case-studies*') ? 'active bg-brand-50 text-brand-600' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Case Studies
                 </a>
@@ -439,6 +459,16 @@
                     Support Tickets
                 </a>
 
+                <a href="{{ route('admin.feedback') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.feedback*') ? 'active bg-brand-50 text-brand-600' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M7 8h10M7 12h6m-8 8 4-4h8a3 3 0 003-3V7a3 3 0 00-3-3H7a3 3 0 00-3 3v6a3 3 0 003 3h1l-3 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Feedback
+                </a>
+
+                <a href="{{ route('admin.contacts') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.contacts*') ? 'active bg-brand-50 text-brand-600' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M8 7a4 4 0 118 0 4 4 0 01-8 0zM5 21a7 7 0 0114 0M3 6h3M3 10h3M3 14h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Contacts
+                </a>
+
                 <a href="{{ route('admin.account-managers') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.account-managers*') ? 'active bg-brand-50 text-brand-600' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Account Managers
@@ -446,7 +476,7 @@
 
                 <a href="{{ route('admin.notifications') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.notifications*') ? 'active bg-brand-50 text-brand-600' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    Notifications
+                    Notification Log
                 </a>
 
                 <a href="{{ route('admin.referral-codes') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.referral-codes*') ? 'active bg-brand-50 text-brand-600' : '' }}">
@@ -462,6 +492,21 @@
                 <a href="{{ route('admin.api-keys') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.api-keys*') ? 'active bg-brand-50 text-brand-600' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     API Keys
+                </a>
+
+                <a href="{{ route('admin.api-docs') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.api-docs*') ? 'active bg-brand-50 text-brand-600' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M8 7h8M8 11h8M8 15h5M6 3h9l3 3v15H6V3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    API Docs
+                </a>
+
+                <a href="{{ route('admin.system-providers') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.system-providers*') ? 'active bg-brand-50 text-brand-600' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    System Providers
+                </a>
+
+                <a href="{{ route('admin.data-export-jobs') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.data-export-jobs*') ? 'active bg-brand-50 text-brand-600' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M12 3v10m0 0 4-4m-4 4-4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2M7 7h2m6 0h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Data Export Jobs
                 </a>
 
                 <a href="{{ route('admin.sessions-security') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.sessions-security*') ? 'active bg-brand-50 text-brand-600' : '' }}">
@@ -721,7 +766,8 @@
             <footer class="border-t border-gray-200 px-6 py-3 bg-white flex items-center justify-between text-xs text-gray-400">
                 <span>copyright &copy; {{ date('Y') }} AdShqip — Admin Panel</span>
                 <div class="flex items-center gap-4">
-                    <a href="#" class="hover:text-gray-600">API Docs</a>
+                    <a href="{{ route('admin.api-docs') }}" class="hover:text-gray-600">API Docs</a>
+                    <a href="{{ route('admin.system-providers') }}" class="hover:text-gray-600">System Providers</a>
                     <a href="#" class="hover:text-gray-600">Status</a>
                     <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-brand-500"></span> All systems operational</span>
                 </div>

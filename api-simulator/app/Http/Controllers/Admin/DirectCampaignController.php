@@ -189,6 +189,32 @@ class DirectCampaignController extends Controller
         ]);
     }
 
+    private function applyDirectCampaignDefaults(array $validated): array
+    {
+        $defaults = [
+            'sponsored_label' => 'Sponsored',
+            'schedule_timezone' => 'Europe/Tirane',
+            'delivery_mode' => 'standard',
+            'priority' => 5,
+            'weight' => 1,
+            'frequency_cap_period' => 'day',
+            'ctw_min_watch_seconds' => 5,
+            'end_card_type' => 'cta_button',
+            'end_card_display_seconds' => 10,
+            'clip_aspect_ratio' => '9:16',
+            'clip_sound_default' => 'on',
+            'clip_swipe_up_text' => 'Shiko Me Shume',
+        ];
+
+        foreach ($defaults as $field => $default) {
+            if (! array_key_exists($field, $validated) || $validated[$field] === null || $validated[$field] === '') {
+                $validated[$field] = $default;
+            }
+        }
+
+        return $validated;
+    }
+
     public function index(Request $request)
     {
         $campaigns = DirectCampaign::with(['advertiser', 'zones.zone'])
@@ -400,8 +426,10 @@ class DirectCampaignController extends Controller
 
         // Handle boolean checkboxes
         foreach (['ctw_enabled', 'ctw_autoplay', 'ctw_muted_autoplay', 'end_card_enabled', 'clip_enabled', 'clip_autoplay', 'clip_loop', 'clip_swipe_up_enabled'] as $field) {
-            $validated[$field] = $request->has($field) ? true : false;
+            $validated[$field] = $request->boolean($field);
         }
+
+        $validated = $this->applyDirectCampaignDefaults($validated);
 
         $campaign = DirectCampaign::create($validated);
 
@@ -574,8 +602,10 @@ class DirectCampaignController extends Controller
 
         // Handle boolean checkboxes
         foreach (['ctw_enabled', 'ctw_autoplay', 'ctw_muted_autoplay', 'end_card_enabled', 'clip_enabled', 'clip_autoplay', 'clip_loop', 'clip_swipe_up_enabled'] as $field) {
-            $validated[$field] = $request->has($field) ? true : false;
+            $validated[$field] = $request->boolean($field);
         }
+
+        $validated = $this->applyDirectCampaignDefaults($validated);
 
         $campaign->update($validated);
 

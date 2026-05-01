@@ -86,23 +86,22 @@
                     Creatives
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('advertiser.audiences') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('advertiser.audiences*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Audiences
                 </a>
 
                 <div class="pt-3">
-                    <button onclick="toggleSubmenu('advancedMenu')" class="sidebar-link flex items-center justify-between w-full px-3 py-2 rounded-lg text-gray-600 hover:text-brand-600">
+                    <button onclick="toggleSubmenu('advancedMenu')" class="sidebar-link flex items-center justify-between w-full px-3 py-2 rounded-lg text-gray-600 hover:text-brand-600 {{ request()->routeIs('advertiser.campaign-admarket*') || request()->routeIs('advertiser.direct-campaigns*') ? 'active' : '' }}">
                         <span class="flex items-center gap-3">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                             Advanced
                         </span>
                         <svg class="w-3 h-3 transition-transform" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </button>
-                    <div id="advancedMenu" class="ml-7 mt-1 space-y-0.5 hidden">
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">Campaign Admarket</a>
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">Direct Campaigns</a>
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">Dynamic Creatives</a>
+                    <div id="advancedMenu" class="ml-7 mt-1 space-y-0.5 {{ request()->routeIs('advertiser.campaign-admarket*') || request()->routeIs('advertiser.direct-campaigns*') ? '' : 'hidden' }}">
+                        <a href="{{ route('advertiser.campaign-admarket') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('advertiser.campaign-admarket*') ? 'active' : '' }}">Campaign AdMarket</a>
+                        <a href="{{ route('advertiser.direct-campaigns') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('advertiser.direct-campaigns*') ? 'active' : '' }}">Direct Campaigns</a>
                     </div>
                 </div>
 
@@ -126,17 +125,17 @@
                 </div>
 
                 <div class="pt-3">
-                    <button onclick="toggleSubmenu('trackingMenu')" class="sidebar-link flex items-center justify-between w-full px-3 py-2 rounded-lg text-gray-600 hover:text-brand-600">
+                    <button onclick="toggleSubmenu('trackingMenu')" class="sidebar-link flex items-center justify-between w-full px-3 py-2 rounded-lg text-gray-600 hover:text-brand-600 {{ request()->routeIs('advertiser.tracking*') ? 'active' : '' }}">
                         <span class="flex items-center gap-3">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                             Tracking
                         </span>
                         <svg class="w-3 h-3 transition-transform" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </button>
-                    <div id="trackingMenu" class="ml-7 mt-1 space-y-0.5 hidden">
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">Conversion Tracking</a>
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">Goals</a>
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">Event Log</a>
+                    <div id="trackingMenu" class="ml-7 mt-1 space-y-0.5 {{ request()->routeIs('advertiser.tracking*') ? '' : 'hidden' }}">
+                        <a href="{{ route('advertiser.tracking.conversions') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('advertiser.tracking.conversions*') ? 'active' : '' }}">Conversion Tracking</a>
+                        <a href="{{ route('advertiser.tracking.goals') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('advertiser.tracking.goals*') ? 'active' : '' }}">Goals</a>
+                        <a href="{{ route('advertiser.tracking.event-log') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('advertiser.tracking.event-log*') ? 'active' : '' }}">Event Log</a>
                     </div>
                 </div>
 
@@ -152,8 +151,8 @@
                         <a href="{{ route('advertiser.payments.history') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('advertiser.payments.history') ? 'active' : '' }}">Payment History</a>
                         <a href="{{ route('advertiser.payments.deposit-history') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('advertiser.payments.deposit-history') ? 'active' : '' }}">Deposit History</a>
                         <a href="{{ route('advertiser.payments.add-funds') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('advertiser.payments.add-funds*') ? 'active' : '' }}">Add Funds</a>
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">Invoices History</a>
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">Subscription Plan</a>
+                        <a href="{{ route('advertiser.payments.invoices') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('advertiser.payments.invoices*') ? 'active' : '' }}">Invoices History</a>
+                        <a href="{{ route('advertiser.payments.subscription-plan') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('advertiser.payments.subscription-plan*') ? 'active' : '' }}">Subscription Plan</a>
                     </div>
                 </div>
 
@@ -174,22 +173,22 @@
                     </div>
                 </div>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 mt-3">
+                <a href="{{ route('advertiser.referrals') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 mt-3 {{ request()->routeIs('advertiser.referrals*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Referral Program
                 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('advertiser.teams') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('advertiser.teams*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Teams
                 </a>
 
                 <div class="pt-4 mt-4 border-t border-gray-100">
                     <span class="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Help</span>
-                    <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 mt-2 text-xs">Help Center</a>
-                    <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 text-xs">Support Tickets</a>
-                    <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 text-xs">Give Feedback</a>
-                    <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 text-xs">Contacts</a>
+                    <a href="{{ route('advertiser.help-center') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 mt-2 text-xs {{ request()->routeIs('advertiser.help-center') ? 'active' : '' }}">Help Center</a>
+                    <a href="{{ route('advertiser.support-tickets') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 text-xs {{ request()->routeIs('advertiser.support-tickets*') ? 'active' : '' }}">Support Tickets</a>
+                    <a href="{{ route('advertiser.feedback') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 text-xs {{ request()->routeIs('advertiser.feedback*') ? 'active' : '' }}">Give Feedback</a>
+                    <a href="{{ route('advertiser.contacts') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 text-xs {{ request()->routeIs('advertiser.contacts*') ? 'active' : '' }}">Contacts</a>
                 </div>
             </nav>
 

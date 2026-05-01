@@ -33,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'audit.advertiser' => \App\Http\Middleware\LogAdvertiserActivity::class,
             'audit.publisher' => \App\Http\Middleware\LogPublisherActivity::class,
             'admin.permission' => \App\Http\Middleware\EnsureAdminPermission::class,
+            'api.key' => \App\Http\Middleware\AuthenticateApiKey::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

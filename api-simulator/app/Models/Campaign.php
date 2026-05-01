@@ -74,6 +74,10 @@ class Campaign extends Model
         'oem_targeting_mode',
         'oem_bid_adjustment',
         'oem_placement_types',
+        'admarket_enabled',
+        'admarket_status',
+        'admarket_notes',
+        'admarket_published_at',
         'weight',
         'admin_approved',
         'is_deleted',
@@ -109,6 +113,8 @@ class Campaign extends Model
             'dynamic_creative_enabled' => 'boolean',
             'msn_exclusive' => 'boolean',
             'msn_enabled' => 'boolean',
+            'admarket_enabled' => 'boolean',
+            'admarket_published_at' => 'datetime',
         ];
     }
 
@@ -145,5 +151,12 @@ class Campaign extends Model
     public function categories()
     {
         return $this->belongsToMany(Category::class, 'aq_campaign_category', 'campaign_id', 'category_id');
+    }
+
+    public function audiences()
+    {
+        return $this->belongsToMany(AdvertiserAudience::class, 'aq_campaign_audience', 'campaign_id', 'audience_id')
+            ->withPivot('mode')
+            ->withTimestamps();
     }
 }

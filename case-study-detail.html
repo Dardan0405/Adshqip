@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Case Study | Adshqip</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff1f2',
+              100: '#ffe4e6',
+              500: '#f43f5e',
+              600: '#e11d48',
+              700: '#be123c'
+            }
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-zinc-50 text-zinc-950 antialiased dark:bg-zinc-950 dark:text-white">
+  <main class="min-h-screen">
+    <section class="border-b border-zinc-200 bg-white/80 dark:border-zinc-800 dark:bg-zinc-950/80">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
+        <a href="adshqipgpt5high37sonnetcontinue2.html#cases" class="text-sm font-semibold text-brand-600 hover:text-brand-700">Back to case studies</a>
+        <a href="adshqipgpt5high37sonnetcontinue2.html" class="text-sm font-semibold text-zinc-600 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white">Adshqip</a>
+      </div>
+    </section>
+
+    <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+      <div id="caseStudyDetail" class="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div class="animate-pulse space-y-6">
+          <div class="h-4 w-40 rounded bg-zinc-200 dark:bg-zinc-700"></div>
+          <div class="h-10 w-2/3 rounded bg-zinc-200 dark:bg-zinc-700"></div>
+          <div class="h-4 w-full rounded bg-zinc-200 dark:bg-zinc-700"></div>
+          <div class="h-4 w-5/6 rounded bg-zinc-200 dark:bg-zinc-700"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE = 'http://127.0.0.1:8000';
+
+    function escapeHtml(value) {
+      const div = document.createElement('div');
+      div.textContent = value == null ? '' : String(value);
+      return div.innerHTML;
+    }
+
+    function paragraphs(text) {
+      return String(text || '')
+        .split(/\n{2,}|\r\n{2,}/)
+        .map(part => part.trim())
+        .filter(Boolean)
+        .map(part => `<p>${escapeHtml(part).replace(/\n/g, '<br>')}</p>`)
+        .join('');
+    }
+
+    function renderChart(caseStudy) {
+      const color = caseStudy.accent_color || '#e11d48';
+      const beforeLabel = escapeHtml(caseStudy.before_label || 'Before');
+      const afterLabel = escapeHtml(caseStudy.after_label || 'After');
+      const beforeValue = escapeHtml(caseStudy.before_value || '');
+      const afterValue = escapeHtml(caseStudy.after_value || caseStudy.metric_value || '');
+
+      if (caseStudy.chart_type === 'line') {
+        return `
+          <div class="relative h-72 rounded-2xl bg-zinc-100 dark:bg-zinc-800">
+            <svg class="h-full w-full" viewBox="0 0 600 260" preserveAspectRatio="none">
+              <line x1="0" y1="70" x2="600" y2="70" stroke="currentColor" stroke-width="1" stroke-dasharray="6 6" class="text-zinc-300 dark:text-zinc-700" />
+              <line x1="0" y1="140" x2="600" y2="140" stroke="currentColor" stroke-width="1" stroke-dasharray="6 6" class="text-zinc-300 dark:text-zinc-700" />
+              <line x1="0" y1="210" x2="600" y2="210" stroke="currentColor" stroke-width="1" stroke-dasharray="6 6" class="text-zinc-300 dark:text-zinc-700" />
+              <path d="M0,220 C70,205 130,190 190,165 C260,135 320,110 380,75 C450,35 520,45 600,55" stroke="${color}" stroke-width="5" fill="none" />
+            </svg>
+            <div class="absolute bottom-4 left-5 text-sm text-zinc-500">${beforeLabel}</div>
+            <div class="absolute bottom-4 right-5 text-sm text-zinc-500">${afterLabel}</div>
+            <div class="absolute right-5 top-5 text-sm font-bold" style="color:${color}">${afterValue}</div>
+          </div>`;
+      }
+
+      if (caseStudy.chart_type === 'bar') {
+        return `
+          <div class="relative h-72 rounded-2xl bg-zinc-100 dark:bg-zinc-800">
+            <div class="absolute inset-0 flex items-end justify-center gap-16 p-8">
+              <div class="flex w-24 flex-col items-center">
+                <div class="w-full rounded-t bg-zinc-300 dark:bg-zinc-700" style="height:120px"></div>
+                <div class="mt-3 text-sm text-zinc-500">${beforeLabel}</div>
+              </div>
+              <div class="flex w-24 flex-col items-center">
+                <div class="w-full rounded-t" style="height:170px;background-color:${color}"></div>
+                <div class="mt-3 text-sm text-zinc-500">${afterLabel}</div>
+              </div>
+            </div>
+            <div class="absolute right-5 top-5 text-sm font-bold" style="color:${color}">${afterValue}</div>
+          </div>`;
+      }
+
+      return `
+        <div class="relative h-72 rounded-2xl bg-zinc-100 dark:bg-zinc-800">
+          <div class="absolute inset-0 flex">
+            <div class="flex w-1/2 flex-col items-center justify-center border-r border-dashed border-zinc-300 dark:border-zinc-700">
+              <div class="text-sm text-zinc-500">${beforeLabel}</div>
+              <div class="mt-2 text-4xl font-black">${beforeValue}</div>
+            </div>
+            <div class="flex w-1/2 flex-col items-center justify-center">
+              <div class="text-sm text-zinc-500">${afterLabel}</div>
+              <div class="mt-2 text-4xl font-black" style="color:${color}">${afterValue}</div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    async function loadCaseStudyDetail() {
+      const container = document.getElementById('caseStudyDetail');
+      const slug = new URLSearchParams(window.location.search).get('slug');
+
+      if (!slug) {
+        container.innerHTML = '<div class="text-sm text-rose-600">Missing case study slug.</div>';
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/case-studies-feed/${encodeURIComponent(slug)}`, {
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (!response.ok) throw new Error(`Case study responded with ${response.status}`);
+
+        const payload = await response.json();
+        const item = payload.case_study;
+        const color = item.accent_color || '#e11d48';
+        const logo = item.logo_url
+          ? `<img src="${escapeHtml(item.logo_url)}" alt="${escapeHtml(item.company_name)}" class="h-12 w-12 rounded-full object-cover" />`
+          : `<div class="grid h-12 w-12 place-items-center rounded-full bg-zinc-100 text-sm font-bold text-zinc-500 dark:bg-zinc-800">${escapeHtml((item.company_name || 'CS').slice(0, 2).toUpperCase())}</div>`;
+
+        document.title = `${item.title} | Adshqip Case Study`;
+
+        container.innerHTML = `
+          <div class="flex flex-col gap-8">
+            <div>
+              <div class="flex flex-wrap items-center gap-3 text-sm text-zinc-500">
+                <span class="inline-flex items-center gap-2">
+                  <span class="h-2 w-2 rounded-full" style="background-color:${color}"></span>
+                  ${escapeHtml(item.audience_type)}
+                </span>
+                ${item.industry ? `<span>${escapeHtml(item.industry)}</span>` : ''}
+                <span>${escapeHtml(item.slug)}</span>
+              </div>
+              <h1 class="mt-4 max-w-4xl text-4xl font-black tracking-tight sm:text-5xl">${escapeHtml(item.title)}</h1>
+              <p class="mt-5 max-w-3xl text-lg text-zinc-600 dark:text-zinc-300">${escapeHtml(item.description)}</p>
+            </div>
+
+            <div class="grid gap-6 lg:grid-cols-[1fr_320px]">
+              <div>${renderChart(item)}</div>
+              <aside class="rounded-2xl border border-zinc-200 p-6 dark:border-zinc-800">
+                <div class="flex items-center gap-3">
+                  ${logo}
+                  <div>
+                    <div class="font-bold">${escapeHtml(item.company_name)}</div>
+                    <div class="text-sm text-zinc-500">${escapeHtml(item.industry || 'Case study')}</div>
+                  </div>
+                </div>
+                <div class="mt-6 text-4xl font-black" style="color:${color}">${escapeHtml(item.metric_value)}</div>
+                ${item.metric_label ? `<div class="mt-1 text-sm text-zinc-500">${escapeHtml(item.metric_label)}</div>` : ''}
+                <a href="adshqipgpt5high37sonnetcontinue2.html#contact" class="mt-8 inline-flex w-full items-center justify-center rounded-xl px-5 py-3 text-sm font-bold text-white" style="background-color:${color}">Start a similar campaign</a>
+              </aside>
+            </div>
+
+            <article class="prose prose-zinc max-w-none dark:prose-invert prose-p:text-zinc-600 dark:prose-p:text-zinc-300">
+              ${paragraphs(item.content || item.description)}
+            </article>
+          </div>`;
+      } catch (error) {
+        console.warn('Failed to load case study detail', error);
+        container.innerHTML = '<div class="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-700">Case study could not be loaded. Make sure Laravel is running and the slug exists.</div>';
+      }
+    }
+
+    loadCaseStudyDetail();
+  </script>
+</body>
+</html>

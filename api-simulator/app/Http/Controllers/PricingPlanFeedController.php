@@ -23,7 +23,12 @@ class PricingPlanFeedController extends Controller
                     'price_monthly' => $plan->price_monthly !== null ? (float) $plan->price_monthly : null,
                     'price_yearly' => $plan->price_yearly !== null ? (float) $plan->price_yearly : null,
                     'currency' => $plan->currency,
-                    'features' => $plan->features ?? [],
+                    'features' => collect($plan->features ?? [])
+                        ->flatMap(fn ($feature) => preg_split('/(?:\r\n|\r|\n|&#10;)+/', (string) $feature))
+                        ->map(fn ($feature) => trim(html_entity_decode((string) $feature)))
+                        ->filter()
+                        ->values()
+                        ->all(),
                     'impressions_limit' => $plan->impressions_limit,
                     'is_popular' => (bool) $plan->is_popular,
                     'is_enterprise' => (bool) $plan->is_enterprise,

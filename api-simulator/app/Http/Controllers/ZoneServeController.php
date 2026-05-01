@@ -8,6 +8,7 @@ use App\Models\PlatformSetting;
 use App\Models\StatDaily;
 use App\Models\Zone;
 use App\Support\AdDeliveryOptions;
+use App\Support\AudienceTargetingMatcher;
 use App\Support\PlatformMemcache;
 use Illuminate\Http\Request;
 
@@ -52,7 +53,7 @@ class ZoneServeController extends Controller
                         return $this->emptyJs()->getContent();
                     }
 
-                    $adHtml = $this->buildAdHtml($zone);
+                    $adHtml = $this->buildAdHtml($zone, $request);
 
                     return $this->buildLoaderJs($zone, $adHtml);
                 },
@@ -70,23 +71,61 @@ class ZoneServeController extends Controller
             ->where('status', 'active')
             ->find($zoneId);
         if (!$zone) {
+            app(\App\Support\AdServingLogger::class)->log($request, [
+                'delivery_type' => 'zone',
+                'event_type' => 'zone_request',
+                'status' => 'blocked',
+                'zone_id' => $zoneId,
+                'meta' => ['reason' => 'zone_not_found_or_inactive'],
+            ]);
             return $this->emptyJs();
         }
 
         // ── Server-side targeting enforcement ──
         if (! $this->passesZoneTargeting($zone, $request)) {
+            app(\App\Support\AdServingLogger::class)->log($request, [
+                'delivery_type' => 'zone',
+                'event_type' => 'zone_request',
+                'status' => 'blocked',
+                'zone_id' => $zone->id,
+                'site_id' => $zone->site_id,
+                'publisher_id' => $zone->site?->publisher_id,
+                'meta' => ['reason' => 'zone_targeting_failed'],
+            ]);
             return $this->emptyJs();
         }
 
         if (! $deliveryOptions->mobileAdsEnabled() && $deliveryOptions->isMobileOrTabletRequest($request)) {
+            app(\App\Support\AdServingLogger::class)->log($request, [
+                'delivery_type' => 'zone',
+                'event_type' => 'zone_request',
+                'status' => 'blocked',
+                'zone_id' => $zone->id,
+                'site_id' => $zone->site_id,
+                'publisher_id' => $zone->site?->publisher_id,
+                'meta' => ['reason' => 'mobile_ads_disabled'],
+            ]);
             return $this->emptyJs();
         }
 
         // Build the ad HTML that the JS will inject
-        $adHtml = $this->buildAdHtml($zone);
+        $adHtml = $this->buildAdHtml($zone, $request);
 
         // Build JS that injects the ad into the zone container
         $js = $this->buildLoaderJs($zone, $adHtml);
+
+        app(\App\Support\AdServingLogger::class)->log($request, [
+            'delivery_type' => 'zone',
+            'event_type' => 'zone_request',
+            'status' => 'served',
+            'zone_id' => $zone->id,
+            'site_id' => $zone->site_id,
+            'publisher_id' => $zone->site?->publisher_id,
+            'meta' => [
+                'format_key' => $zone->format_key,
+                'size_key' => $zone->size_key,
+            ],
+        ]);
 
         return response($js, 200)
             ->header('Content-Type', 'application/javascript; charset=utf-8')
@@ -224,8 +263,9 @@ class ZoneServeController extends Controller
     /**
      * Build the ad HTML content for this zone (placeholder/demo).
      */
-    private function buildAdHtml(Zone $zone): string
+    private function buildAdHtml(Zone $zone, ?Request $request = null): string
     {
+        $request ??= request();
         $format = $zone->format_key ?? 'display_web';
         $size = $zone->size_key ?? '';
 
@@ -247,7 +287,7 @@ class ZoneServeController extends Controller
                 ->whereIn('status', ['active', 'paused', 'pending_review'])
                 ->first();
 
-            if ($campaign) {
+            if ($campaign && app(AudienceTargetingMatcher::class)->passes($campaign, $request)) {
                 $campaignHtml = $this->buildRegularCampaignHtml($campaign, $zone, $width, $height);
                 if ($campaignHtml !== null) {
                     return $campaignHtml;
@@ -260,7 +300,8 @@ class ZoneServeController extends Controller
             ->where('is_deleted', false)
             ->where('status', 'active')
             ->latest('id')
-            ->first();
+            ->get()
+            ->first(fn (Campaign $campaign) => app(AudienceTargetingMatcher::class)->passes($campaign, $request));
 
         if ($campaign) {
             $campaignHtml = $this->buildRegularCampaignHtml($campaign, $zone, $width, $height);

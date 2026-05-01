@@ -83,14 +83,14 @@
                 <label class="mb-1.5 block text-sm font-medium text-gray-700">Features</label>
                 <textarea name="features_input" rows="5" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20" placeholder="One feature per line" required>{{ old('features_input') }}</textarea>
             </div>
-            <div class="xl:col-span-4 flex flex-wrap items-center gap-4">
-                <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" name="is_popular" value="1">
-                    Popular plan
+            <div class="xl:col-span-4 flex flex-wrap items-center gap-3">
+                <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-100">
+                    <input type="checkbox" name="is_popular" value="1" class="rounded border-amber-300 text-amber-600 focus:ring-amber-500" {{ old('is_popular') ? 'checked' : '' }}>
+                    Mark as Popular
                 </label>
-                <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" name="is_enterprise" value="1">
-                    Enterprise plan
+                <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-700 hover:bg-purple-100">
+                    <input type="checkbox" name="is_enterprise" value="1" class="rounded border-purple-300 text-purple-600 focus:ring-purple-500" {{ old('is_enterprise') ? 'checked' : '' }}>
+                    Mark as Enterprise
                 </label>
                 <button type="submit" class="ml-auto rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">Save Plan</button>
             </div>
@@ -157,7 +157,7 @@
                                         data-sort-order="{{ $plan->sort_order }}"
                                         data-is-popular="{{ $plan->is_popular ? '1' : '0' }}"
                                         data-is-enterprise="{{ $plan->is_enterprise ? '1' : '0' }}"
-                                        data-features="{{ implode('&#10;', $plan->features ?? []) }}">
+                                        data-features-b64="{{ base64_encode(implode("\n", $plan->features ?? [])) }}">
                                         Edit
                                     </button>
                                     @if($plan->status === 'active')
@@ -252,14 +252,14 @@
                     <label class="mb-1.5 block text-sm font-medium text-gray-700">Features</label>
                     <textarea id="edit_features_input" name="features_input" rows="5" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm" required></textarea>
                 </div>
-                <div class="md:col-span-2 flex flex-wrap items-center gap-4">
-                    <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-                        <input id="edit_is_popular" type="checkbox" name="is_popular" value="1">
-                        Popular plan
+                <div class="md:col-span-2 flex flex-wrap items-center gap-3">
+                    <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-100">
+                        <input id="edit_is_popular" type="checkbox" name="is_popular" value="1" class="rounded border-amber-300 text-amber-600 focus:ring-amber-500">
+                        Mark as Popular
                     </label>
-                    <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-                        <input id="edit_is_enterprise" type="checkbox" name="is_enterprise" value="1">
-                        Enterprise plan
+                    <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-700 hover:bg-purple-100">
+                        <input id="edit_is_enterprise" type="checkbox" name="is_enterprise" value="1" class="rounded border-purple-300 text-purple-600 focus:ring-purple-500">
+                        Mark as Enterprise
                     </label>
                     <div class="ml-auto flex gap-3">
                         <button type="button" onclick="closeEditPlan()" class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">Cancel</button>
@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit_sort_order').value = this.dataset.sortOrder;
             document.getElementById('edit_is_popular').checked = this.dataset.isPopular === '1';
             document.getElementById('edit_is_enterprise').checked = this.dataset.isEnterprise === '1';
-            document.getElementById('edit_features_input').value = this.dataset.features || '';
+            document.getElementById('edit_features_input').value = this.dataset.featuresB64 ? atob(this.dataset.featuresB64) : '';
 
             modal.classList.remove('hidden');
             modal.classList.add('flex');

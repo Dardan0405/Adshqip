@@ -755,6 +755,7 @@ class CampaignController extends Controller
             'ad_formats.*.reward_amount' => 'nullable|string',
             'ad_formats.*.reward_type' => 'nullable|string',
             'pixel_tracker_id' => 'nullable|exists:aq_pixel_trackers,id',
+            'show_in_admarket' => 'nullable|boolean',
         ]);
 
         // Handle S2S checkbox (unchecked = not sent)
@@ -768,6 +769,10 @@ class CampaignController extends Controller
 
         // Set remaining budget equal to total budget for new campaigns
         $validated['remaining_budget'] = $validated['total_budget'] ?? 0;
+        $validated['admarket_enabled'] = $request->has('show_in_admarket');
+        $validated['admarket_status'] = $validated['admarket_enabled'] ? 'listed' : 'unlisted';
+        $validated['admarket_published_at'] = $validated['admarket_enabled'] ? now() : null;
+        unset($validated['show_in_admarket']);
 
         // Parse JSON fields if they're strings
         if (isset($validated['targeting_geo']) && is_string($validated['targeting_geo'])) {
@@ -1180,6 +1185,9 @@ class CampaignController extends Controller
             'zone_name' => $campaign->zone?->name,
             'zone_site_name' => $campaign->zone?->site?->name,
             'pixel_tracker_id' => $campaign->pixel_tracker_id,
+            'admarket_enabled' => (bool) $campaign->admarket_enabled,
+            'admarket_status' => $campaign->admarket_status,
+            'admarket_published_at' => $campaign->admarket_published_at?->format('Y-m-d H:i'),
             'spend' => $spend,
         ];
 
@@ -1392,6 +1400,8 @@ class CampaignController extends Controller
             'ad_formats.*.reward_amount' => 'nullable|string',
             'ad_formats.*.reward_type' => 'nullable|string',
             'pixel_tracker_id' => 'nullable|exists:aq_pixel_trackers,id',
+            'show_in_admarket' => 'nullable|boolean',
+            'show_in_admarket_present' => 'nullable|boolean',
         ]);
 
         // Handle S2S checkbox (unchecked = not sent)
@@ -1399,6 +1409,15 @@ class CampaignController extends Controller
         if (!$validated['s2s_enabled']) {
             $validated['s2s_postback_url'] = null;
         }
+        if ($request->has('show_in_admarket_present')) {
+            $validated['admarket_enabled'] = $request->has('show_in_admarket');
+            $validated['admarket_status'] = $validated['admarket_enabled'] ? 'listed' : 'unlisted';
+            if ($validated['admarket_enabled'] && ! $campaign->admarket_published_at) {
+                $validated['admarket_published_at'] = now();
+            }
+        }
+        unset($validated['show_in_admarket']);
+        unset($validated['show_in_admarket_present']);
 
         // Convert traffic_sources indexed array to clean array
         if (isset($validated['traffic_sources'])) {

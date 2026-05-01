@@ -40,4 +40,9 @@ class PricingPlan extends Model
     {
         return $query->where('status', 'active');
     }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(UserSubscription::class, 'plan_id');
+    }
 }

@@ -73,6 +73,7 @@
                     <tr class="bg-gray-50 border-b border-gray-100">
                         <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">ID</th>
                         <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Key</th>
+                        <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Secret</th>
                         <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Permissions</th>
                         <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Status</th>
                         <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">Expires</th>
@@ -86,6 +87,13 @@
                             <td class="px-4 py-3">
                                 <div class="font-medium text-gray-900">{{ $apiKey->name }}</div>
                                 <div class="font-mono text-xs text-gray-400">{{ $apiKey->api_key }}</div>
+                            </td>
+                            <td class="px-4 py-3">
+                                @if($apiKey->api_secret_encrypted)
+                                    <div class="font-mono text-xs text-gray-700 break-all">{{ $apiKey->api_secret_encrypted }}</div>
+                                @else
+                                    <div class="text-xs text-amber-600">Secret not stored. Generate a new key.</div>
+                                @endif
                             </td>
                             <td class="px-4 py-3 text-gray-700">{{ collect($apiKey->permissions ?? [])->implode(', ') ?: 'No permissions' }}</td>
                             <td class="px-4 py-3">
@@ -109,7 +117,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="px-4 py-12 text-center text-sm text-gray-500">No API keys found.</td></tr>
+                        <tr><td colspan="7" class="px-4 py-12 text-center text-sm text-gray-500">No API keys found.</td></tr>
                     @endforelse
                 </tbody>
             </table>

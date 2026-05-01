@@ -7,6 +7,7 @@ use App\Models\PlatformSetting;
 use App\Models\TelegramMiniApp;
 use App\Models\TelegramMiniAppSession;
 use App\Models\User;
+use App\Support\SystemProviderRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -123,6 +124,8 @@ class TelegramIntegrationController extends Controller
         if (filled($validated['telegram_webhook_secret'] ?? null)) {
             PlatformSetting::setValue('telegram_webhook_secret_encrypted', encrypt(trim((string) $validated['telegram_webhook_secret'])), 'string', 'telegram', 'Encrypted Telegram webhook secret', $request->user()?->id);
         }
+
+        app(SystemProviderRegistry::class)->syncTelegramProvider($request->user()?->id);
 
         return redirect()->route('admin.telegram-integration')->with('success', 'Telegram integration updated successfully.');
     }

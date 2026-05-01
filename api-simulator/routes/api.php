@@ -10,6 +10,30 @@ Route::post('/verify-security-question', [AuthController::class, 'verifySecurity
 Route::post('/register', [AuthController::class, 'register']);
 Route::get('/me', [AuthController::class, 'me']);
 
+Route::middleware('api.key')->get('/integration/ping', function (\Illuminate\Http\Request $request) {
+    $apiKey = $request->attributes->get('api_key');
+
+    return response()->json([
+        'ok' => true,
+        'message' => 'API key authentication works.',
+        'key' => [
+            'id' => $apiKey?->id,
+            'name' => $apiKey?->name,
+            'api_key' => $apiKey?->api_key,
+            'permissions' => $apiKey?->permissions ?? [],
+            'last_used_at' => optional($apiKey?->last_used_at)->toISOString(),
+        ],
+    ]);
+})->name('api.integration.ping');
+
+Route::middleware('api.key:read_reports')->get('/integration/reports-test', function (\Illuminate\Http\Request $request) {
+    return response()->json([
+        'ok' => true,
+        'message' => 'read_reports permission accepted.',
+        'key_name' => $request->attributes->get('api_key')?->name,
+    ]);
+})->name('api.integration.reports-test');
+
 Route::post('/payments/stripe/webhook', [PaymentWebhookController::class, 'stripe'])->name('api.payments.stripe.webhook');
 Route::post('/payments/bitpay/webhook', [PaymentWebhookController::class, 'bitpay'])->name('api.payments.bitpay.webhook');
 

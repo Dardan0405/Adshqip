@@ -15,6 +15,7 @@ class ApiKey extends Model
         'name',
         'api_key',
         'api_secret_hash',
+        'api_secret_encrypted',
         'permissions',
         'rate_limit_per_minute',
         'allowed_ips',
@@ -28,6 +29,7 @@ class ApiKey extends Model
         return [
             'permissions' => 'array',
             'allowed_ips' => 'array',
+            'api_secret_encrypted' => 'encrypted',
             'last_used_at' => 'datetime',
             'expires_at' => 'datetime',
             'created_at' => 'datetime',
