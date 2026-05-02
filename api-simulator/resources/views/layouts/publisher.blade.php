@@ -97,7 +97,7 @@
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         admarket
                     </a>
-                    <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                    <a href="{{ route('publisher.direct-campaigns') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg {{ request()->routeIs('publisher.direct-campaigns*') ? 'active' : 'text-gray-600' }}">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                         direct campaigns
                     </a>
@@ -121,24 +121,25 @@
                         <a href="{{ route('publisher.reports.requests') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.reports.requests') ? 'active' : '' }}">request reports</a>
                         <a href="{{ route('publisher.reports.groups') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.reports.groups') ? 'active' : '' }}">group reports</a>
                         <a href="{{ route('publisher.reports.geo') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.reports.geo') ? 'active' : '' }}">geo breakdown</a>
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">traffic sources</a>
+                        <a href="{{ route('publisher.reports.traffic-sources') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.reports.traffic-sources*') ? 'active' : '' }}">traffic sources</a>
                     </div>
                 </div>
 
                 {{-- Wallet --}}
                 <div class="pt-3">
-                    <button onclick="toggleSubmenu('walletMenu')" class="sidebar-link flex items-center justify-between w-full px-3 py-2 rounded-lg text-gray-600 hover:text-brand-600">
+                    <button onclick="toggleSubmenu('walletMenu')" class="sidebar-link flex items-center justify-between w-full px-3 py-2 rounded-lg text-gray-600 hover:text-brand-600 {{ request()->routeIs('publisher.wallet*') || request()->routeIs('publisher.payment-history*') || request()->routeIs('publisher.invoices*') || request()->routeIs('publisher.subscription-plan*') || request()->routeIs('publisher.payouts*') || request()->routeIs('publisher.payment-settings*') ? 'active' : '' }}">
                         <span class="flex items-center gap-3">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                             wallet
                         </span>
                         <svg class="w-3 h-3 transition-transform" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </button>
-                    <div id="walletMenu" class="ml-7 mt-1 space-y-0.5 hidden">
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">manage wallet</a>
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">payments</a>
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">invoices history</a>
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">subscription plan</a>
+                    <div id="walletMenu" class="ml-7 mt-1 space-y-0.5 {{ request()->routeIs('publisher.wallet*') || request()->routeIs('publisher.payment-history*') || request()->routeIs('publisher.invoices*') || request()->routeIs('publisher.subscription-plan*') || request()->routeIs('publisher.payouts*') || request()->routeIs('publisher.payment-settings*') ? '' : 'hidden' }}">
+                        <a href="{{ route('publisher.wallet') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.wallet*') ? 'active' : '' }}">manage wallet</a>
+                        <a href="{{ route('publisher.payouts') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.payouts*') ? 'active' : '' }}">payments</a>
+                        <a href="{{ route('publisher.invoices') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.invoices*') ? 'active' : '' }}">invoices history</a>
+                        <a href="{{ route('publisher.subscription-plan') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.subscription-plan*') ? 'active' : '' }}">subscription plan</a>
+                        <a href="{{ route('publisher.payment-settings') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.payment-settings*') ? 'active' : '' }}">payout settings</a>
                     </div>
                 </div>
 
@@ -168,7 +169,7 @@
                 </a>
 
                 {{-- Direct Links --}}
-                <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600">
+                <a href="{{ route('publisher.direct-links') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg {{ request()->routeIs('publisher.direct-links*') ? 'active' : 'text-gray-600' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     direct links
                 </a>
@@ -176,23 +177,11 @@
                 {{-- Settings --}}
                 <div class="pt-4 mt-4 border-t border-gray-100">
                     <span class="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">settings</span>
-                    <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 mt-2 text-xs">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke="currentColor" stroke-width="1.5"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="1.5"/></svg>
-                        account settings
-                    </a>
-                    <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 text-xs">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                        notifications
-                    </a>
-                    <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 text-xs">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                        security
-                    </a>
-                    <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 text-xs">
+                    <a href="{{ route('publisher.kyc-verification') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.kyc-verification*') ? 'active' : '' }}">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><path d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                         KYC verification
                     </a>
-                    <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 text-xs">
+                    <a href="{{ route('publisher.api-keys') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.api-keys*') ? 'active' : '' }}">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         API keys
                     </a>
@@ -200,18 +189,18 @@
 
                 {{-- Help --}}
                 <div class="pt-4 mt-4 border-t border-gray-100">
-                    <button onclick="toggleSubmenu('helpMenu')" class="sidebar-link flex items-center justify-between w-full px-3 py-2 rounded-lg text-gray-500 text-xs">
+                    <button onclick="toggleSubmenu('helpMenu')" class="sidebar-link flex items-center justify-between w-full px-3 py-2 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.help-center*') || request()->routeIs('publisher.support-tickets*') || request()->routeIs('publisher.feedback*') || request()->routeIs('publisher.contacts*') ? 'active' : '' }}">
                         <span class="flex items-center gap-3">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                             help
                         </span>
                         <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </button>
-                    <div id="helpMenu" class="ml-7 mt-1 space-y-0.5 hidden">
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">help center</a>
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">support tickets</a>
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">give feedback</a>
-                        <a href="#" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs">contacts</a>
+                    <div id="helpMenu" class="ml-7 mt-1 space-y-0.5 {{ request()->routeIs('publisher.help-center*') || request()->routeIs('publisher.support-tickets*') || request()->routeIs('publisher.feedback*') || request()->routeIs('publisher.contacts*') ? '' : 'hidden' }}">
+                        <a href="{{ route('publisher.help-center') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.help-center*') ? 'active' : '' }}">help center</a>
+                        <a href="{{ route('publisher.support-tickets') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.support-tickets*') ? 'active' : '' }}">support tickets</a>
+                        <a href="{{ route('publisher.feedback') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.feedback*') ? 'active' : '' }}">give feedback</a>
+                        <a href="{{ route('publisher.contacts') }}" class="sidebar-link block px-3 py-1.5 rounded-lg text-gray-500 text-xs {{ request()->routeIs('publisher.contacts*') ? 'active' : '' }}">contacts</a>
                     </div>
                 </div>
             </nav>

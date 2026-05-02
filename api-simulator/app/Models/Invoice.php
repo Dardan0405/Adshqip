@@ -62,6 +62,11 @@ class Invoice extends Model
         return $query->where('aq_invoices.type', 'advertiser_charge');
     }
 
+    public function scopeSubscriptionCharges($query)
+    {
+        return $query->where('aq_invoices.type', 'subscription_charge');
+    }
+
     /**
      * Scope a query to only include paid invoices.
      */

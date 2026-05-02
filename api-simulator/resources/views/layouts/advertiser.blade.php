@@ -182,6 +182,10 @@
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Teams
                 </a>
+                <a href="{{ route('advertiser.kyc-verification') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('advertiser.kyc-verification*') ? 'active' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    KYC Verification
+                </a>
 
                 <div class="pt-4 mt-4 border-t border-gray-100">
                     <span class="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Help</span>

@@ -188,6 +188,7 @@ class AddDirectLinkController extends Controller
             abort(410, 'This direct link has expired.');
         }
 
+        $directLink->increment('view_count');
         $directLink->increment('click_count');
 
         if ($directLink->destination_url) {

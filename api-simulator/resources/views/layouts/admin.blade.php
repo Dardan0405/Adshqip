@@ -105,6 +105,11 @@
                     Campaign Approvals
                 </a>
 
+                <a href="{{ route('admin.add-direct-link') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.add-direct-link*') ? 'active' : '' }}">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Direct Links
+                </a>
+
                 <a href="{{ route('admin.manage-admarket-campaigns') }}" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 {{ request()->routeIs('admin.manage-admarket-campaigns*') ? 'active' : '' }}">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     Manage AdMarket Campaign
@@ -739,10 +744,6 @@
                             <a href="{{ route('admin.mass-email') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors {{ request()->routeIs('admin.mass-email*') ? 'bg-gray-50 text-brand-600' : '' }}">
                                 <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                 Mass Email
-                            </a>
-                            <a href="{{ route('admin.add-direct-link') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors {{ request()->routeIs('admin.add-direct-link*') ? 'bg-gray-50 text-brand-600' : '' }}">
-                                <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                Add Direct Link
                             </a>
                             <div class="border-t border-gray-100 my-1"></div>
                             <form method="POST" action="{{ route('logout') }}">

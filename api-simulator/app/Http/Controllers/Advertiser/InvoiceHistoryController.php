@@ -101,7 +101,7 @@ class InvoiceHistoryController extends Controller
     {
         $invoice = Invoice::query()
             ->where('user_id', $request->user()->id)
-            ->where('type', 'advertiser_charge')
+            ->whereIn('type', ['advertiser_charge', 'subscription_charge'])
             ->findOrFail($id);
 
         if ($invoice->pdf_url) {
@@ -159,7 +159,7 @@ class InvoiceHistoryController extends Controller
     {
         return Invoice::query()
             ->where('user_id', $request->user()->id)
-            ->where('type', 'advertiser_charge')
+            ->whereIn('type', ['advertiser_charge', 'subscription_charge'])
             ->when(!empty($filters['search']), function ($query) use ($filters) {
                 $search = trim((string) $filters['search']);
                 $query->where(function ($inner) use ($search) {
@@ -185,6 +185,9 @@ class InvoiceHistoryController extends Controller
         $profile = $user->profile ?? $user->userProfile;
         $name = trim(($profile->first_name ?? '') . ' ' . ($profile->last_name ?? '')) ?: $user->email;
         $company = $profile->company_name ?? null;
+        $description = $invoice->type === 'subscription_charge'
+            ? 'Subscription Plan Charge'
+            : 'Advertiser account charge';
 
         return "ADVERTISER INVOICE\n\n"
             . "Invoice Number: {$invoice->invoice_number}\n"
@@ -194,7 +197,7 @@ class InvoiceHistoryController extends Controller
             . ($company ? "{$company}\n" : '')
             . "{$name}\n"
             . "{$user->email}\n\n"
-            . "Description: Advertiser account charge\n"
+            . "Description: {$description}\n"
             . 'Amount: ' . $invoice->currency . ' ' . number_format((float) $invoice->amount, 2) . "\n"
             . 'Tax: ' . $invoice->currency . ' ' . number_format((float) $invoice->tax_amount, 2) . "\n"
             . 'TOTAL: ' . $invoice->currency . ' ' . number_format((float) $invoice->total_amount, 2) . "\n\n"

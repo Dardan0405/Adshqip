@@ -36,6 +36,7 @@ Route::middleware('api.key:read_reports')->get('/integration/reports-test', func
 
 Route::post('/payments/stripe/webhook', [PaymentWebhookController::class, 'stripe'])->name('api.payments.stripe.webhook');
 Route::post('/payments/bitpay/webhook', [PaymentWebhookController::class, 'bitpay'])->name('api.payments.bitpay.webhook');
+Route::post('/payments/paypal/webhook', [PaymentWebhookController::class, 'paypal'])->name('api.payments.paypal.webhook');
 
 // Telegram Integration API
 Route::prefix('telegram')->group(function () {

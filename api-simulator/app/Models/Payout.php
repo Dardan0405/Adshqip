@@ -13,7 +13,10 @@ class Payout extends Model
         'amount',
         'currency',
         'payment_method',
+        'payment_provider',
         'payment_reference',
+        'gateway_reference',
+        'gateway_response',
         'status',
         'period_start',
         'period_end',
@@ -25,6 +28,7 @@ class Payout extends Model
         'amount' => 'decimal:4',
         'period_start' => 'date',
         'period_end' => 'date',
+        'gateway_response' => 'array',
         'processed_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -58,6 +62,17 @@ class Payout extends Model
 
     public function getPaymentMethodLabelAttribute(): string
     {
+        if (filled($this->payment_provider)) {
+            return match ($this->payment_provider) {
+                'bankwire' => 'Bank Wire',
+                'paypal' => 'PayPal',
+                'bitcoin' => 'Bitcoin',
+                'stripe' => 'Stripe',
+                'authorize_net' => 'Authorize.net',
+                default => ucfirst($this->payment_provider),
+            };
+        }
+
         return match ($this->payment_method) {
             'paypal' => 'PayPal',
             'wire_transfer' => 'Wire Transfer',
@@ -65,6 +80,15 @@ class Payout extends Model
             'payoneer' => 'Payoneer',
             default => ucfirst($this->payment_method ?? 'Unknown'),
         };
+    }
+
+    public function getPaymentProviderLabelAttribute(): string
+    {
+        if (! filled($this->payment_provider)) {
+            return $this->payment_method_label;
+        }
+
+        return $this->payment_method_label;
     }
 
     public function getStatusBadgeAttribute(): array

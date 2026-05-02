@@ -99,7 +99,7 @@ class InvoiceController extends Controller
     public function download($id)
     {
         $invoice = Invoice::with('user.userProfile')
-            ->advertiserInvoices()
+            ->whereIn('type', ['advertiser_charge', 'subscription_charge'])
             ->whereHas('user', fn ($query) => $query->where('role', 'advertiser'))
             ->findOrFail($id);
 
@@ -122,7 +122,7 @@ class InvoiceController extends Controller
             ->join('aq_users', 'aq_invoices.user_id', '=', 'aq_users.id')
             ->where('aq_users.is_deleted', false)
             ->where('aq_users.role', 'advertiser')
-            ->where('aq_invoices.type', 'advertiser_charge');
+            ->whereIn('aq_invoices.type', ['advertiser_charge', 'subscription_charge']);
 
         if ($search = trim((string) $request->get('search'))) {
             $query->where(function ($inner) use ($search) {
@@ -169,7 +169,7 @@ Bill To:
 {$advertiserName}
 {$invoice->user->email}
 
-Description: Advertiser Charge
+Description: " . ($invoice->type === 'subscription_charge' ? 'Subscription Plan Charge' : 'Advertiser Charge') . "
 Amount: EUR " . number_format((float) $invoice->amount, 2) . "
 Tax: EUR " . number_format((float) $invoice->tax_amount, 2) . "
 TOTAL: EUR " . number_format((float) $invoice->total_amount, 2) . "

@@ -211,6 +211,7 @@ class PlatformSetting extends Model
                 'mode' => 'sandbox',
                 'client_id' => '',
                 'secret' => '',
+                'webhook_id' => '',
                 'paypal_email' => '',
                 'merchant_id' => '',
                 'instructions' => '',
